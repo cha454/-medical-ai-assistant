@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Assistant Médical IA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,107 +13,481 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            animation: pulse 15s ease-in-out infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
         
         .header {
             text-align: center;
             color: white;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.8s ease-out;
         }
         
         .header h1 {
-            font-size: 2.5em;
+            font-size: 3em;
             margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.2);
+            letter-spacing: -1px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+        
+        .header-links {
+            margin-top: 15px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .header-link {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .header-link:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         
         .warning {
-            background: #ff6b6b;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
             color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
             text-align: center;
-            font-weight: bold;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(255,107,107,0.3);
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .warning::before {
+            content: '⚠️';
+            font-size: 1.5em;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
         }
         
         .card {
             background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.8s ease-out both;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card:nth-child(1) { animation-delay: 0.3s; }
+        .card:nth-child(2) { animation-delay: 0.4s; }
+        .card:nth-child(3) { animation-delay: 0.5s; }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+        
+        .card-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            display: block;
         }
         
         .card h2 {
-            color: #667eea;
-            margin-bottom: 15px;
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+            font-weight: 600;
         }
         
-        input, textarea, button {
+        .card p {
+            color: #718096;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        input, textarea {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             margin: 10px 0;
-            border: 2px solid #ddd;
-            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
             font-size: 16px;
+            font-family: inherit;
+            transition: all 0.3s;
+            background: #f7fafc;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        
+        input::placeholder, textarea::placeholder {
+            color: #a0aec0;
         }
         
         button {
-            background: #667eea;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            font-weight: bold;
-            transition: background 0.3s;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        button:hover::before {
+            width: 300px;
+            height: 300px;
         }
         
         button:hover {
-            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.5);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
         
         .result {
             margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 12px;
             border-left: 4px solid #667eea;
+            animation: slideIn 0.5s ease-out;
         }
         
         .disease-item {
             background: white;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 8px;
-            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 12px;
+            border-left: 4px solid #48bb78;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        .disease-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .disease-item h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .confidence {
             display: inline-block;
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 14px;
-            margin-left: 10px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.3);
         }
         
+        .severity-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .severity-faible { background: #c6f6d5; color: #22543d; }
+        .severity-modérée { background: #feebc8; color: #7c2d12; }
+        .severity-élevée { background: #fed7d7; color: #742a2a; }
+        .severity-critique { background: #feb2b2; color: #742a2a; }
+        
         .emergency {
-            background: #ff6b6b;
+            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
             color: white;
-            padding: 20px;
-            border-radius: 10px;
+            padding: 30px;
+            border-radius: 15px;
             text-align: center;
             font-size: 1.2em;
-            font-weight: bold;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(252,129,129,0.4);
+            animation: pulse 2s ease-in-out infinite;
+            border: 3px solid rgba(255,255,255,0.5);
+        }
+        
+        .emergency::before {
+            content: '🚨';
+            font-size: 3em;
+            display: block;
+            margin-bottom: 15px;
+            animation: shake 0.5s ease-in-out infinite;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .recommendations {
+            margin-top: 15px;
+            padding-left: 20px;
+        }
+        
+        .recommendations li {
+            margin: 8px 0;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        
+        .chat-message {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 12px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: 20%;
+            text-align: right;
+        }
+        
+        .bot-message {
+            background: #f7fafc;
+            color: #2d3748;
+            margin-right: 20%;
+            border-left: 4px solid #667eea;
+        }
+        
+        .interaction-safe {
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+            color: #22543d;
+            padding: 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(72,187,120,0.2);
+        }
+        
+        .interaction-warning {
+            background: linear-gradient(135deg, #fed7d7 0%, #fc8181 100%);
+            color: #742a2a;
+            padding: 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(252,129,129,0.3);
+        }
+        
+        .drug-info {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .drug-info strong {
+            color: #2d3748;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 50px;
+            padding: 30px;
+            opacity: 0.9;
+        }
+        
+        .footer a {
+            color: white;
+            text-decoration: underline;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .user-message, .bot-message {
+                margin-left: 0;
+                margin-right: 0;
+            }
+        }
+        
+        /* Tooltip */
+        [data-tooltip] {
+            position: relative;
+            cursor: help;
+        }
+        
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 12px;
+            background: #2d3748;
+            color: white;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        [data-tooltip]:hover::after {
+            opacity: 1;
         }
     </style>
 </head>
@@ -121,49 +496,98 @@
         <div class="header">
             <h1>🏥 Assistant Médical IA</h1>
             <p>Votre assistant intelligent pour l'information médicale</p>
-            <a href="/admin" style="color: white; text-decoration: underline; margin-top: 10px; display: inline-block;">⚙️ Administration</a>
+            <div class="header-links">
+                <a href="/admin" class="header-link">⚙️ Administration</a>
+                <a href="#" class="header-link" onclick="scrollToSection('symptoms')">🔍 Symptômes</a>
+                <a href="#" class="header-link" onclick="scrollToSection('drugs')">💊 Médicaments</a>
+                <a href="#" class="header-link" onclick="scrollToSection('chat')">💬 Chat</a>
+            </div>
         </div>
         
         <div class="warning">
-            ⚠️ AVERTISSEMENT: Cet outil ne remplace pas une consultation médicale. En cas d'urgence, appelez le 15 (SAMU).
+            AVERTISSEMENT IMPORTANT
+            <div style="margin-top: 10px; font-weight: 400;">
+                Cet outil ne remplace pas une consultation médicale professionnelle.<br>
+                En cas d'urgence, appelez immédiatement le 15 (SAMU).
+            </div>
         </div>
         
-        <div class="card">
-            <h2>🔍 Analyser des symptômes</h2>
-            <p>Entrez vos symptômes séparés par des virgules</p>
-            <input type="text" id="symptoms" placeholder="Ex: fièvre, toux, fatigue">
-            <button onclick="analyzeSymptoms()">Analyser</button>
-            <div id="analysis-result"></div>
+        <div class="cards-grid">
+            <div class="card" id="symptoms">
+                <span class="card-icon">🔍</span>
+                <h2>Analyser des symptômes</h2>
+                <p>Décrivez vos symptômes et obtenez une analyse basée sur l'IA</p>
+                <input type="text" id="symptoms" placeholder="Ex: fièvre, toux, fatigue" data-tooltip="Séparez les symptômes par des virgules">
+                <button onclick="analyzeSymptoms()" id="analyze-btn">
+                    <span>Analyser mes symptômes</span>
+                </button>
+                <div id="analysis-result"></div>
+            </div>
+            
+            <div class="card" id="drugs">
+                <span class="card-icon">💊</span>
+                <h2>Vérifier les interactions</h2>
+                <p>Vérifiez les interactions entre vos médicaments</p>
+                <input type="text" id="drugs" placeholder="Ex: paracétamol, ibuprofène" data-tooltip="Séparez les médicaments par des virgules">
+                <button onclick="checkDrugs()" id="drugs-btn">
+                    <span>Vérifier les interactions</span>
+                </button>
+                <div id="drugs-result"></div>
+            </div>
+            
+            <div class="card" id="chat">
+                <span class="card-icon">💬</span>
+                <h2>Chatbot médical</h2>
+                <p>Posez vos questions à notre assistant intelligent</p>
+                <textarea id="chat-input" rows="3" placeholder="Posez votre question médicale..."></textarea>
+                <button onclick="sendMessage()" id="chat-btn">
+                    <span>Envoyer le message</span>
+                </button>
+                <div id="chat-result"></div>
+            </div>
         </div>
         
-        <div class="card">
-            <h2>💊 Vérifier les interactions médicamenteuses</h2>
-            <p>Entrez les médicaments séparés par des virgules</p>
-            <input type="text" id="drugs" placeholder="Ex: paracétamol, ibuprofène">
-            <button onclick="checkDrugs()">Vérifier</button>
-            <div id="drugs-result"></div>
-        </div>
-        
-        <div class="card">
-            <h2>💬 Chatbot médical</h2>
-            <textarea id="chat-input" rows="3" placeholder="Posez votre question..."></textarea>
-            <button onclick="sendMessage()">Envoyer</button>
-            <div id="chat-result"></div>
+        <div class="footer">
+            <p>💡 Développé avec ❤️ pour améliorer l'accès à l'information médicale</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">
+                <a href="https://github.com/cha454/-medical-ai-assistant" target="_blank">GitHub</a> • 
+                <a href="/admin">Administration</a>
+            </p>
         </div>
     </div>
     
     <script>
         const API_URL = window.location.origin;
         
+        // Smooth scroll
+        function scrollToSection(id) {
+            event.preventDefault();
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // Loading state
+        function setLoading(buttonId, isLoading) {
+            const btn = document.getElementById(buttonId);
+            const span = btn.querySelector('span');
+            if (isLoading) {
+                btn.disabled = true;
+                span.innerHTML = '<span class="loading"></span> Chargement...';
+            } else {
+                btn.disabled = false;
+                span.textContent = span.textContent.replace(' Chargement...', '');
+            }
+        }
+        
         async function analyzeSymptoms() {
             const symptomsInput = document.getElementById('symptoms').value;
             const resultDiv = document.getElementById('analysis-result');
             
             if (!symptomsInput.trim()) {
-                resultDiv.innerHTML = '<div class="result">Veuillez entrer des symptômes</div>';
+                resultDiv.innerHTML = '<div class="result" style="border-left-color: #fc8181;">⚠️ Veuillez entrer des symptômes</div>';
                 return;
             }
             
+            setLoading('analyze-btn', true);
             const symptoms = symptomsInput.split(',').map(s => s.trim());
             
             try {
@@ -176,7 +600,7 @@
                 const data = await response.json();
                 
                 if (data.emergency) {
-                    resultDiv.innerHTML = `<div class="emergency">🚨 ${data.message}</div>`;
+                    resultDiv.innerHTML = `<div class="emergency">${data.message}</div>`;
                     return;
                 }
                 
@@ -185,26 +609,34 @@
                     return;
                 }
                 
-                let html = '<div class="result"><h3>Maladies possibles:</h3>';
+                let html = '<div class="result"><h3 style="margin-bottom: 15px; color: #2d3748;">📋 Maladies possibles:</h3>';
                 data.results.forEach((result, index) => {
+                    const severityClass = `severity-${result.severity}`;
                     html += `
-                        <div class="disease-item">
-                            <strong>${index + 1}. ${result.disease.toUpperCase()}</strong>
-                            <span class="confidence">${result.confidence}%</span>
-                            <p><strong>Description:</strong> ${result.description}</p>
-                            <p><strong>Gravité:</strong> ${result.severity}</p>
-                            <p><strong>Recommandations:</strong></p>
-                            <ul>
-                                ${result.recommendations.map(r => `<li>${r}</li>`).join('')}
-                            </ul>
+                        <div class="disease-item" style="animation-delay: ${index * 0.1}s;">
+                            <h3>
+                                ${index + 1}. ${result.disease.toUpperCase()}
+                                <span class="confidence">${result.confidence}%</span>
+                                <span class="severity-badge ${severityClass}">${result.severity}</span>
+                            </h3>
+                            <p style="margin: 10px 0; color: #4a5568;"><strong>📝 Description:</strong> ${result.description}</p>
+                            <p style="margin: 10px 0; color: #4a5568;"><strong>🩺 Symptômes typiques:</strong> ${result.symptoms.join(', ')}</p>
+                            <div style="margin-top: 15px;">
+                                <strong style="color: #2d3748;">💡 Recommandations:</strong>
+                                <ul class="recommendations">
+                                    ${result.recommendations.map(r => `<li>${r}</li>`).join('')}
+                                </ul>
+                            </div>
                         </div>
                     `;
                 });
-                html += '</div>';
+                html += '<div style="margin-top: 20px; padding: 15px; background: #fff5f5; border-radius: 10px; color: #c53030; font-weight: 500;">⚠️ Consultez un médecin pour un diagnostic définitif</div></div>';
                 resultDiv.innerHTML = html;
                 
             } catch (error) {
-                resultDiv.innerHTML = `<div class="result">Erreur: ${error.message}</div>`;
+                resultDiv.innerHTML = `<div class="result" style="border-left-color: #fc8181;">❌ Erreur: ${error.message}</div>`;
+            } finally {
+                setLoading('analyze-btn', false);
             }
         }
         
@@ -213,10 +645,11 @@
             const resultDiv = document.getElementById('drugs-result');
             
             if (!drugsInput.trim()) {
-                resultDiv.innerHTML = '<div class="result">Veuillez entrer des médicaments</div>';
+                resultDiv.innerHTML = '<div class="result" style="border-left-color: #fc8181;">⚠️ Veuillez entrer des médicaments</div>';
                 return;
             }
             
+            setLoading('drugs-btn', true);
             const drugs = drugsInput.split(',').map(d => d.trim());
             
             try {
@@ -231,22 +664,25 @@
                 let html = '<div class="result">';
                 
                 if (data.safe) {
-                    html += '<p style="color: green; font-weight: bold;">✓ Aucune interaction majeure détectée</p>';
+                    html += '<div class="interaction-safe">✅ Aucune interaction majeure détectée</div>';
                 } else {
-                    html += '<p style="color: red; font-weight: bold;">⚠️ INTERACTIONS DÉTECTÉES:</p>';
+                    html += '<div class="interaction-warning">⚠️ INTERACTIONS DÉTECTÉES<br><br>';
                     data.interactions.forEach(interaction => {
-                        html += `<p>❌ ${interaction.warning}</p>`;
+                        html += `<div style="margin: 10px 0;">❌ ${interaction.warning}<br><small>Gravité: ${interaction.severity}</small></div>`;
                     });
+                    html += '</div>';
                 }
                 
                 if (data.drugs_info.length > 0) {
-                    html += '<h4>Informations détaillées:</h4>';
+                    html += '<h4 style="margin: 20px 0 10px; color: #2d3748;">📋 Informations détaillées:</h4>';
                     data.drugs_info.forEach(drug => {
                         html += `
-                            <div style="margin: 10px 0; padding: 10px; background: white; border-radius: 5px;">
-                                <strong>${drug.name.toUpperCase()}</strong><br>
-                                Catégorie: ${drug.category}<br>
-                                Dosage: ${drug.dosage}
+                            <div class="drug-info">
+                                <strong>💊 ${drug.name.toUpperCase()}</strong>
+                                <p style="margin: 5px 0; color: #4a5568;"><strong>Catégorie:</strong> ${drug.category}</p>
+                                <p style="margin: 5px 0; color: #4a5568;"><strong>Dosage:</strong> ${drug.dosage}</p>
+                                ${drug.interactions.length > 0 ? `<p style="margin: 5px 0; color: #e53e3e;"><strong>⚠️ Interactions:</strong> ${drug.interactions.join(', ')}</p>` : ''}
+                                ${drug.contraindications.length > 0 ? `<p style="margin: 5px 0; color: #e53e3e;"><strong>🚫 Contre-indications:</strong> ${drug.contraindications.join(', ')}</p>` : ''}
                             </div>
                         `;
                     });
@@ -256,7 +692,9 @@
                 resultDiv.innerHTML = html;
                 
             } catch (error) {
-                resultDiv.innerHTML = `<div class="result">Erreur: ${error.message}</div>`;
+                resultDiv.innerHTML = `<div class="result" style="border-left-color: #fc8181;">❌ Erreur: ${error.message}</div>`;
+            } finally {
+                setLoading('drugs-btn', false);
             }
         }
         
@@ -266,9 +704,15 @@
             const message = messageInput.value;
             
             if (!message.trim()) {
-                resultDiv.innerHTML = '<div class="result">Veuillez entrer un message</div>';
+                resultDiv.innerHTML = '<div class="result" style="border-left-color: #fc8181;">⚠️ Veuillez entrer un message</div>';
                 return;
             }
+            
+            setLoading('chat-btn', true);
+            
+            // Afficher le message de l'utilisateur
+            const userMsg = `<div class="chat-message user-message">👤 ${message}</div>`;
+            resultDiv.innerHTML = userMsg;
             
             try {
                 const response = await fetch(`${API_URL}/api/chat`, {
@@ -279,24 +723,60 @@
                 
                 const data = await response.json();
                 
-                let html = `
-                    <div class="result">
-                        <p><strong>Vous:</strong> ${message}</p>
-                        <p><strong>Assistant:</strong> ${data.response.replace(/\n/g, '<br>')}</p>
-                `;
+                let html = userMsg;
+                html += `<div class="chat-message bot-message">🤖 ${data.response.replace(/\n/g, '<br>')}</div>`;
                 
                 if (data.collected_symptoms.length > 0) {
-                    html += `<p><em>Symptômes collectés: ${data.collected_symptoms.join(', ')}</em></p>`;
+                    html += `<div class="result" style="margin-top: 15px;">
+                        <strong>📝 Symptômes collectés:</strong> ${data.collected_symptoms.join(', ')}
+                        <br><br>
+                        <button onclick="analyzeCollectedSymptoms(${JSON.stringify(data.collected_symptoms).replace(/"/g, '&quot;')})" 
+                                style="width: auto; padding: 10px 20px; margin-top: 10px;">
+                            Analyser ces symptômes
+                        </button>
+                    </div>`;
                 }
                 
-                html += '</div>';
                 resultDiv.innerHTML = html;
                 messageInput.value = '';
                 
+                // Scroll to result
+                resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
             } catch (error) {
-                resultDiv.innerHTML = `<div class="result">Erreur: ${error.message}</div>`;
+                resultDiv.innerHTML = userMsg + `<div class="result" style="border-left-color: #fc8181;">❌ Erreur: ${error.message}</div>`;
+            } finally {
+                setLoading('chat-btn', false);
             }
         }
+        
+        function analyzeCollectedSymptoms(symptoms) {
+            document.getElementById('symptoms').value = symptoms.join(', ');
+            scrollToSection('symptoms');
+            setTimeout(() => analyzeSymptoms(), 500);
+        }
+        
+        // Enter key support
+        document.getElementById('chat-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        document.getElementById('symptoms').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                analyzeSymptoms();
+            }
+        });
+        
+        document.getElementById('drugs').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                checkDrugs();
+            }
+        });
     </script>
 </body>
 </html>
