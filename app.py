@@ -2,10 +2,11 @@
 API Flask pour l'Assistant Médical IA
 """
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session
 from flask_cors import CORS
 import sys
 import os
+import uuid
 
 # Ajouter le dossier src au path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
@@ -14,9 +15,15 @@ from chatbot import MedicalChatbot
 from disease_classifier import DiseaseClassifier
 from drug_interactions import DrugInteractionChecker
 from medical_knowledge import get_disease_info, get_drug_info, check_emergency, get_all_diseases, get_all_drugs
+from database import MedicalDatabase
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 CORS(app)
+
+# Initialisation de la base de données
+db = MedicalDatabase()
+db.populate_initial_data()
 
 # Initialisation des composants
 chatbot = MedicalChatbot()
@@ -27,6 +34,12 @@ drug_checker = DrugInteractionChecker()
 print("Entraînement du modèle...")
 classifier.train()
 print("Modèle prêt!")
+
+def get_session_id():
+    """Récupère ou crée un ID de session"""
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+    return session['session_id']
 
 @app.route('/')
 def home():
@@ -51,12 +64,17 @@ def chat():
         if not message:
             return jsonify({"error": "Message vide"}), 400
         
+        session_id = get_session_id()
         response = chatbot.process_message(message)
         symptoms = chatbot.get_collected_symptoms()
         
+        # Sauvegarder dans la base de données
+        db.save_chat_message(session_id, message, response)
+        
         return jsonify({
             "response": response,
-            "collected_symptoms": symptoms
+            "collected_symptoms": symptoms,
+            "session_id": session_id
         })
     
     except Exception as e:
@@ -71,6 +89,8 @@ def analyze_symptoms():
         
         if not symptoms:
             return jsonify({"error": "Aucun symptôme fourni"}), 400
+        
+        session_id = get_session_id()
         
         # Vérification d'urgence
         if check_emergency(symptoms):
@@ -91,6 +111,7 @@ def analyze_symptoms():
         
         # Formater les résultats
         formatted_results = []
+        predicted_diseases = []
         for result in results[:3]:
             formatted_results.append({
                 "disease": result['disease'],
@@ -100,11 +121,19 @@ def analyze_symptoms():
                 "symptoms": result['info']['symptoms'],
                 "recommendations": result['info']['recommendations']
             })
+            predicted_diseases.append({
+                "disease": result['disease'],
+                "confidence": round(result['confidence'] * 100, 1)
+            })
+        
+        # Sauvegarder la consultation
+        db.save_consultation(session_id, symptoms, predicted_diseases)
         
         return jsonify({
             "emergency": False,
             "results": formatted_results,
-            "input_symptoms": symptoms
+            "input_symptoms": symptoms,
+            "session_id": session_id
         })
     
     except Exception as e:
@@ -120,6 +149,7 @@ def check_drugs():
         if not drugs or len(drugs) < 1:
             return jsonify({"error": "Aucun médicament fourni"}), 400
         
+        session_id = get_session_id()
         result = drug_checker.check_interactions(drugs)
         
         # Récupérer les infos détaillées
@@ -135,11 +165,15 @@ def check_drugs():
                     "contraindications": info['contraindications']
                 })
         
+        # Sauvegarder la vérification
+        db.save_drug_check(session_id, drugs, not result['safe'], result['interactions'])
+        
         return jsonify({
             "safe": result['safe'],
             "interactions": result['interactions'],
             "warnings": result['warnings'],
-            "drugs_info": drugs_info
+            "drugs_info": drugs_info,
+            "session_id": session_id
         })
     
     except Exception as e:
@@ -202,3 +236,97 @@ def list_drugs():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
+
+# === NOUVEAUX ENDPOINTS POUR LA BASE DE DONNÉES ===
+
+@app.route('/api/history/consultations', methods=['GET'])
+def get_consultation_history():
+    """Récupère l'historique des consultations"""
+    try:
+        session_id = get_session_id()
+        limit = request.args.get('limit', 50, type=int)
+        
+        consultations = db.get_consultations(session_id, limit)
+        
+        return jsonify({
+            "consultations": consultations,
+            "count": len(consultations)
+        })
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/history/chat', methods=['GET'])
+def get_chat_history_endpoint():
+    """Récupère l'historique du chat"""
+    try:
+        session_id = get_session_id()
+        limit = request.args.get('limit', 20, type=int)
+        
+        history = db.get_chat_history(session_id, limit)
+        
+        return jsonify({
+            "history": history,
+            "count": len(history)
+        })
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/statistics', methods=['GET'])
+def get_statistics():
+    """Récupère les statistiques de l'application"""
+    try:
+        stats = db.get_statistics()
+        
+        return jsonify({
+            "statistics": stats
+        })
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/admin/diseases', methods=['GET', 'POST'])
+def manage_diseases():
+    """Gestion des maladies (admin)"""
+    try:
+        if request.method == 'GET':
+            diseases = db.get_all_diseases()
+            return jsonify({"diseases": diseases})
+        
+        elif request.method == 'POST':
+            data = request.get_json()
+            disease_id = db.add_disease(
+                name=data['name'],
+                description=data['description'],
+                symptoms=data['symptoms'],
+                recommendations=data['recommendations'],
+                severity=data['severity']
+            )
+            return jsonify({"success": True, "id": disease_id})
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/admin/drugs', methods=['GET', 'POST'])
+def manage_drugs():
+    """Gestion des médicaments (admin)"""
+    try:
+        if request.method == 'GET':
+            drugs = db.get_all_drugs()
+            return jsonify({"drugs": drugs})
+        
+        elif request.method == 'POST':
+            data = request.get_json()
+            drug_id = db.add_drug(
+                name=data['name'],
+                category=data['category'],
+                dosage=data['dosage'],
+                interactions=data['interactions'],
+                contraindications=data['contraindications']
+            )
+            return jsonify({"success": True, "id": drug_id})
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
