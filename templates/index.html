@@ -497,10 +497,7 @@
             <h1>🏥 Assistant Médical IA</h1>
             <p>Votre assistant intelligent pour l'information médicale</p>
             <div class="header-links">
-                <a href="/chat" class="header-link">💬 Chat IA</a>
-                <a href="/admin" class="header-link">⚙️ Administration</a>
-                <a href="#" class="header-link" onclick="scrollToSection('symptoms')">🔍 Symptômes</a>
-                <a href="#" class="header-link" onclick="scrollToSection('drugs')">💊 Médicaments</a>
+                <a href="/chat" class="header-link">💬 Commencer à chater</a>
             </div>
         </div>
         
@@ -512,58 +509,52 @@
             </div>
         </div>
         
-        <div class="cards-grid">
-            <div class="card" id="symptoms">
-                <span class="card-icon">🔍</span>
-                <h2>Analyser des symptômes</h2>
-                <p>Décrivez vos symptômes et obtenez une analyse basée sur l'IA</p>
-                <input type="text" id="symptoms" placeholder="Ex: fièvre, toux, fatigue" data-tooltip="Séparez les symptômes par des virgules">
-                <button onclick="analyzeSymptoms()" id="analyze-btn">
-                    <span>Analyser mes symptômes</span>
-                </button>
-                <div id="analysis-result"></div>
-            </div>
-            
-            <div class="card" id="drugs">
-                <span class="card-icon">💊</span>
-                <h2>Vérifier les interactions</h2>
-                <p>Vérifiez les interactions entre vos médicaments</p>
-                <input type="text" id="drugs" placeholder="Ex: paracétamol, ibuprofène" data-tooltip="Séparez les médicaments par des virgules">
-                <button onclick="checkDrugs()" id="drugs-btn">
-                    <span>Vérifier les interactions</span>
-                </button>
-                <div id="drugs-result"></div>
-            </div>
-            
-            <div class="card" id="chat">
-                <span class="card-icon">💬</span>
-                <h2>Chatbot médical</h2>
-                <p>Posez vos questions à notre assistant intelligent</p>
-                <textarea id="chat-input" rows="3" placeholder="Posez votre question médicale..."></textarea>
-                <button onclick="sendMessage()" id="chat-btn">
-                    <span>Envoyer le message</span>
-                </button>
-                <div id="chat-result"></div>
+        <div style="max-width: 600px; margin: 0 auto; text-align: center;">
+            <div class="card" style="padding: 60px 40px;">
+                <span class="card-icon" style="font-size: 5em; margin-bottom: 30px;">💬</span>
+                <h2 style="font-size: 2em; margin-bottom: 20px;">Discutez avec votre Assistant Médical IA</h2>
+                <p style="font-size: 1.2em; margin-bottom: 40px; color: #718096;">
+                    Posez vos questions médicales en langage naturel et obtenez des réponses instantanées
+                </p>
+                <a href="/chat" style="text-decoration: none;">
+                    <button style="font-size: 1.2em; padding: 20px 50px;">
+                        <span>💬 Commencer la conversation</span>
+                    </button>
+                </a>
+                
+                <div style="margin-top: 50px; padding-top: 30px; border-top: 1px solid #e2e8f0;">
+                    <h3 style="color: #2d3748; margin-bottom: 20px;">Fonctionnalités</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; text-align: left;">
+                        <div>
+                            <div style="font-size: 2em; margin-bottom: 10px;">🎤</div>
+                            <strong>Reconnaissance vocale</strong>
+                            <p style="font-size: 0.9em; color: #718096;">Parlez au lieu de taper</p>
+                        </div>
+                        <div>
+                            <div style="font-size: 2em; margin-bottom: 10px;">🌍</div>
+                            <strong>Multilingue</strong>
+                            <p style="font-size: 0.9em; color: #718096;">FR, EN, ES</p>
+                        </div>
+                        <div>
+                            <div style="font-size: 2em; margin-bottom: 10px;">💾</div>
+                            <strong>Historique</strong>
+                            <p style="font-size: 0.9em; color: #718096;">Sauvegarde automatique</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         
         <div class="footer">
             <p>💡 Développé avec ❤️ pour améliorer l'accès à l'information médicale</p>
             <p style="margin-top: 10px; font-size: 0.9em;">
-                <a href="https://github.com/cha454/-medical-ai-assistant" target="_blank">GitHub</a> • 
-                <a href="/admin">Administration</a>
+                <a href="https://github.com/cha454/-medical-ai-assistant" target="_blank">GitHub</a>
             </p>
         </div>
     </div>
     
     <script>
         const API_URL = window.location.origin;
-        
-        // Smooth scroll
-        function scrollToSection(id) {
-            event.preventDefault();
-            document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
         
         // Loading state
         function setLoading(buttonId, isLoading) {
