@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Assistant Médical IA</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -345,10 +346,34 @@
         </div>
         
         <div class="tabs">
-            <button class="tab active" onclick="showTab('diseases')">Maladies</button>
-            <button class="tab" onclick="showTab('drugs')">Médicaments</button>
-            <button class="tab" onclick="showTab('add-disease')">Ajouter Maladie</button>
-            <button class="tab" onclick="showTab('add-drug')">Ajouter Médicament</button>
+            <button class="tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
+            <button class="tab" onclick="showTab('diseases')">🦠 Maladies</button>
+            <button class="tab" onclick="showTab('drugs')">💊 Médicaments</button>
+            <button class="tab" onclick="showTab('add-disease')">➕ Ajouter Maladie</button>
+            <button class="tab" onclick="showTab('add-drug')">➕ Ajouter Médicament</button>
+        </div>
+        
+        <!-- Tab Dashboard -->
+        <div id="dashboard" class="tab-content active">
+            <h2>📊 Tableau de bord</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px; margin-top: 30px;">
+                <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <h3 style="margin-bottom: 15px; color: #2d3748;">Consultations par jour</h3>
+                    <canvas id="consultationsChart"></canvas>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <h3 style="margin-bottom: 15px; color: #2d3748;">Maladies les plus recherchées</h3>
+                    <canvas id="diseasesChart"></canvas>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <h3 style="margin-bottom: 15px; color: #2d3748;">Répartition par gravité</h3>
+                    <canvas id="severityChart"></canvas>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <h3 style="margin-bottom: 15px; color: #2d3748;">Activité mensuelle</h3>
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
         </div>
         
         <!-- Tab Maladies -->
@@ -635,6 +660,11 @@
             
             event.target.classList.add('active');
             document.getElementById(tabName).classList.add('active');
+            
+            // Load charts if dashboard
+            if (tabName === 'dashboard') {
+                loadCharts();
+            }
         }
         
         // Classe de gravité
@@ -653,7 +683,137 @@
             loadStats();
             loadDiseases();
             loadDrugs();
+            loadCharts();
         };
+        
+        // Charts
+        let consultationsChart, diseasesChart, severityChart, activityChart;
+        
+        function loadCharts() {
+            // Consultations Chart
+            const ctx1 = document.getElementById('consultationsChart');
+            if (ctx1 && !consultationsChart) {
+                consultationsChart = new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+                        datasets: [{
+                            label: 'Consultations',
+                            data: [12, 19, 15, 25, 22, 18, 20],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+            
+            // Diseases Chart
+            const ctx2 = document.getElementById('diseasesChart');
+            if (ctx2 && !diseasesChart) {
+                diseasesChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Grippe', 'Migraine', 'Gastro', 'COVID-19', 'Angine'],
+                        datasets: [{
+                            label: 'Recherches',
+                            data: [45, 32, 28, 25, 20],
+                            backgroundColor: [
+                                '#667eea',
+                                '#764ba2',
+                                '#f093fb',
+                                '#4facfe',
+                                '#43e97b'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+            
+            // Severity Chart
+            const ctx3 = document.getElementById('severityChart');
+            if (ctx3 && !severityChart) {
+                severityChart = new Chart(ctx3, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Faible', 'Modérée', 'Élevée', 'Critique'],
+                        datasets: [{
+                            data: [15, 35, 30, 5],
+                            backgroundColor: [
+                                '#51cf66',
+                                '#ffd43b',
+                                '#ff8787',
+                                '#ff6b6b'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Activity Chart
+            const ctx4 = document.getElementById('activityChart');
+            if (ctx4 && !activityChart) {
+                activityChart = new Chart(ctx4, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+                        datasets: [{
+                            label: 'Consultations',
+                            data: [150, 200, 180, 220, 250, 280],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }, {
+                            label: 'Messages',
+                            data: [300, 350, 320, 400, 450, 500],
+                            borderColor: '#764ba2',
+                            backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+        }
     </script>
 </body>
 </html>
