@@ -343,71 +343,71 @@ def manage_drugs():
 
 
 # === ENDPOINTS ANALYSE D'IMAGES ===
+# Commenté temporairement - à implémenter plus tard
+# from image_analyzer import analyzer
 
-from image_analyzer import analyzer
+# @app.route('/api/image/analyze', methods=['POST'])
+# def analyze_medical_image():
+#     """Analyse une image médicale"""
+#     try:
+#         # Vérifier si une image est présente
+#         if 'image' not in request.files and 'image_base64' not in request.json:
+#             return jsonify({"error": "Aucune image fournie"}), 400
+#         
+#         session_id = get_session_id()
+#         
+#         # Image uploadée
+#         if 'image' in request.files:
+#             image_file = request.files['image']
+#             if image_file.filename == '':
+#                 return jsonify({"error": "Nom de fichier vide"}), 400
+#             
+#             # Lire l'image
+#             image_data = image_file.read()
+#             result = analyzer.analyze_image(image_data)
+#         
+#         # Image en base64
+#         else:
+#             data = request.get_json()
+#             base64_string = data.get('image_base64', '')
+#             result = analyzer.analyze_image_from_base64(base64_string)
+#         
+#         # Sauvegarder l'analyse dans la base de données
+#         if result.get('success'):
+#             top_prediction = result.get('top_prediction', {})
+#             db.save_consultation(
+#                 session_id,
+#                 ["analyse_image"],
+#                 [{
+#                     "type": "image_analysis",
+#                     "condition": top_prediction.get('condition', 'inconnue'),
+#                     "confidence": top_prediction.get('confidence', 0)
+#                 }]
+#             )
+#         
+#         return jsonify(result)
+#     
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/image/analyze', methods=['POST'])
-def analyze_medical_image():
-    """Analyse une image médicale"""
-    try:
-        # Vérifier si une image est présente
-        if 'image' not in request.files and 'image_base64' not in request.json:
-            return jsonify({"error": "Aucune image fournie"}), 400
-        
-        session_id = get_session_id()
-        
-        # Image uploadée
-        if 'image' in request.files:
-            image_file = request.files['image']
-            if image_file.filename == '':
-                return jsonify({"error": "Nom de fichier vide"}), 400
-            
-            # Lire l'image
-            image_data = image_file.read()
-            result = analyzer.analyze_image(image_data)
-        
-        # Image en base64
-        else:
-            data = request.get_json()
-            base64_string = data.get('image_base64', '')
-            result = analyzer.analyze_image_from_base64(base64_string)
-        
-        # Sauvegarder l'analyse dans la base de données
-        if result.get('success'):
-            top_prediction = result.get('top_prediction', {})
-            db.save_consultation(
-                session_id,
-                ["analyse_image"],
-                [{
-                    "type": "image_analysis",
-                    "condition": top_prediction.get('condition', 'inconnue'),
-                    "confidence": top_prediction.get('confidence', 0)
-                }]
-            )
-        
-        return jsonify(result)
-    
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+# @app.route('/api/image/abcde', methods=['GET'])
+# def get_abcde_rule():
+#     """Retourne la règle ABCDE pour l'auto-examen"""
+#     try:
+#         from image_analyzer import MedicalImageAnalyzer
+#         temp_analyzer = MedicalImageAnalyzer()
+#         abcde = temp_analyzer.get_abcde_rule()
+#         return jsonify(abcde)
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/image/abcde', methods=['GET'])
-def get_abcde_rule():
-    """Retourne la règle ABCDE pour l'auto-examen"""
-    try:
-        from image_analyzer import MedicalImageAnalyzer
-        temp_analyzer = MedicalImageAnalyzer()
-        abcde = temp_analyzer.get_abcde_rule()
-        return jsonify(abcde)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/image/skin-cancer-info', methods=['GET'])
-def get_skin_cancer_info():
-    """Retourne des informations sur le cancer de la peau"""
-    try:
-        from image_analyzer import MedicalImageAnalyzer
-        temp_analyzer = MedicalImageAnalyzer()
-        info = temp_analyzer.get_skin_cancer_info()
-        return jsonify(info)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+# @app.route('/api/image/skin-cancer-info', methods=['GET'])
+# def get_skin_cancer_info():
+#     """Retourne des informations sur le cancer de la peau"""
+#     try:
+#         from image_analyzer import MedicalImageAnalyzer
+#         temp_analyzer = MedicalImageAnalyzer()
+#         info = temp_analyzer.get_skin_cancer_info()
+#         return jsonify(info)
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
