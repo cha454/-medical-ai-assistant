@@ -46,6 +46,11 @@ def home():
     """Page d'accueil"""
     return render_template('index.html')
 
+@app.route('/chat')
+def chat_interface():
+    """Interface de chat style ChatGPT"""
+    return render_template('chat.html')
+
 @app.route('/admin')
 def admin():
     """Page d'administration"""
