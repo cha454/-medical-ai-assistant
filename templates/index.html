@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistant Médical IA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .warning {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        input, textarea, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .disease-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .confidence {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        
+        .emergency {
+            background: #ff6b6b;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Assistant Médical IA</h1>
+            <p>Votre assistant intelligent pour l'information médicale</p>
+        </div>
+        
+        <div class="warning">
+            ⚠️ AVERTISSEMENT: Cet outil ne remplace pas une consultation médicale. En cas d'urgence, appelez le 15 (SAMU).
+        </div>
+        
+        <div class="card">
+            <h2>🔍 Analyser des symptômes</h2>
+            <p>Entrez vos symptômes séparés par des virgules</p>
+            <input type="text" id="symptoms" placeholder="Ex: fièvre, toux, fatigue">
+            <button onclick="analyzeSymptoms()">Analyser</button>
+            <div id="analysis-result"></div>
+        </div>
+        
+        <div class="card">
+            <h2>💊 Vérifier les interactions médicamenteuses</h2>
+            <p>Entrez les médicaments séparés par des virgules</p>
+            <input type="text" id="drugs" placeholder="Ex: paracétamol, ibuprofène">
+            <button onclick="checkDrugs()">Vérifier</button>
+            <div id="drugs-result"></div>
+        </div>
+        
+        <div class="card">
+            <h2>💬 Chatbot médical</h2>
+            <textarea id="chat-input" rows="3" placeholder="Posez votre question..."></textarea>
+            <button onclick="sendMessage()">Envoyer</button>
+            <div id="chat-result"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = window.location.origin;
+        
+        async function analyzeSymptoms() {
+            const symptomsInput = document.getElementById('symptoms').value;
+            const resultDiv = document.getElementById('analysis-result');
+            
+            if (!symptomsInput.trim()) {
+                resultDiv.innerHTML = '<div class="result">Veuillez entrer des symptômes</div>';
+                return;
+            }
+            
+            const symptoms = symptomsInput.split(',').map(s => s.trim());
+            
+            try {
+                const response = await fetch(`${API_URL}/api/analyze`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({symptoms})
+                });
+                
+                const data = await response.json();
+                
+                if (data.emergency) {
+                    resultDiv.innerHTML = `<div class="emergency">🚨 ${data.message}</div>`;
+                    return;
+                }
+                
+                if (data.results.length === 0) {
+                    resultDiv.innerHTML = `<div class="result">${data.message}</div>`;
+                    return;
+                }
+                
+                let html = '<div class="result"><h3>Maladies possibles:</h3>';
+                data.results.forEach((result, index) => {
+                    html += `
+                        <div class="disease-item">
+                            <strong>${index + 1}. ${result.disease.toUpperCase()}</strong>
+                            <span class="confidence">${result.confidence}%</span>
+                            <p><strong>Description:</strong> ${result.description}</p>
+                            <p><strong>Gravité:</strong> ${result.severity}</p>
+                            <p><strong>Recommandations:</strong></p>
+                            <ul>
+                                ${result.recommendations.map(r => `<li>${r}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result">Erreur: ${error.message}</div>`;
+            }
+        }
+        
+        async function checkDrugs() {
+            const drugsInput = document.getElementById('drugs').value;
+            const resultDiv = document.getElementById('drugs-result');
+            
+            if (!drugsInput.trim()) {
+                resultDiv.innerHTML = '<div class="result">Veuillez entrer des médicaments</div>';
+                return;
+            }
+            
+            const drugs = drugsInput.split(',').map(d => d.trim());
+            
+            try {
+                const response = await fetch(`${API_URL}/api/drugs/check`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({drugs})
+                });
+                
+                const data = await response.json();
+                
+                let html = '<div class="result">';
+                
+                if (data.safe) {
+                    html += '<p style="color: green; font-weight: bold;">✓ Aucune interaction majeure détectée</p>';
+                } else {
+                    html += '<p style="color: red; font-weight: bold;">⚠️ INTERACTIONS DÉTECTÉES:</p>';
+                    data.interactions.forEach(interaction => {
+                        html += `<p>❌ ${interaction.warning}</p>`;
+                    });
+                }
+                
+                if (data.drugs_info.length > 0) {
+                    html += '<h4>Informations détaillées:</h4>';
+                    data.drugs_info.forEach(drug => {
+                        html += `
+                            <div style="margin: 10px 0; padding: 10px; background: white; border-radius: 5px;">
+                                <strong>${drug.name.toUpperCase()}</strong><br>
+                                Catégorie: ${drug.category}<br>
+                                Dosage: ${drug.dosage}
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += '</div>';
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result">Erreur: ${error.message}</div>`;
+            }
+        }
+        
+        async function sendMessage() {
+            const messageInput = document.getElementById('chat-input');
+            const resultDiv = document.getElementById('chat-result');
+            const message = messageInput.value;
+            
+            if (!message.trim()) {
+                resultDiv.innerHTML = '<div class="result">Veuillez entrer un message</div>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message})
+                });
+                
+                const data = await response.json();
+                
+                let html = `
+                    <div class="result">
+                        <p><strong>Vous:</strong> ${message}</p>
+                        <p><strong>Assistant:</strong> ${data.response.replace(/\n/g, '<br>')}</p>
+                `;
+                
+                if (data.collected_symptoms.length > 0) {
+                    html += `<p><em>Symptômes collectés: ${data.collected_symptoms.join(', ')}</em></p>`;
+                }
+                
+                html += '</div>';
+                resultDiv.innerHTML = html;
+                messageInput.value = '';
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result">Erreur: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
