@@ -27,6 +27,17 @@ except ImportError:
     llm = None
     print("⚠️ Module LLM non disponible")
 
+# Import du module Email
+try:
+    from email_service import email_service
+    EMAIL_AVAILABLE = email_service.is_available()
+    if EMAIL_AVAILABLE:
+        print("✓ Service email activé")
+except ImportError:
+    EMAIL_AVAILABLE = False
+    email_service = None
+    print("⚠️ Module email non disponible")
+
 class EnhancedMedicalChatbot:
     def __init__(self):
         self.conversation_state = "greeting"
@@ -177,6 +188,16 @@ class EnhancedMedicalChatbot:
             return response
         
         # ============================================
+        # DÉTECTION DEMANDE D'EMAIL
+        # ============================================
+        email_keywords = ["envoie", "envoyer", "envoi", "mail", "email", "e-mail", "résumé", "resume"]
+        if any(kw in user_input_lower for kw in email_keywords):
+            email_response = self._handle_email_request(user_input, user_input_lower)
+            if email_response:
+                self._save_response(email_response)
+                return email_response
+        
+        # ============================================
         # UTILISER LE LLM SI DISPONIBLE
         # ============================================
         if LLM_AVAILABLE and llm:
@@ -308,6 +329,74 @@ Réponds de manière empathique, précise et structurée. Utilise les informatio
             if any(keyword in text for keyword in keywords):
                 return emotion
         return None
+    
+    def _handle_email_request(self, user_input, user_input_lower):
+        """Gère les demandes d'envoi d'email"""
+        # Vérifier si le service email est disponible
+        if not EMAIL_AVAILABLE or not email_service:
+            return """📧 **Service email non disponible**
+
+Le service d'envoi d'email n'est pas configuré actuellement.
+
+**Alternative:** Vous pouvez copier le résumé de notre conversation en cliquant sur le bouton 📋 à côté de chaque message.
+
+Contactez l'administrateur pour activer cette fonctionnalité."""
+        
+        # Extraire l'adresse email du message
+        email_address = email_service.extract_email_from_text(user_input)
+        
+        if not email_address:
+            return """📧 **Envoi de résumé par email**
+
+Je peux vous envoyer un résumé de notre conversation par email.
+
+**Comment faire:**
+Dites-moi simplement: "Envoie le résumé à mon.email@exemple.com"
+
+⚠️ Assurez-vous d'inclure une adresse email valide dans votre message."""
+        
+        # Vérifier qu'il y a une conversation à envoyer
+        if len(self.conversation_history) < 2:
+            return f"""📧 **Pas assez de contenu**
+
+Je n'ai pas encore assez d'informations à vous envoyer.
+
+Posez-moi d'abord quelques questions sur votre santé, puis demandez-moi d'envoyer le résumé à {email_address}."""
+        
+        # Envoyer l'email
+        result = email_service.send_conversation_summary(
+            email_address,
+            self.conversation_history,
+            self.collected_symptoms if self.collected_symptoms else None
+        )
+        
+        if result["success"]:
+            return f"""📧 **Email envoyé avec succès!** ✅
+
+Le résumé de notre conversation a été envoyé à:
+📬 **{email_address}**
+
+**Contenu envoyé:**
+• Historique de notre conversation
+• Symptômes mentionnés: {', '.join(self.collected_symptoms) if self.collected_symptoms else 'Aucun'}
+• Date et heure de la consultation
+
+⚠️ Vérifiez votre dossier spam si vous ne voyez pas l'email.
+
+Puis-je vous aider avec autre chose?"""
+        else:
+            return f"""📧 **Erreur d'envoi** ❌
+
+Je n'ai pas pu envoyer l'email à {email_address}.
+
+**Raison:** {result.get('error', 'Erreur inconnue')}
+
+**Suggestions:**
+• Vérifiez que l'adresse email est correcte
+• Réessayez dans quelques instants
+• Utilisez le bouton 📋 pour copier les messages manuellement
+
+Voulez-vous réessayer?"""
     
     def _add_empathy(self, response, emotion):
         """Ajoute de l'empathie selon l'émotion détectée"""
