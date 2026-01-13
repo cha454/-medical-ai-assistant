@@ -59,9 +59,20 @@ def admin():
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Vérification de santé de l'API"""
+    from medical_knowledge import get_knowledge_base_info, check_data_freshness
+    
+    kb_info = get_knowledge_base_info()
+    freshness = check_data_freshness()
+    
     return jsonify({
         "status": "healthy",
-        "message": "Assistant Médical IA opérationnel"
+        "message": "Assistant Médical IA opérationnel",
+        "version": kb_info["version"],
+        "last_updated": kb_info["last_updated"],
+        "data_freshness": freshness,
+        "total_diseases": kb_info["total_diseases"],
+        "total_drugs": kb_info["total_drugs"],
+        "disclaimer": "Informations à but éducatif uniquement"
     })
 
 @app.route('/api/chat', methods=['POST'])
@@ -70,11 +81,17 @@ def chat():
     try:
         data = request.get_json()
         message = data.get('message', '')
+        language = data.get('language', 'fr')
         
         if not message:
             return jsonify({"error": "Message vide"}), 400
         
         session_id = get_session_id()
+        
+        # Ajouter le disclaimer au début de chaque session
+        from medical_knowledge import get_medical_disclaimer
+        disclaimer = get_medical_disclaimer()
+        
         response = chatbot.process_message(message)
         symptoms = chatbot.get_collected_symptoms()
         
@@ -84,7 +101,8 @@ def chat():
         return jsonify({
             "response": response,
             "collected_symptoms": symptoms,
-            "session_id": session_id
+            "session_id": session_id,
+            "disclaimer": disclaimer.get(language, disclaimer['fr'])
         })
     
     except Exception as e:

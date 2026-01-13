@@ -1,8 +1,33 @@
 """
 Base de connaissances médicales
+
+⚠️ AVERTISSEMENT:
+Les informations contenues dans ce fichier sont à but éducatif uniquement.
+Elles ne remplacent pas l'avis d'un professionnel de santé.
+Sources: Littérature médicale publique, recommandations de santé publique.
+Dernière mise à jour: Janvier 2026
+
+Pour les urgences médicales, appelez le 15 (SAMU) en France.
 """
 
-# Base de données des maladies et symptômes (50+ maladies)
+# Métadonnées de la base de connaissances
+KNOWLEDGE_BASE_INFO = {
+    "version": "1.0.0",
+    "last_updated": "2026-01-13",
+    "total_diseases": 55,
+    "total_drugs": 60,
+    "languages": ["fr", "en", "es"],
+    "disclaimer": "Informations à but éducatif uniquement. Consultez un médecin pour un diagnostic.",
+    "sources": [
+        "OMS - Organisation Mondiale de la Santé",
+        "Santé Publique France",
+        "Vidal (informations médicamenteuses)",
+        "Littérature médicale publique"
+    ]
+}
+
+# Base de données des maladies et symptômes (55+ maladies)
+# Note: Ces informations sont générales et peuvent ne pas s'appliquer à tous les cas
 DISEASES_DATABASE = {
     # Maladies infectieuses
     "grippe": {
@@ -774,3 +799,34 @@ def get_all_diseases():
 def get_all_drugs():
     """Retourne la liste de tous les médicaments"""
     return list(DRUGS_DATABASE.keys())
+
+
+# Fonction pour obtenir les métadonnées
+def get_knowledge_base_info():
+    """Retourne les informations sur la base de connaissances"""
+    return KNOWLEDGE_BASE_INFO
+
+# Fonction pour obtenir le disclaimer
+def get_medical_disclaimer():
+    """Retourne l'avertissement médical"""
+    return {
+        "fr": "⚠️ Ces informations sont à but éducatif uniquement. Consultez toujours un médecin pour un diagnostic médical. En cas d'urgence, appelez le 15 (SAMU).",
+        "en": "⚠️ This information is for educational purposes only. Always consult a doctor for medical diagnosis. In case of emergency, call 15 (SAMU).",
+        "es": "⚠️ Esta información es solo para fines educativos. Siempre consulte a un médico para un diagnóstico médico. En caso de emergencia, llame al 15 (SAMU)."
+    }
+
+# Fonction pour vérifier la fraîcheur des données
+def check_data_freshness():
+    """Vérifie si les données sont à jour (< 6 mois)"""
+    from datetime import datetime, timedelta
+    
+    last_update = datetime.strptime(KNOWLEDGE_BASE_INFO["last_updated"], "%Y-%m-%d")
+    now = datetime.now()
+    age_days = (now - last_update).days
+    
+    return {
+        "is_fresh": age_days < 180,  # Moins de 6 mois
+        "age_days": age_days,
+        "last_updated": KNOWLEDGE_BASE_INFO["last_updated"],
+        "warning": "Les données ont plus de 6 mois. Vérifiez avec des sources récentes." if age_days >= 180 else None
+    }
