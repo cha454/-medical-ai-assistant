@@ -1,0 +1,264 @@
+"""
+Module d'intégration LLM pour réponses ultra-intelligentes
+Supporte: OpenAI GPT, Anthropic Claude, Groq (gratuit), HuggingFace (gratuit)
+"""
+
+import os
+import json
+import requests
+from datetime import datetime
+
+class LLMProvider:
+    def __init__(self):
+        # Clés API (à configurer dans les variables d'environnement)
+        self.openai_key = os.environ.get('OPENAI_API_KEY')
+        self.anthropic_key = os.environ.get('ANTHROPIC_API_KEY')
+        self.groq_key = os.environ.get('GROQ_API_KEY')
+        self.huggingface_key = os.environ.get('HUGGINGFACE_API_KEY')
+        
+        # Provider actif (par ordre de préférence)
+        self.active_provider = self._detect_provider()
+        
+        # Prompt système médical
+        self.system_prompt = """Tu es un assistant médical IA professionnel, empathique et précis.
+
+RÈGLES IMPORTANTES:
+1. Tu fournis des informations médicales générales à but éducatif UNIQUEMENT
+2. Tu ne poses JAMAIS de diagnostic - seul un médecin peut le faire
+3. Tu recommandes TOUJOURS de consulter un professionnel de santé
+4. En cas d'urgence, tu diriges vers le 15 (SAMU) ou 112
+5. Tu es empathique et rassurant, mais honnête sur tes limites
+6. Tu cites tes sources quand possible (OMS, études médicales)
+7. Tu adaptes ton langage au niveau de l'utilisateur
+8. Tu poses des questions de suivi pour mieux comprendre la situation
+
+FORMAT DE RÉPONSE:
+- Utilise des emojis pour rendre la lecture agréable
+- Structure tes réponses avec des titres et listes
+- Termine toujours par une recommandation ou question de suivi
+- Ajoute un avertissement médical si nécessaire
+
+CONTEXTE: Tu es l'assistant médical du site "Assistant Médical IA".
+DATE ACTUELLE: {date}
+"""
+        
+        print(f"✓ LLM Provider initialisé: {self.active_provider or 'Aucun (mode basique)'}")
+    
+    def _detect_provider(self):
+        """Détecte le provider disponible"""
+        if self.openai_key:
+            return "openai"
+        elif self.anthropic_key:
+            return "anthropic"
+        elif self.groq_key:
+            return "groq"
+        elif self.huggingface_key:
+            return "huggingface"
+        return None
+    
+    def is_available(self):
+        """Vérifie si un LLM est disponible"""
+        return self.active_provider is not None
+    
+    def generate_response(self, user_message, conversation_history=None, language="fr"):
+        """Génère une réponse avec le LLM actif"""
+        
+        if not self.is_available():
+            return None
+        
+        # Préparer le contexte
+        system = self.system_prompt.format(date=datetime.now().strftime("%d/%m/%Y"))
+        
+        # Ajouter la langue
+        if language == "en":
+            system += "\nRéponds en ANGLAIS."
+        elif language == "es":
+            system += "\nRéponds en ESPAGNOL."
+        else:
+            system += "\nRéponds en FRANÇAIS."
+        
+        # Construire les messages
+        messages = [{"role": "system", "content": system}]
+        
+        # Ajouter l'historique de conversation (derniers 10 messages)
+        if conversation_history:
+            for msg in conversation_history[-10:]:
+                messages.append({
+                    "role": msg.get("role", "user"),
+                    "content": msg.get("content", "")
+                })
+        
+        # Ajouter le message actuel
+        messages.append({"role": "user", "content": user_message})
+        
+        # Appeler le provider approprié
+        try:
+            if self.active_provider == "openai":
+                return self._call_openai(messages)
+            elif self.active_provider == "anthropic":
+                return self._call_anthropic(messages, system)
+            elif self.active_provider == "groq":
+                return self._call_groq(messages)
+            elif self.active_provider == "huggingface":
+                return self._call_huggingface(user_message, system)
+        except Exception as e:
+            print(f"Erreur LLM ({self.active_provider}): {e}")
+            return None
+        
+        return None
+    
+    def _call_openai(self, messages):
+        """Appel à l'API OpenAI"""
+        url = "https://api.openai.com/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.openai_key}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "model": "gpt-4o-mini",  # Modèle économique et performant
+            "messages": messages,
+            "max_tokens": 1500,
+            "temperature": 0.7
+        }
+        
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+        if response.status_code == 200:
+            result = response.json()
+            return result["choices"][0]["message"]["content"]
+        else:
+            print(f"OpenAI Error: {response.status_code} - {response.text}")
+            return None
+    
+    def _call_anthropic(self, messages, system):
+        """Appel à l'API Anthropic Claude"""
+        url = "https://api.anthropic.com/v1/messages"
+        headers = {
+            "x-api-key": self.anthropic_key,
+            "anthropic-version": "2023-06-01",
+            "Content-Type": "application/json"
+        }
+        
+        # Convertir le format des messages pour Claude
+        claude_messages = []
+        for msg in messages:
+            if msg["role"] != "system":
+                claude_messages.append({
+                    "role": msg["role"],
+                    "content": msg["content"]
+                })
+        
+        data = {
+            "model": "claude-3-haiku-20240307",  # Modèle rapide et économique
+            "max_tokens": 1500,
+            "system": system,
+            "messages": claude_messages
+        }
+        
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+        if response.status_code == 200:
+            result = response.json()
+            return result["content"][0]["text"]
+        else:
+            print(f"Anthropic Error: {response.status_code} - {response.text}")
+            return None
+    
+    def _call_groq(self, messages):
+        """Appel à l'API Groq (gratuit et rapide)"""
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.groq_key}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "model": "llama-3.1-70b-versatile",  # Modèle gratuit très performant
+            "messages": messages,
+            "max_tokens": 1500,
+            "temperature": 0.7
+        }
+        
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+        if response.status_code == 200:
+            result = response.json()
+            return result["choices"][0]["message"]["content"]
+        else:
+            print(f"Groq Error: {response.status_code} - {response.text}")
+            return None
+    
+    def _call_huggingface(self, user_message, system):
+        """Appel à l'API HuggingFace (gratuit)"""
+        url = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
+        headers = {
+            "Authorization": f"Bearer {self.huggingface_key}",
+            "Content-Type": "application/json"
+        }
+        
+        # Format pour Mistral
+        prompt = f"<s>[INST] {system}\n\nQuestion de l'utilisateur: {user_message} [/INST]"
+        
+        data = {
+            "inputs": prompt,
+            "parameters": {
+                "max_new_tokens": 1000,
+                "temperature": 0.7,
+                "return_full_text": False
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=data, timeout=60)
+        if response.status_code == 200:
+            result = response.json()
+            if isinstance(result, list) and len(result) > 0:
+                return result[0].get("generated_text", "")
+        else:
+            print(f"HuggingFace Error: {response.status_code} - {response.text}")
+        return None
+    
+    def get_provider_info(self):
+        """Retourne les informations sur le provider actif"""
+        providers_info = {
+            "openai": {
+                "name": "OpenAI GPT-4",
+                "model": "gpt-4o-mini",
+                "quality": "Excellent",
+                "speed": "Rapide",
+                "cost": "Payant"
+            },
+            "anthropic": {
+                "name": "Anthropic Claude",
+                "model": "claude-3-haiku",
+                "quality": "Excellent",
+                "speed": "Rapide",
+                "cost": "Payant"
+            },
+            "groq": {
+                "name": "Groq (Llama 3.1)",
+                "model": "llama-3.1-70b-versatile",
+                "quality": "Très bon",
+                "speed": "Très rapide",
+                "cost": "Gratuit"
+            },
+            "huggingface": {
+                "name": "HuggingFace (Mistral)",
+                "model": "Mistral-7B-Instruct",
+                "quality": "Bon",
+                "speed": "Moyen",
+                "cost": "Gratuit"
+            }
+        }
+        
+        if self.active_provider:
+            return providers_info.get(self.active_provider, {})
+        return {"name": "Mode basique (sans LLM)", "quality": "Limité"}
+
+# Instance globale
+llm = LLMProvider()
+
+# Test
+if __name__ == "__main__":
+    print(f"Provider actif: {llm.active_provider}")
+    print(f"LLM disponible: {llm.is_available()}")
+    print(f"Info: {llm.get_provider_info()}")
+    
+    if llm.is_available():
+        response = llm.generate_response("Quels sont les symptômes de la grippe?")
+        print(f"\nRéponse:\n{response}")

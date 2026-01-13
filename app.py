@@ -78,7 +78,7 @@ def health_check():
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    """Endpoint pour le chatbot"""
+    """Endpoint pour le chatbot avec support LLM"""
     try:
         data = request.get_json()
         message = data.get('message', '')
@@ -93,17 +93,31 @@ def chat():
         from medical_knowledge import get_medical_disclaimer
         disclaimer = get_medical_disclaimer()
         
-        response = chatbot.process_message(message)
+        # Appeler le chatbot avec la langue
+        response = chatbot.process_message(message, language)
         symptoms = chatbot.get_collected_symptoms()
         
         # Sauvegarder dans la base de données
         db.save_chat_message(session_id, message, response)
         
+        # Vérifier si LLM est actif
+        llm_active = False
+        llm_provider = "Mode basique"
+        try:
+            from llm_provider import llm
+            if llm and llm.is_available():
+                llm_active = True
+                llm_provider = llm.get_provider_info().get('name', 'LLM')
+        except:
+            pass
+        
         return jsonify({
             "response": response,
             "collected_symptoms": symptoms,
             "session_id": session_id,
-            "disclaimer": disclaimer.get(language, disclaimer['fr'])
+            "disclaimer": disclaimer.get(language, disclaimer['fr']),
+            "llm_active": llm_active,
+            "llm_provider": llm_provider
         })
     
     except Exception as e:

@@ -1,6 +1,7 @@
 """
 Chatbot médical enrichi avec capacités étendues et intelligence contextuelle
 + Recherche web en temps réel
++ Intégration LLM pour réponses ultra-intelligentes
 """
 
 import re
@@ -14,6 +15,17 @@ try:
 except ImportError:
     WEB_SEARCH_AVAILABLE = False
     print("⚠️ Module de recherche web non disponible")
+
+# Import du module LLM
+try:
+    from llm_provider import llm
+    LLM_AVAILABLE = llm.is_available()
+    if LLM_AVAILABLE:
+        print(f"✓ LLM activé: {llm.get_provider_info().get('name', 'Inconnu')}")
+except ImportError:
+    LLM_AVAILABLE = False
+    llm = None
+    print("⚠️ Module LLM non disponible")
 
 class EnhancedMedicalChatbot:
     def __init__(self):
