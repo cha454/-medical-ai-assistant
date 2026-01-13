@@ -395,7 +395,36 @@ Souhaitez-vous une analyse de ces symptômes?""".format(
         return response
     
     def _search_diseases(self, query):
-        """Recherche intelligente dans les maladies"""
+        """Recherche intelligente dans les maladies avec synonymes"""
+        # Synonymes et variations de mots
+        disease_synonyms = {
+            "rhume": ["rhume", "enrhumé", "enrhumée", "rhinopharyngite", "nez qui coule", "nez bouché"],
+            "grippe": ["grippe", "grippé", "grippée", "syndrome grippal"],
+            "gastro-entérite": ["gastro", "gastro-entérite", "gastroentérite"],
+            "covid-19": ["covid", "covid-19", "coronavirus"],
+            "migraine": ["migraine", "migraineux", "migraineuse"],
+            "angine": ["angine", "mal de gorge", "gorge irritée"],
+        }
+        
+        # Chercher d'abord par synonymes
+        for disease_name, synonyms in disease_synonyms.items():
+            if any(syn in query for syn in synonyms):
+                if disease_name in DISEASES_DATABASE:
+                    info = DISEASES_DATABASE[disease_name]
+                    return f"""**{disease_name.upper()}**
+
+📝 **Description:** {info['description']}
+
+🩺 **Symptômes typiques:** {', '.join(info['symptoms'])}
+
+⚠️ **Gravité:** {info['severity']}
+
+💡 **Recommandations:**
+{chr(10).join('• ' + rec for rec in info['recommendations'])}
+
+⚠️ Consultez un médecin pour un diagnostic précis."""
+        
+        # Recherche standard
         for disease_name, info in DISEASES_DATABASE.items():
             if disease_name in query or any(symptom in query for symptom in info['symptoms']):
                 return f"""**{disease_name.upper()}**

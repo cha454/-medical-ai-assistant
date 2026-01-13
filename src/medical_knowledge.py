@@ -30,6 +30,12 @@ KNOWLEDGE_BASE_INFO = {
 # Note: Ces informations sont générales et peuvent ne pas s'appliquer à tous les cas
 DISEASES_DATABASE = {
     # Maladies infectieuses
+    "rhume": {
+        "symptoms": ["nez bouché", "écoulement nasal", "éternuements", "mal de gorge", "fatigue légère", "toux"],
+        "description": "Infection virale bénigne des voies respiratoires supérieures (rhinopharyngite)",
+        "recommendations": ["Repos", "Hydratation abondante", "Lavages nasaux au sérum physiologique", "Paracétamol si douleurs", "Miel pour la gorge", "Consulter si fièvre > 38.5°C ou symptômes > 10 jours"],
+        "severity": "faible"
+    },
     "grippe": {
         "symptoms": ["fièvre", "toux", "fatigue", "courbatures", "maux de tête"],
         "description": "Infection virale respiratoire courante",
