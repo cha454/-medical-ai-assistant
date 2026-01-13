@@ -764,15 +764,23 @@
                 // Remove typing indicator
                 removeTypingIndicator(typingId);
                 
+                // Vérifier si la réponse est valide
+                if (data.error) {
+                    addMessage('Erreur: ' + data.error, 'assistant');
+                    return;
+                }
+                
+                const responseText = data.response || "Désolé, je n'ai pas pu générer de réponse. Veuillez réessayer.";
+                
                 // Add assistant message with typing effect
-                await addMessageWithTyping(data.response, 'assistant');
+                await addMessageWithTyping(responseText, 'assistant');
                 
                 // Save to conversation history
-                saveToHistory(message, data.response);
+                saveToHistory(message, responseText);
                 
             } catch (error) {
                 removeTypingIndicator(typingId);
-                addMessage('Erreur: ' + error.message, 'assistant');
+                addMessage('Erreur de connexion: ' + error.message, 'assistant');
             } finally {
                 isGenerating = false;
                 document.getElementById('send-btn').disabled = false;

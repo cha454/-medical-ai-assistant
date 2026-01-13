@@ -156,7 +156,7 @@ class EnhancedMedicalChatbot:
             "puis-je te faire confiance": "Je fournis des informations basées sur des sources médicales fiables, mais vous devez toujours consulter un professionnel de santé pour votre situation personnelle."
         }
     
-    def process_message(self, user_input):
+    def process_message(self, user_input, language="fr"):
         """Traite le message de l'utilisateur avec intelligence étendue et contextuelle"""
         user_input_lower = user_input.lower()
         
