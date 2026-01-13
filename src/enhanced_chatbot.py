@@ -1,10 +1,19 @@
 """
 Chatbot médical enrichi avec capacités étendues et intelligence contextuelle
++ Recherche web en temps réel
 """
 
 import re
 from datetime import datetime
 from medical_knowledge import DISEASES_DATABASE, DRUGS_DATABASE, EMERGENCY_SYMPTOMS, check_emergency
+
+# Import du module de recherche web
+try:
+    from web_search import web_search
+    WEB_SEARCH_AVAILABLE = True
+except ImportError:
+    WEB_SEARCH_AVAILABLE = False
+    print("⚠️ Module de recherche web non disponible")
 
 class EnhancedMedicalChatbot:
     def __init__(self):
@@ -186,6 +195,13 @@ class EnhancedMedicalChatbot:
         if disease_response:
             self.last_topic = "disease"
             response = self._add_empathy(disease_response, emotion)
+            
+            # Enrichir avec recherche web si disponible
+            if WEB_SEARCH_AVAILABLE and len(user_input.split()) > 2:
+                web_info = self._enrich_with_web_search(user_input)
+                if web_info:
+                    response += f"\n\n{web_info}"
+            
             self._save_response(response)
             return response
         
@@ -202,6 +218,13 @@ class EnhancedMedicalChatbot:
         if topic_response:
             self.last_topic = "topic"
             response = self._add_empathy(topic_response, emotion)
+            
+            # Enrichir avec recherche web
+            if WEB_SEARCH_AVAILABLE:
+                web_info = self._enrich_with_web_search(user_input)
+                if web_info:
+                    response += f"\n\n{web_info}"
+            
             self._save_response(response)
             return response
         
@@ -710,3 +733,46 @@ Avez-vous d'autres symptômes à signaler?
         self.collected_symptoms = []
         self.conversation_state = "greeting"
         self.conversation_history = []
+
+    
+    def _enrich_with_web_search(self, query):
+        """Enrichit la réponse avec des informations du web"""
+        if not WEB_SEARCH_AVAILABLE:
+            return None
+        
+        try:
+            # Nettoyer la requête
+            clean_query = query.strip()
+            
+            # Rechercher sur le web
+            web_results = web_search.search_and_format(clean_query, "fr")
+            
+            if web_results:
+                return f"""---
+
+**🌐 INFORMATIONS COMPLÉMENTAIRES DU WEB:**
+
+{web_results}"""
+            
+        except Exception as e:
+            print(f"Erreur recherche web: {e}")
+        
+        return None
+    
+    def search_web_only(self, query):
+        """Recherche uniquement sur le web (pour questions non couvertes)"""
+        if not WEB_SEARCH_AVAILABLE:
+            return "La recherche web n'est pas disponible actuellement."
+        
+        try:
+            results = web_search.search_and_format(query, "fr")
+            if results:
+                return f"""Je n'ai pas cette information dans ma base de données, mais voici ce que j'ai trouvé sur le web:
+
+{results}
+
+⚠️ **Important:** Ces informations proviennent de sources externes. Vérifiez toujours avec un professionnel de santé."""
+            else:
+                return "Je n'ai pas trouvé d'informations fiables sur le web pour cette question. Consultez un professionnel de santé."
+        except Exception as e:
+            return f"Erreur lors de la recherche web: {str(e)}"
