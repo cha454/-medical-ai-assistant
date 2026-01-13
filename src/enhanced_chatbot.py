@@ -170,11 +170,47 @@ class EnhancedMedicalChatbot:
         # Détection d'émotions
         emotion = self._detect_emotion(user_input_lower)
         
-        # Détection d'urgence
+        # Détection d'urgence - TOUJOURS prioritaire
         if check_emergency([user_input]):
             response = self._emergency_response()
             self._save_response(response)
             return response
+        
+        # ============================================
+        # UTILISER LE LLM SI DISPONIBLE
+        # ============================================
+        if LLM_AVAILABLE and llm:
+            try:
+                # Enrichir le contexte avec les infos de la base de données
+                context = self._build_context_for_llm(user_input_lower)
+                
+                # Construire le message enrichi
+                enriched_message = f"""Question de l'utilisateur: {user_input}
+
+Contexte médical pertinent de notre base de données:
+{context}
+
+Réponds de manière empathique, précise et structurée. Utilise les informations du contexte si pertinentes."""
+                
+                # Appeler le LLM
+                llm_response = llm.generate_response(
+                    enriched_message,
+                    self.conversation_history,
+                    language
+                )
+                
+                if llm_response:
+                    # Ajouter le disclaimer
+                    response = llm_response + "\n\n---\n⚠️ *Ces informations sont à but éducatif. Consultez un médecin pour un avis personnalisé.*"
+                    self._save_response(response)
+                    return response
+            except Exception as e:
+                print(f"Erreur LLM: {e}")
+                # Continuer avec le mode basique si erreur
+        
+        # ============================================
+        # MODE BASIQUE (si LLM non disponible)
+        # ============================================
         
         # Salutations
         if any(word in user_input_lower for word in ["bonjour", "salut", "hello", "bonsoir", "hey", "coucou"]):
@@ -285,6 +321,54 @@ class EnhancedMedicalChatbot:
         if emotion and emotion in empathy_phrases:
             return empathy_phrases[emotion] + response
         return response
+    
+    def _build_context_for_llm(self, query):
+        """Construit le contexte médical pour enrichir la réponse du LLM"""
+        context_parts = []
+        
+        # Chercher dans les maladies
+        for disease_name, info in DISEASES_DATABASE.items():
+            if disease_name in query or any(symptom in query for symptom in info['symptoms']):
+                context_parts.append(f"""
+Maladie trouvée: {disease_name}
+Description: {info['description']}
+Symptômes: {', '.join(info['symptoms'])}
+Gravité: {info['severity']}
+Recommandations: {', '.join(info['recommendations'])}
+""")
+                break
+        
+        # Chercher dans les médicaments
+        for drug_name, info in DRUGS_DATABASE.items():
+            if drug_name in query:
+                context_parts.append(f"""
+Médicament trouvé: {drug_name}
+Catégorie: {info['category']}
+Dosage: {info['dosage']}
+Interactions: {', '.join(info['interactions'])}
+Contre-indications: {', '.join(info['contraindications'])}
+""")
+                break
+        
+        # Synonymes courants
+        synonyms_check = {
+            "rhume": ["enrhumé", "enrhumée", "nez qui coule"],
+            "grippe": ["grippé", "grippée", "syndrome grippal"],
+            "migraine": ["migraineux", "mal de tête"],
+        }
+        
+        for disease, syns in synonyms_check.items():
+            if any(s in query for s in syns) and disease in DISEASES_DATABASE:
+                info = DISEASES_DATABASE[disease]
+                context_parts.append(f"""
+Maladie détectée (synonyme): {disease}
+Description: {info['description']}
+Symptômes: {', '.join(info['symptoms'])}
+Recommandations: {', '.join(info['recommendations'])}
+""")
+                break
+        
+        return "\n".join(context_parts) if context_parts else "Aucune information spécifique trouvée dans la base de données locale."
     
     def _elaborate_on_topic(self):
         """Élabore sur le dernier sujet abordé"""
