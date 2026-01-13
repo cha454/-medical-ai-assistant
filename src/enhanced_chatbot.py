@@ -1,8 +1,9 @@
 """
-Chatbot médical enrichi avec capacités étendues
+Chatbot médical enrichi avec capacités étendues et intelligence contextuelle
 """
 
 import re
+from datetime import datetime
 from medical_knowledge import DISEASES_DATABASE, DRUGS_DATABASE, EMERGENCY_SYMPTOMS, check_emergency
 
 class EnhancedMedicalChatbot:
@@ -11,6 +12,27 @@ class EnhancedMedicalChatbot:
         self.collected_symptoms = []
         self.patient_name = None
         self.conversation_history = []
+        self.last_topic = None
+        self.user_concerns = []
+        
+        # Détection d'émotions
+        self.emotion_keywords = {
+            "inquiet": ["inquiet", "peur", "angoisse", "stress", "anxieux", "nerveux", "préoccupé"],
+            "douleur": ["mal", "douleur", "souffre", "fait mal", "insupportable", "intense"],
+            "fatigue": ["fatigué", "épuisé", "crevé", "pas d'énergie", "faible"],
+            "urgent": ["urgent", "vite", "rapidement", "immédiat", "maintenant", "grave"]
+        }
+        
+        # Synonymes pour meilleure compréhension
+        self.synonyms = {
+            "tête": ["tête", "crâne", "cerveau"],
+            "ventre": ["ventre", "abdomen", "estomac", "intestin"],
+            "gorge": ["gorge", "pharynx", "amygdales"],
+            "poitrine": ["poitrine", "thorax", "poumons", "cœur"],
+            "dos": ["dos", "colonne", "vertèbres", "lombaires"],
+            "jambes": ["jambes", "cuisses", "mollets", "pieds"],
+            "bras": ["bras", "épaules", "coudes", "mains"]
+        }
         
         # Base de connaissances étendue
         self.medical_topics = {
@@ -114,71 +136,227 @@ class EnhancedMedicalChatbot:
         }
     
     def process_message(self, user_input):
-        """Traite le message de l'utilisateur avec intelligence étendue"""
+        """Traite le message de l'utilisateur avec intelligence étendue et contextuelle"""
         user_input_lower = user_input.lower()
         
         # Sauvegarder dans l'historique
-        self.conversation_history.append({"role": "user", "content": user_input})
+        self.conversation_history.append({
+            "role": "user", 
+            "content": user_input,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+        # Détection d'émotions
+        emotion = self._detect_emotion(user_input_lower)
         
         # Détection d'urgence
         if check_emergency([user_input]):
             response = self._emergency_response()
-            self.conversation_history.append({"role": "assistant", "content": response})
+            self._save_response(response)
             return response
         
         # Salutations
         if any(word in user_input_lower for word in ["bonjour", "salut", "hello", "bonsoir", "hey", "coucou"]):
             response = self._greeting_response()
-            self.conversation_history.append({"role": "assistant", "content": response})
+            self._save_response(response)
+            return response
+        
+        # Détection du nom
+        name_match = re.search(r"je m'appelle (\w+)|mon nom est (\w+)", user_input_lower)
+        if name_match:
+            self.patient_name = name_match.group(1) or name_match.group(2)
+            response = f"Enchanté {self.patient_name.capitalize()}! Comment puis-je vous aider aujourd'hui?"
+            self._save_response(response)
+            return response
+        
+        # Questions de suivi (contexte)
+        if self.last_topic and any(word in user_input_lower for word in ["plus", "encore", "détails", "expliquer", "pourquoi", "comment"]):
+            response = self._elaborate_on_topic()
+            self._save_response(response)
             return response
         
         # FAQ
         for question, answer in self.faq.items():
             if question in user_input_lower:
-                self.conversation_history.append({"role": "assistant", "content": answer})
+                self._save_response(answer)
                 return answer
         
         # Recherche dans les maladies
         disease_response = self._search_diseases(user_input_lower)
         if disease_response:
-            self.conversation_history.append({"role": "assistant", "content": disease_response})
-            return disease_response
+            self.last_topic = "disease"
+            response = self._add_empathy(disease_response, emotion)
+            self._save_response(response)
+            return response
         
         # Recherche dans les médicaments
         drug_response = self._search_drugs(user_input_lower)
         if drug_response:
-            self.conversation_history.append({"role": "assistant", "content": drug_response})
-            return drug_response
+            self.last_topic = "drug"
+            response = self._add_empathy(drug_response, emotion)
+            self._save_response(response)
+            return response
         
         # Recherche dans les topics médicaux
         topic_response = self._search_medical_topics(user_input_lower)
         if topic_response:
-            self.conversation_history.append({"role": "assistant", "content": topic_response})
-            return topic_response
+            self.last_topic = "topic"
+            response = self._add_empathy(topic_response, emotion)
+            self._save_response(response)
+            return response
         
         # Extraction de symptômes
         symptoms = self._extract_symptoms(user_input)
         if symptoms:
             self.collected_symptoms.extend(symptoms)
-            response = self._symptom_acknowledgment(symptoms)
-            self.conversation_history.append({"role": "assistant", "content": response})
+            self.user_concerns.append(user_input)
+            response = self._symptom_acknowledgment(symptoms, emotion)
+            self._save_response(response)
             return response
         
         # Demande d'aide
-        if any(word in user_input_lower for word in ["aide", "help", "comment", "peux-tu"]):
+        if any(word in user_input_lower for word in ["aide", "help", "comment", "peux-tu", "capable"]):
             response = self._help_response()
-            self.conversation_history.append({"role": "assistant", "content": response})
+            self._save_response(response)
             return response
         
         # Au revoir
-        if any(word in user_input_lower for word in ["au revoir", "bye", "merci", "stop", "adieu"]):
+        if any(word in user_input_lower for word in ["au revoir", "bye", "merci", "stop", "adieu", "à bientôt"]):
             response = self._goodbye_response()
-            self.conversation_history.append({"role": "assistant", "content": response})
+            self._save_response(response)
             return response
         
-        # Réponse intelligente par défaut
-        response = self._intelligent_default_response(user_input)
-        self.conversation_history.append({"role": "assistant", "content": response})
+        # Réponse intelligente par défaut avec contexte
+        response = self._intelligent_default_response(user_input, emotion)
+        self._save_response(response)
+        return response
+    
+    def _detect_emotion(self, text):
+        """Détecte l'émotion dans le message"""
+        for emotion, keywords in self.emotion_keywords.items():
+            if any(keyword in text for keyword in keywords):
+                return emotion
+        return None
+    
+    def _add_empathy(self, response, emotion):
+        """Ajoute de l'empathie selon l'émotion détectée"""
+        empathy_phrases = {
+            "inquiet": "Je comprends votre inquiétude. ",
+            "douleur": "Je suis désolé que vous souffriez. ",
+            "fatigue": "Je comprends que vous vous sentiez fatigué. ",
+            "urgent": "Je vois que c'est urgent pour vous. "
+        }
+        
+        if emotion and emotion in empathy_phrases:
+            return empathy_phrases[emotion] + response
+        return response
+    
+    def _elaborate_on_topic(self):
+        """Élabore sur le dernier sujet abordé"""
+        if not self.last_topic:
+            return "De quoi souhaitez-vous que je parle plus en détail?"
+        
+        elaborations = {
+            "disease": """Pour approfondir sur cette maladie:
+
+**Facteurs de risque:**
+• Âge, antécédents familiaux, mode de vie
+• Certaines conditions médicales préexistantes
+
+**Prévention:**
+• Hygiène de vie saine
+• Dépistage régulier si nécessaire
+• Vaccination si disponible
+
+**Quand consulter:**
+• Si les symptômes persistent ou s'aggravent
+• Si vous avez des doutes
+• Pour un suivi régulier
+
+Avez-vous d'autres questions spécifiques?""",
+            
+            "drug": """Informations complémentaires sur ce médicament:
+
+**Conservation:**
+• À température ambiante sauf indication contraire
+• Hors de portée des enfants
+• Vérifier la date de péremption
+
+**Effets secondaires possibles:**
+• Consultez la notice
+• Signalez tout effet inhabituel à votre médecin
+
+**Oubli de dose:**
+• Prenez-la dès que possible
+• Ne doublez pas la dose suivante
+
+**Questions à poser à votre médecin:**
+• Durée du traitement
+• Interactions avec vos autres médicaments
+• Précautions particulières
+
+Autre chose?""",
+            
+            "topic": """Pour aller plus loin sur ce sujet:
+
+**Ressources fiables:**
+• Santé Publique France
+• OMS (Organisation Mondiale de la Santé)
+• Votre médecin traitant
+
+**Actions concrètes:**
+• Notez vos questions pour votre prochain rendez-vous
+• Tenez un journal de santé si nécessaire
+• Impliquez vos proches si besoin
+
+Souhaitez-vous des informations sur un aspect particulier?"""
+        }
+        
+        return elaborations.get(self.last_topic, "Que voulez-vous savoir de plus?")
+    
+    def _save_response(self, response):
+        """Sauvegarde la réponse dans l'historique"""
+        self.conversation_history.append({
+            "role": "assistant",
+            "content": response,
+            "timestamp": datetime.now().isoformat()
+        })
+    
+    def _symptom_acknowledgment(self, symptoms, emotion):
+        """Accuse réception des symptômes avec empathie"""
+        prefix = ""
+        if emotion == "douleur":
+            prefix = "Je suis désolé que vous souffriez. "
+        elif emotion == "inquiet":
+            prefix = "Je comprends votre inquiétude. "
+        
+        response = f"{prefix}J'ai noté les symptômes suivants: **{', '.join(symptoms)}**\n\n"
+        
+        # Suggestions personnalisées
+        if "fièvre" in symptoms:
+            response += "💡 **Conseil:** Prenez votre température et notez-la. Restez hydraté.\n\n"
+        
+        if "toux" in symptoms:
+            response += "💡 **Conseil:** Buvez des boissons chaudes, reposez-vous.\n\n"
+        
+        if "douleur" in symptoms or any("mal" in s for s in symptoms):
+            response += "💡 **Conseil:** Notez l'intensité de la douleur (1-10) et sa localisation précise.\n\n"
+        
+        if len(self.collected_symptoms) >= 3:
+            response += """**📋 Résumé de vos symptômes:**
+{symptoms_list}
+
+**Recommandations:**
+1. Si ces symptômes persistent > 48h, consultez un médecin
+2. Si aggravation, consultez rapidement
+3. Notez l'évolution de vos symptômes
+
+Souhaitez-vous une analyse de ces symptômes?""".format(
+                symptoms_list='\n'.join(f"• {s}" for s in set(self.collected_symptoms))
+            )
+        else:
+            response += "Avez-vous d'autres symptômes? Plus vous me donnez d'informations, mieux je peux vous orienter."
+        
         return response
     
     def _search_diseases(self, query):
@@ -228,45 +406,178 @@ class EnhancedMedicalChatbot:
 💡 Pour plus d'informations personnalisées, consultez un professionnel de santé."""
         return None
     
-    def _intelligent_default_response(self, query):
-        """Réponse intelligente par défaut"""
+    def _intelligent_default_response(self, query, emotion=None):
+        """Réponse intelligente par défaut avec contexte et empathie"""
+        
+        # Ajouter empathie si émotion détectée
+        empathy_prefix = ""
+        if emotion == "inquiet":
+            empathy_prefix = "Je comprends votre inquiétude. "
+        elif emotion == "urgent":
+            empathy_prefix = "Je vois que c'est important pour vous. "
+        
         # Détection de questions sur la santé générale
-        if any(word in query.lower() for word in ["santé", "bien-être", "forme", "conseil"]):
-            return """Pour une bonne santé générale, je recommande:
+        if any(word in query.lower() for word in ["santé", "bien-être", "forme", "conseil", "rester en bonne santé"]):
+            return empathy_prefix + """**🌟 Pour une santé optimale, voici mes recommandations:**
 
-✅ **Alimentation équilibrée:** Fruits, légumes, protéines, céréales complètes
-✅ **Activité physique:** 30 minutes par jour minimum
-✅ **Sommeil:** 7-9 heures par nuit
-✅ **Hydratation:** 1,5-2 litres d'eau par jour
-✅ **Gestion du stress:** Relaxation, méditation, loisirs
-✅ **Suivi médical:** Consultations régulières
+**🥗 Alimentation:**
+• 5 fruits et légumes par jour
+• Protéines variées (viande, poisson, légumineuses)
+• Céréales complètes
+• Limitez sucre, sel et graisses saturées
 
-Avez-vous une question plus spécifique?"""
+**🏃 Activité physique:**
+• 30 minutes d'exercice modéré par jour
+• Marche, vélo, natation, jardinage...
+• Montez les escaliers au lieu de l'ascenseur
+
+**😴 Sommeil:**
+• 7-9 heures par nuit
+• Horaires réguliers
+• Évitez les écrans 1h avant le coucher
+
+**💧 Hydratation:**
+• 1,5-2 litres d'eau par jour
+• Plus si sport ou chaleur
+
+**🧘 Bien-être mental:**
+• Gérez le stress (méditation, yoga, loisirs)
+• Maintenez des liens sociaux
+• Prenez du temps pour vous
+
+**🏥 Suivi médical:**
+• Consultations régulières
+• Dépistages recommandés selon l'âge
+• Vaccinations à jour
+
+💡 **Astuce:** Commencez par un petit changement à la fois!
+
+Avez-vous une question plus spécifique sur l'un de ces aspects?"""
         
         # Détection de questions sur les symptômes
-        if any(word in query.lower() for word in ["symptôme", "signe", "douleur", "mal", "souffre"]):
-            return """Je comprends que vous avez des symptômes. Pour vous aider au mieux:
+        if any(word in query.lower() for word in ["symptôme", "signe", "douleur", "mal", "souffre", "ressens"]):
+            return empathy_prefix + """**🩺 Pour m'aider à mieux vous orienter, pouvez-vous me dire:**
 
-1. **Décrivez précisément** vos symptômes
-2. **Depuis quand** les ressentez-vous?
-3. **Intensité:** Légers, modérés ou intenses?
-4. **Autres signes:** Fièvre, fatigue, etc.?
+1. **Quel(s) symptôme(s)** ressentez-vous exactement?
+2. **Depuis quand?** (heures, jours, semaines)
+3. **Intensité:** Sur une échelle de 1 à 10?
+4. **Évolution:** Stable, s'améliore ou s'aggrave?
+5. **Autres signes:** Fièvre, fatigue, perte d'appétit?
+6. **Contexte:** Après un repas, un effort, au repos?
 
-⚠️ Si les symptômes sont intenses ou inquiétants, consultez rapidement un médecin.
-🚨 En cas d'urgence, appelez le 15 (SAMU)."""
+💡 **Plus vous êtes précis, mieux je peux vous aider!**
+
+⚠️ **Signes d'alerte nécessitant une consultation rapide:**
+• Douleur intense et soudaine
+• Fièvre élevée persistante
+• Difficultés respiratoires
+• Saignements importants
+• Symptômes qui s'aggravent rapidement
+
+🚨 **En cas d'urgence, appelez le 15 (SAMU)**"""
+        
+        # Détection de questions sur les traitements
+        if any(word in query.lower() for word in ["traitement", "soigner", "guérir", "médicament", "remède"]):
+            return empathy_prefix + """**💊 Concernant les traitements:**
+
+**⚠️ Important:** Je ne peux pas prescrire de médicaments. Seul un médecin peut le faire après examen.
+
+**Ce que je peux faire:**
+• Vous informer sur les médicaments courants
+• Expliquer les interactions médicamenteuses
+• Donner des conseils généraux de prévention
+• Vous orienter vers une consultation si nécessaire
+
+**Traitements non médicamenteux:**
+• Repos et hydratation
+• Alimentation adaptée
+• Activité physique modérée
+• Gestion du stress
+• Sommeil de qualité
+
+**Pour un traitement adapté à votre situation:**
+1. Consultez votre médecin traitant
+2. Décrivez précisément vos symptômes
+3. Mentionnez vos antécédents et traitements en cours
+4. Suivez les prescriptions à la lettre
+
+Avez-vous une question sur un médicament spécifique ou une maladie?"""
+        
+        # Détection de questions sur "quand consulter"
+        if any(word in query.lower() for word in ["consulter", "médecin", "docteur", "rendez-vous", "aller voir"]):
+            return empathy_prefix + """**🏥 Quand consulter un médecin?**
+
+**🚨 URGENCE - Appelez le 15 immédiatement:**
+• Douleur thoracique intense
+• Difficultés respiratoires sévères
+• Perte de conscience
+• Hémorragie importante
+• Paralysie soudaine
+• Convulsions
+
+**⚠️ Consultation rapide (24-48h):**
+• Fièvre > 39°C persistante
+• Douleur intense non soulagée
+• Vomissements/diarrhée avec déshydratation
+• Symptômes qui s'aggravent
+• Blessure nécessitant des points de suture
+
+**📅 Consultation programmée:**
+• Symptômes persistants > 1 semaine
+• Fatigue inexpliquée prolongée
+• Perte de poids involontaire
+• Changement inhabituel dans votre corps
+• Suivi de maladie chronique
+• Bilan de santé annuel
+
+**💡 En cas de doute, il vaut mieux consulter!**
+
+**Numéros utiles:**
+• Urgences: 15 (SAMU)
+• Médecin de garde: 116 117
+• Antipoison: 01 40 05 48 48
+
+Avez-vous des symptômes spécifiques qui vous inquiètent?"""
+        
+        # Suggestions basées sur l'historique
+        if len(self.conversation_history) > 4:
+            return empathy_prefix + """Je n'ai pas trouvé d'information spécifique sur votre question.
+
+**💡 Suggestions basées sur notre conversation:**
+
+Vous pouvez me demander:
+• Des détails sur un symptôme spécifique
+• Des informations sur une maladie
+• Des conseils de prévention
+• Des informations sur un médicament
+• Quand consulter un médecin
+
+**Ou reformulez votre question différemment.**
+
+Par exemple:
+• Au lieu de "J'ai mal", dites "J'ai mal à la tête depuis 2 jours"
+• Au lieu de "C'est grave?", décrivez vos symptômes précisément
+
+Je suis là pour vous aider! 😊"""
         
         # Réponse générale
-        return """Je n'ai pas trouvé d'information spécifique sur votre question dans ma base de connaissances.
+        return empathy_prefix + """Je n'ai pas trouvé d'information spécifique sur votre question dans ma base de connaissances.
 
-💡 **Je peux vous aider avec:**
-• Informations sur les maladies courantes
-• Conseils de prévention et hygiène
-• Informations sur les médicaments
-• Premiers secours
-• Nutrition et bien-être
-• Santé mentale
+**💡 Je peux vous aider avec:**
 
-Pouvez-vous reformuler votre question ou être plus précis?
+**🦠 Maladies:** Grippe, diabète, hypertension, migraine, etc.
+**💊 Médicaments:** Paracétamol, ibuprofène, antibiotiques, etc.
+**🩺 Symptômes:** Fièvre, toux, douleurs, fatigue, etc.
+**🛡️ Prévention:** Hygiène, alimentation, exercice, vaccins
+**🥗 Nutrition:** Alimentation équilibrée, vitamines, hydratation
+**🧠 Santé mentale:** Stress, anxiété, sommeil, burn-out
+**🚑 Premiers secours:** Brûlures, coupures, étouffement, etc.
+**👶 Pédiatrie:** Santé des enfants, fièvre, croissance
+**👴 Gériatrie:** Santé des seniors, prévention des chutes
+
+**Pouvez-vous reformuler votre question ou être plus précis?**
+
+Exemple: "Quels sont les symptômes du diabète?" ou "Comment traiter une brûlure?"
 
 ⚠️ Pour un avis médical personnalisé, consultez toujours un professionnel de santé."""
     
@@ -336,23 +647,40 @@ Pouvez-vous reformuler votre question ou être plus précis?
 À bientôt!"""
     
     def _extract_symptoms(self, text):
-        """Extrait les symptômes du texte"""
+        """Extrait les symptômes du texte avec synonymes"""
         common_symptoms = [
             "fièvre", "toux", "fatigue", "douleur", "maux de tête", 
             "nausées", "vomissements", "diarrhée", "vertiges",
             "courbatures", "frissons", "mal de gorge", "congestion",
             "essoufflement", "perte goût", "perte odorat", "mal de ventre",
-            "mal au dos", "mal aux dents", "démangeaisons", "éruption"
+            "mal au dos", "mal aux dents", "démangeaisons", "éruption",
+            "sueurs", "palpitations", "tremblements", "engourdissement",
+            "gonflement", "rougeur", "saignement", "brûlure"
         ]
         
         found_symptoms = []
         text_lower = text.lower()
         
+        # Recherche directe
         for symptom in common_symptoms:
             if symptom in text_lower:
                 found_symptoms.append(symptom)
         
-        return found_symptoms
+        # Recherche avec synonymes
+        if "tête" in text_lower and "mal" in text_lower:
+            found_symptoms.append("maux de tête")
+        if "ventre" in text_lower and "mal" in text_lower:
+            found_symptoms.append("mal de ventre")
+        if "gorge" in text_lower and "mal" in text_lower:
+            found_symptoms.append("mal de gorge")
+        if "dos" in text_lower and "mal" in text_lower:
+            found_symptoms.append("mal au dos")
+        
+        # Température
+        if re.search(r"\d{2}[.,]\d", text_lower):
+            found_symptoms.append("fièvre")
+        
+        return list(set(found_symptoms))  # Supprimer les doublons
     
     def _symptom_acknowledgment(self, symptoms):
         """Accuse réception des symptômes"""
