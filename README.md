@@ -1,37 +1,212 @@
-# Assistant Médical IA
+# 🏥 Assistant Médical IA
 
-Un assistant médical intelligent combinant plusieurs technologies d'IA pour aider dans le diagnostic et l'information médicale.
+Un assistant médical intelligent basé sur l'IA qui permet de discuter en langage naturel sur des questions de santé.
 
-## ⚠️ AVERTISSEMENT IMPORTANT
+![Python](https://img.shields.io/badge/Python-3.13-blue)
+![Flask](https://img.shields.io/badge/Flask-3.1-green)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.20-orange)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
-**Cet assistant est un outil d'aide à la décision uniquement. Il ne remplace EN AUCUN CAS une consultation médicale professionnelle. Consultez toujours un médecin qualifié pour tout problème de santé.**
+## 🌐 Démo en ligne
 
-## Fonctionnalités
+**🔗 Application:** https://medical-ai-assistant-2k1a.onrender.com/
 
-1. **Chatbot conversationnel** - Dialogue naturel sur les symptômes
-2. **Classification de maladies** - Prédiction basée sur les symptômes
-3. **Vérification d'interactions médicamenteuses** - Détection de risques
-4. **Base de connaissances médicales** - Informations sur maladies et traitements
+## ⚠️ Avertissement Important
 
-## Installation
+**Cet assistant est un outil d'information uniquement. Il ne remplace EN AUCUN CAS une consultation médicale professionnelle. Consultez toujours un médecin qualifié pour tout problème de santé.**
+
+## ✨ Fonctionnalités
+
+### 💬 Chat Intelligent
+- Interface conversationnelle style ChatGPT
+- Réponses en temps réel avec effet de typing
+- Historique des conversations sauvegardé
+- Actions: Copier, Régénérer les réponses
+
+### 🎤 Reconnaissance Vocale
+- Parlez au lieu de taper
+- Support multilingue (FR, EN, ES)
+- Activation simple par bouton micro
+
+### 🌍 Multilingue
+- **Français** 🇫🇷
+- **English** 🇬🇧
+- **Español** 🇪🇸
+- Changement de langue instantané
+
+### 🤖 Intelligence Artificielle
+- **55+ maladies** dans la base de connaissances
+- **60+ médicaments** avec interactions
+- **Machine Learning** (scikit-learn) pour la classification
+- **Base de données SQLite** pour l'historique
+
+### 📊 Dashboard Admin (optionnel)
+- Statistiques en temps réel
+- Graphiques interactifs (Charts.js)
+- Gestion des maladies et médicaments
+- Accès: `/admin`
+
+## 🚀 Installation
+
+### Prérequis
+- Python 3.9+
+- pip
+
+### Installation locale
 
 ```bash
+# Cloner le repository
+git clone https://github.com/cha454/-medical-ai-assistant.git
+cd medical-ai-assistant
+
+# Créer un environnement virtuel
+python -m venv venv
+
+# Activer l'environnement
+# Windows:
+venv\Scripts\activate
+# Linux/Mac:
+source venv/bin/activate
+
+# Installer les dépendances
 pip install -r requirements.txt
+
+# Lancer l'application
+python app.py
 ```
 
-## Utilisation
+L'application sera accessible sur `http://localhost:5000`
 
-```bash
-python src/main.py
+## 📁 Structure du Projet
+
+```
+medical-ai-assistant/
+├── app.py                      # Application Flask principale
+├── requirements.txt            # Dépendances Python
+├── render.yaml                 # Configuration Render
+├── src/
+│   ├── chatbot.py             # Chatbot conversationnel
+│   ├── disease_classifier.py  # Classification ML des maladies
+│   ├── drug_interactions.py   # Vérification médicaments
+│   ├── medical_knowledge.py   # Base de connaissances (55+ maladies, 60+ médicaments)
+│   └── database.py            # Gestion base de données SQLite
+├── templates/
+│   ├── index.html             # Page d'accueil
+│   ├── chat.html              # Interface chat style ChatGPT
+│   └── admin.html             # Dashboard admin
+└── README.md
 ```
 
-## Technologies utilisées
+## 🎯 Utilisation
 
-- Python 3.8+
-- scikit-learn (Machine Learning)
-- NLTK/spaCy (Traitement du langage naturel)
-- pandas (Manipulation de données)
+### Interface Chat
 
-## Licence
+1. Accédez à https://medical-ai-assistant-2k1a.onrender.com/
+2. Cliquez sur "💬 Commencer la conversation"
+3. Posez vos questions en langage naturel
 
-Projet éducatif - Utilisation responsable uniquement
+**Exemples de questions:**
+- "J'ai de la fièvre et de la toux, qu'est-ce que ça peut être?"
+- "Quels sont les symptômes du diabète?"
+- "Puis-je prendre ibuprofène et aspirine ensemble?"
+- "Comment traiter une migraine?"
+
+### Reconnaissance Vocale
+
+1. Cliquez sur le bouton micro 🎤
+2. Autorisez l'accès au microphone
+3. Parlez votre question
+4. Le texte apparaît automatiquement
+
+### Changer de Langue
+
+1. En bas de la sidebar, sélectionnez la langue
+2. L'interface se traduit instantanément
+
+## 🛠️ Technologies Utilisées
+
+### Backend
+- **Flask** - Framework web Python
+- **scikit-learn** - Machine Learning
+- **TensorFlow** - Deep Learning (préparé pour analyse d'images)
+- **SQLite** - Base de données
+- **Gunicorn** - Serveur WSGI
+
+### Frontend
+- **HTML5/CSS3** - Interface moderne
+- **JavaScript** - Interactivité
+- **Chart.js** - Graphiques interactifs
+- **Web Speech API** - Reconnaissance vocale
+
+### Déploiement
+- **Render** - Hébergement cloud
+- **GitHub** - Contrôle de version
+
+## 📊 Base de Connaissances
+
+### Maladies (55+)
+- Infectieuses: grippe, COVID-19, angine, bronchite, pneumonie...
+- Cardiovasculaires: hypertension, infarctus, AVC...
+- Neurologiques: migraine, épilepsie, Parkinson, Alzheimer...
+- Digestives: gastro-entérite, ulcère, appendicite...
+- Et bien plus...
+
+### Médicaments (60+)
+- Antalgiques: paracétamol, tramadol, morphine...
+- Anti-inflammatoires: ibuprofène, aspirine, naproxène...
+- Antibiotiques: amoxicilline, azithromycine...
+- Antihypertenseurs: amlodipine, ramipril...
+- Et bien plus...
+
+## 🔒 Sécurité et Confidentialité
+
+- ✅ Aucune donnée personnelle n'est collectée
+- ✅ Historique sauvegardé localement (localStorage)
+- ✅ Pas de tracking
+- ✅ Code open source
+
+## 🚧 Roadmap
+
+- [ ] Analyse d'images médicales (Deep Learning)
+- [ ] Authentification utilisateurs
+- [ ] Export PDF des consultations
+- [ ] Application mobile (React Native)
+- [ ] API publique
+- [ ] Plus de langues (Arabe, Chinois, etc.)
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues! N'hésitez pas à:
+1. Fork le projet
+2. Créer une branche (`git checkout -b feature/AmazingFeature`)
+3. Commit vos changements (`git commit -m 'Add AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrir une Pull Request
+
+## 📝 License
+
+Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+
+## 👨‍💻 Auteur
+
+**cha454**
+- GitHub: [@cha454](https://github.com/cha454)
+- Projet: [medical-ai-assistant](https://github.com/cha454/-medical-ai-assistant)
+
+## 🙏 Remerciements
+
+- Données médicales basées sur des sources publiques
+- Interface inspirée de ChatGPT
+- Communauté open source
+
+## 📞 Support
+
+Pour toute question ou problème:
+- Ouvrir une [issue](https://github.com/cha454/-medical-ai-assistant/issues)
+- Consulter la [documentation](https://github.com/cha454/-medical-ai-assistant/wiki)
+
+---
+
+**⚠️ Rappel:** Cet outil est à but éducatif et informatif uniquement. Consultez toujours un professionnel de santé pour un diagnostic médical.
+
+**Made with ❤️ for better healthcare access**
