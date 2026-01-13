@@ -12,6 +12,7 @@ import uuid
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 from chatbot import MedicalChatbot
+from enhanced_chatbot import EnhancedMedicalChatbot
 from disease_classifier import DiseaseClassifier
 from drug_interactions import DrugInteractionChecker
 from medical_knowledge import get_disease_info, get_drug_info, check_emergency, get_all_diseases, get_all_drugs
@@ -25,8 +26,8 @@ CORS(app)
 db = MedicalDatabase()
 db.populate_initial_data()
 
-# Initialisation des composants
-chatbot = MedicalChatbot()
+# Initialisation des composants - Utiliser le chatbot enrichi
+chatbot = EnhancedMedicalChatbot()  # Chatbot amélioré
 classifier = DiseaseClassifier()
 drug_checker = DrugInteractionChecker()
 
