@@ -1,5 +1,7 @@
 """
 Service d'envoi d'emails pour l'Assistant Medical IA
+IMPORTANT: Render bloque les connexions SMTP sortantes.
+Utilisez SendGrid API ou un autre service d'email API.
 """
 
 import os
@@ -22,21 +24,17 @@ class EmailService:
         return bool(self.smtp_user and self.smtp_password)
 
     def validate_email(self, email):
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        return re.match(email_pattern, email) is not None
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return re.match(pattern, email) is not None
 
     def extract_email_from_text(self, text):
-        email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
-        match = re.search(email_pattern, text)
+        pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+        match = re.search(pattern, text)
         return match.group(0) if match else None
 
     def format_conversation_summary(self, conversation_history, collected_symptoms=None):
         date_str = datetime.now().strftime('%d/%m/%Y a %H:%M')
-        lines = []
-        lines.append("RESUME DE CONSULTATION - ASSISTANT MEDICAL IA")
-        lines.append("")
-        lines.append(f"Date: {date_str}")
-        lines.append("")
+        lines = ["RESUME DE CONSULTATION - ASSISTANT MEDICAL IA", "", f"Date: {date_str}", ""]
         
         if collected_symptoms:
             lines.append("SYMPTOMES MENTIONNES:")
@@ -53,11 +51,8 @@ class EmailService:
             lines.append(f"{role}: {content}")
             lines.append("")
         
-        lines.append("-" * 40)
-        lines.append("")
-        lines.append("AVERTISSEMENT: Ce resume est informatif uniquement.")
-        lines.append("Consultez un professionnel de sante.")
-        lines.append("Urgence: appelez le 15 (SAMU)")
+        lines.extend(["-" * 40, "", "AVERTISSEMENT: Ce resume est informatif uniquement.",
+                     "Consultez un professionnel de sante.", "Urgence: appelez le 15 (SAMU)"])
         
         return "\n".join(lines)
 
@@ -75,7 +70,8 @@ class EmailService:
             msg['To'] = to_email
             msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
-            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+            # Timeout de 5 secondes - Render bloque SMTP
+            with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=5) as server:
                 server.starttls()
                 server.login(self.smtp_user, self.smtp_password)
                 server.send_message(msg)
@@ -84,8 +80,10 @@ class EmailService:
 
         except smtplib.SMTPAuthenticationError:
             return {"success": False, "error": "Erreur authentification SMTP"}
+        except (TimeoutError, OSError) as e:
+            return {"success": False, "error": "Render bloque les connexions SMTP. Utilisez SendGrid API."}
         except Exception as e:
-            return {"success": False, "error": str(e)}
+            return {"success": False, "error": f"Erreur: {str(e)[:100]}"}
 
     def send_conversation_summary(self, to_email, conversation_history, collected_symptoms=None):
         date_str = datetime.now().strftime('%d/%m/%Y')

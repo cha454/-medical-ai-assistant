@@ -170,7 +170,7 @@ DATE ACTUELLE: {date}
             "Content-Type": "application/json"
         }
         data = {
-            "model": "llama-3.1-70b-versatile",  # Modèle gratuit très performant
+            "model": "llama-3.3-70b-versatile",  # Nouveau modèle recommandé
             "messages": messages,
             "max_tokens": 1500,
             "temperature": 0.7
