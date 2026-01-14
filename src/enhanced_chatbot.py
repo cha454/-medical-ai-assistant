@@ -207,37 +207,48 @@ class EnhancedMedicalChatbot:
         # ============================================
         # RECHERCHE WEB + LLM (MODE PRINCIPAL)
         # ============================================
-        # Pour toutes les questions (sauf salutations basiques), utiliser recherche web + LLM
+        # Pour toutes les questions, utiliser le LLM pour un dialogue naturel
         
-        # Salutations simples (pas besoin de recherche)
-        simple_greetings = ["bonjour", "salut", "hello", "bonsoir", "hey", "coucou", "hi"]
-        is_simple_greeting = any(word == user_input_lower.strip() for word in simple_greetings)
+        # Salutations très simples (un seul mot)
+        simple_greetings = ["bonjour", "salut", "hello", "bonsoir", "hey", "coucou", "hi", "bsr"]
+        is_very_simple_greeting = user_input_lower.strip() in simple_greetings
         
-        if is_simple_greeting:
+        if is_very_simple_greeting:
             response = self._greeting_response()
             self._save_response(response)
             return response
         
-        # Au revoir simple
-        simple_goodbyes = ["au revoir", "bye", "merci", "adieu", "à bientôt"]
-        is_simple_goodbye = any(word == user_input_lower.strip() for word in simple_goodbyes)
+        # Au revoir très simple (un seul mot)
+        simple_goodbyes = ["bye", "adieu"]
+        is_very_simple_goodbye = user_input_lower.strip() in simple_goodbyes
         
-        if is_simple_goodbye:
+        if is_very_simple_goodbye:
             response = self._goodbye_response()
             self._save_response(response)
             return response
         
         # ============================================
-        # POUR TOUTES LES AUTRES QUESTIONS: WEB + LLM
+        # POUR TOUTES LES AUTRES QUESTIONS: LLM + WEB
         # ============================================
+        # Même pour "comment ça va?", "merci", etc. → utiliser le LLM pour dialoguer naturellement
         if LLM_AVAILABLE and llm:
             try:
-                # 1. RECHERCHE WEB pour des infos à jour
+                # 1. RECHERCHE WEB pour des infos à jour (seulement pour questions factuelles)
                 web_results = None
                 web_context = ""
                 
-                # Faire une recherche web si la question a plus de 3 mots
-                if WEB_SEARCH_AVAILABLE and len(user_input.split()) >= 3:
+                # Mots-clés conversationnels (pas besoin de recherche web)
+                conversational_keywords = [
+                    "comment tu vas", "comment vas-tu", "ça va", "tu vas bien",
+                    "merci", "merci beaucoup", "d'accord", "ok", "oui", "non",
+                    "qui es-tu", "c'est quoi ton nom", "tu t'appelles comment",
+                    "raconte", "blague", "histoire"
+                ]
+                
+                is_conversational = any(keyword in user_input_lower for keyword in conversational_keywords)
+                
+                # Faire une recherche web seulement pour questions factuelles (pas conversationnelles)
+                if WEB_SEARCH_AVAILABLE and not is_conversational and len(user_input.split()) >= 3:
                     print(f"🔍 Recherche web pour: {user_input}")
                     web_results = web_search.search_medical_info(user_input, language)
                     
@@ -282,13 +293,16 @@ Contexte de notre base de données locale:
 {conversation_context}
 
 INSTRUCTIONS IMPORTANTES:
-- Réponds de manière conversationnelle, naturelle et empathique
-- Utilise les informations du web en priorité car elles sont à jour
-- Structure ta réponse avec des emojis et des sections claires
-- Si c'est une question médicale, ajoute toujours un disclaimer
-- Si c'est une question générale (non médicale), réponds normalement sans disclaimer médical
+- Tu es un assistant conversationnel amical et naturel
+- Réponds TOUJOURS de manière humaine et empathique
+- Pour les questions conversationnelles ("comment ça va?", "merci", etc.), réponds naturellement sans chercher d'infos médicales
+- Pour les questions factuelles, utilise les informations du web et de la base de données
+- Structure tes réponses avec des emojis et des sections claires quand c'est pertinent
+- Si c'est une question médicale, ajoute un disclaimer à la fin
+- Si c'est une conversation normale, dialogue simplement
 - Cite tes sources quand tu utilises les infos du web
-- Sois précis, factuel et vérifié"""
+- Sois précis, factuel et vérifié pour les infos médicales
+- Sois chaleureux et amical pour les conversations générales"""
                 
                 # 5. APPELER LE LLM
                 llm_response = llm.generate_response(
