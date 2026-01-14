@@ -371,6 +371,7 @@ Posez-moi d'abord quelques questions sur votre santé, puis demandez-moi d'envoy
         )
         
         if result["success"]:
+            symptoms_text = ', '.join(self.collected_symptoms) if self.collected_symptoms else 'Aucun'
             return f"""📧 **Email envoyé avec succès!** ✅
 
 Le résumé de notre conversation a été envoyé à:
@@ -378,18 +379,19 @@ Le résumé de notre conversation a été envoyé à:
 
 **Contenu envoyé:**
 • Historique de notre conversation
-• Symptômes mentionnés: {', '.join(self.collected_symptoms) if self.collected_symptoms else 'Aucun'}
+• Symptômes mentionnés: {symptoms_text}
 • Date et heure de la consultation
 
 ⚠️ Vérifiez votre dossier spam si vous ne voyez pas l'email.
 
 Puis-je vous aider avec autre chose?"""
         else:
+            error_msg = result.get('error', 'Erreur inconnue')
             return f"""📧 **Erreur d'envoi** ❌
 
 Je n'ai pas pu envoyer l'email à {email_address}.
 
-**Raison:** {result.get('error', 'Erreur inconnue')}
+**Raison:** {error_msg}
 
 **Suggestions:**
 • Vérifiez que l'adresse email est correcte
