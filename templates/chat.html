@@ -15,10 +15,74 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #f7f7f8;
+            /* Fond animé avec gradient doux */
+            background: linear-gradient(-45deg, #e3f2fd, #f3e5f5, #e8f5e9, #fff3e0);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
             height: 100vh;
             display: flex;
             flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animation du gradient de fond */
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Particules flottantes médicales */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(33, 150, 243, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(156, 39, 176, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(76, 175, 80, 0.05) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-20px) scale(1.05);
+            }
+        }
+
+        /* Overlay subtil pour améliorer la lisibilité */
+        body::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(100px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* S'assurer que le contenu est au-dessus du fond */
+        .header,
+        .chat-container {
+            position: relative;
+            z-index: 1;
         }
 
         /* Header */
