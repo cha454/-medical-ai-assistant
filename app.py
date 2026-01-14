@@ -4,9 +4,13 @@ API Flask pour l'Assistant Médical IA
 
 from flask import Flask, request, jsonify, render_template, session
 from flask_cors import CORS
+from dotenv import load_dotenv
 import sys
 import os
 import uuid
+
+# Charger les variables d'environnement depuis .env
+load_dotenv()
 
 # Ajouter le dossier src au path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
@@ -17,10 +21,15 @@ from disease_classifier import DiseaseClassifier
 from drug_interactions import DrugInteractionChecker
 from medical_knowledge import get_disease_info, get_drug_info, check_emergency, get_all_diseases, get_all_drugs
 from database import MedicalDatabase
+from api_routes import api_bp
+from api_integration import api_integration
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 CORS(app)
+
+# Enregistrer les nouvelles routes API
+app.register_blueprint(api_bp)
 
 # Initialisation de la base de données
 db = MedicalDatabase()

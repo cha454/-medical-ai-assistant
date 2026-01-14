@@ -1,7 +1,6 @@
 """
 Service d'envoi d'emails pour l'Assistant Medical IA
-IMPORTANT: Render bloque les connexions SMTP sortantes.
-Utilisez SendGrid API ou un autre service d'email API.
+Supporte: SendGrid API (recommandé pour Render) et SMTP
 """
 
 import os
@@ -11,17 +10,47 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
+# Import SendGrid
+try:
+    from sendgrid import SendGridAPIClient
+    from sendgrid.helpers.mail import Mail
+    SENDGRID_AVAILABLE = True
+except ImportError:
+    SENDGRID_AVAILABLE = False
+
 
 class EmailService:
     def __init__(self):
+        # Configuration SendGrid (prioritaire)
+        self.sendgrid_key = os.environ.get('SENDGRID_API_KEY', '')
+        
+        # Configuration SMTP (fallback)
         self.smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
         self.smtp_port = int(os.environ.get('SMTP_PORT', 587))
         self.smtp_user = os.environ.get('SMTP_USER', '')
         self.smtp_password = os.environ.get('SMTP_PASSWORD', '')
+        
         self.sender_name = "Assistant Medical IA"
+        
+        # Email expéditeur pour SendGrid (IMPORTANT: doit être vérifié dans SendGrid)
+        # Utiliser SENDGRID_FROM_EMAIL ou SMTP_USER ou email par défaut
+        self.sender_email = os.environ.get('SENDGRID_FROM_EMAIL', 
+                                          os.environ.get('SMTP_USER', 
+                                          'noreply@medical-ai.com'))
+        
+        # Déterminer le provider
+        if self.sendgrid_key and SENDGRID_AVAILABLE:
+            self.provider = "sendgrid"
+            print(f"✓ Email: SendGrid activé (expéditeur: {self.sender_email})")
+        elif self.smtp_user and self.smtp_password:
+            self.provider = "smtp"
+            print("⚠️ Email: SMTP (peut être bloqué sur Render)")
+        else:
+            self.provider = None
+            print("⚠️ Email: Non configuré")
 
     def is_available(self):
-        return bool(self.smtp_user and self.smtp_password)
+        return self.provider is not None
 
     def validate_email(self, email):
         pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -63,6 +92,66 @@ class EmailService:
         if not self.validate_email(to_email):
             return {"success": False, "error": f"Email invalide: {to_email}"}
 
+        # Utiliser SendGrid si disponible
+        if self.provider == "sendgrid":
+            return self._send_with_sendgrid(to_email, subject, body)
+        else:
+            return self._send_with_smtp(to_email, subject, body)
+
+    def _send_with_sendgrid(self, to_email, subject, body):
+        """Envoie via SendGrid API"""
+        try:
+            # Vérifier que la clé API est présente
+            if not self.sendgrid_key:
+                return {"success": False, "error": "SENDGRID_API_KEY non configurée"}
+            
+            # Vérifier que l'email expéditeur est configuré
+            if not self.sender_email or self.sender_email == 'noreply@medical-ai.com':
+                return {
+                    "success": False, 
+                    "error": "Email expéditeur non configuré. Ajoutez SENDGRID_FROM_EMAIL dans les variables d'environnement Render avec un email vérifié dans SendGrid."
+                }
+            
+            message = Mail(
+                from_email=self.sender_email,
+                to_emails=to_email,
+                subject=subject,
+                plain_text_content=body
+            )
+            
+            sg = SendGridAPIClient(self.sendgrid_key)
+            response = sg.send(message)
+            
+            if response.status_code in [200, 201, 202]:
+                return {"success": True, "message": f"Email envoyé à {to_email} via SendGrid"}
+            else:
+                return {
+                    "success": False, 
+                    "error": f"SendGrid erreur {response.status_code}: {response.body}"
+                }
+                
+        except Exception as e:
+            error_msg = str(e)
+            
+            # Messages d'erreur plus clairs
+            if "does not contain a valid address" in error_msg or "Sender" in error_msg:
+                return {
+                    "success": False,
+                    "error": f"Email expéditeur '{self.sender_email}' non vérifié dans SendGrid. Allez sur SendGrid > Settings > Sender Authentication pour vérifier votre email."
+                }
+            elif "API key" in error_msg or "Unauthorized" in error_msg:
+                return {
+                    "success": False,
+                    "error": "Clé API SendGrid invalide. Vérifiez SENDGRID_API_KEY dans Render."
+                }
+            else:
+                return {
+                    "success": False, 
+                    "error": f"Erreur SendGrid: {error_msg[:200]}"
+                }
+
+    def _send_with_smtp(self, to_email, subject, body):
+        """Envoie via SMTP (peut être bloqué sur Render)"""
         try:
             msg = MIMEMultipart('alternative')
             msg['Subject'] = subject
@@ -70,7 +159,6 @@ class EmailService:
             msg['To'] = to_email
             msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
-            # Timeout de 5 secondes - Render bloque SMTP
             with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=5) as server:
                 server.starttls()
                 server.login(self.smtp_user, self.smtp_password)
@@ -80,8 +168,8 @@ class EmailService:
 
         except smtplib.SMTPAuthenticationError:
             return {"success": False, "error": "Erreur authentification SMTP"}
-        except (TimeoutError, OSError) as e:
-            return {"success": False, "error": "Render bloque les connexions SMTP. Utilisez SendGrid API."}
+        except (TimeoutError, OSError):
+            return {"success": False, "error": "Render bloque SMTP. Configurez SENDGRID_API_KEY"}
         except Exception as e:
             return {"success": False, "error": f"Erreur: {str(e)[:100]}"}
 
