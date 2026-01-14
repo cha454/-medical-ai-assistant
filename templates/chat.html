@@ -15,8 +15,8 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            /* Fond animé avec gradient doux */
-            background: linear-gradient(-45deg, #e3f2fd, #f3e5f5, #e8f5e9, #fff3e0);
+            /* Fond animé avec gradient doux - PLUS VISIBLE */
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             height: 100vh;
@@ -48,11 +48,12 @@
             width: 100%;
             height: 100%;
             background-image: 
-                radial-gradient(circle at 20% 50%, rgba(33, 150, 243, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(156, 39, 176, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(76, 175, 80, 0.05) 0%, transparent 50%);
+                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
             animation: float 20s ease-in-out infinite;
             pointer-events: none;
+            z-index: 0;
         }
 
         @keyframes float {
@@ -64,7 +65,7 @@
             }
         }
 
-        /* Overlay subtil pour améliorer la lisibilité */
+        /* Overlay subtil pour améliorer la lisibilité - RÉDUIT */
         body::after {
             content: '';
             position: absolute;
@@ -72,8 +73,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(100px);
+            background: rgba(255, 255, 255, 0.85);
             pointer-events: none;
             z-index: 0;
         }
