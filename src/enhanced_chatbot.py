@@ -205,49 +205,120 @@ class EnhancedMedicalChatbot:
                 # Continuer avec le mode normal si erreur
         
         # ============================================
-        # UTILISER LE LLM SI DISPONIBLE
+        # RECHERCHE WEB + LLM (MODE PRINCIPAL)
+        # ============================================
+        # Pour toutes les questions (sauf salutations basiques), utiliser recherche web + LLM
+        
+        # Salutations simples (pas besoin de recherche)
+        simple_greetings = ["bonjour", "salut", "hello", "bonsoir", "hey", "coucou", "hi"]
+        is_simple_greeting = any(word == user_input_lower.strip() for word in simple_greetings)
+        
+        if is_simple_greeting:
+            response = self._greeting_response()
+            self._save_response(response)
+            return response
+        
+        # Au revoir simple
+        simple_goodbyes = ["au revoir", "bye", "merci", "adieu", "à bientôt"]
+        is_simple_goodbye = any(word == user_input_lower.strip() for word in simple_goodbyes)
+        
+        if is_simple_goodbye:
+            response = self._goodbye_response()
+            self._save_response(response)
+            return response
+        
+        # ============================================
+        # POUR TOUTES LES AUTRES QUESTIONS: WEB + LLM
         # ============================================
         if LLM_AVAILABLE and llm:
             try:
-                # Enrichir le contexte avec les infos de la base de données
-                context = self._build_context_for_llm(user_input_lower)
+                # 1. RECHERCHE WEB pour des infos à jour
+                web_results = None
+                web_context = ""
                 
-                # Si l'utilisateur demande plus d'infos et qu'on a une maladie en contexte
-                if self.last_disease and any(word in user_input_lower for word in ["prévention", "prevention", "mesures", "éviter", "protéger"]):
-                    # Ajouter le contexte de la dernière maladie
+                # Faire une recherche web si la question a plus de 3 mots
+                if WEB_SEARCH_AVAILABLE and len(user_input.split()) >= 3:
+                    print(f"🔍 Recherche web pour: {user_input}")
+                    web_results = web_search.search_medical_info(user_input, language)
+                    
+                    if web_results and web_results.get("sources"):
+                        web_context = "\n\n**Informations trouvées sur le web (à jour):**\n"
+                        
+                        # Ajouter le résumé Wikipedia si disponible
+                        if web_results.get("summary"):
+                            web_context += f"Résumé: {web_results['summary'][:800]}\n\n"
+                        
+                        # Ajouter les sources
+                        web_context += "Sources consultées:\n"
+                        for source in web_results["sources"][:3]:
+                            web_context += f"- {source.get('source', 'Source')}: {source.get('extract', '')[:300]}\n"
+                            if source.get('url'):
+                                web_context += f"  URL: {source['url']}\n"
+                
+                # 2. CONTEXTE de la base de données locale
+                local_context = self._build_context_for_llm(user_input_lower)
+                
+                # 3. CONTEXTE de la conversation précédente
+                conversation_context = ""
+                if self.last_disease and any(word in user_input_lower for word in ["prévention", "prevention", "mesures", "éviter", "protéger", "comment", "pourquoi"]):
                     if self.last_disease in DISEASES_DATABASE:
                         disease_info = DISEASES_DATABASE[self.last_disease]
-                        context += f"""
+                        conversation_context = f"""
 
 Contexte de la conversation précédente:
 L'utilisateur a demandé des informations sur: {self.last_disease}
 Description: {disease_info['description']}
 Recommandations: {', '.join(disease_info['recommendations'])}
-
-L'utilisateur demande maintenant des mesures de prévention pour cette maladie."""
+"""
                 
-                # Construire le message enrichi
+                # 4. CONSTRUIRE LE MESSAGE ENRICHI pour le LLM
                 enriched_message = f"""Question de l'utilisateur: {user_input}
 
-Contexte médical pertinent de notre base de données:
-{context}
+{web_context}
 
-Réponds de manière empathique, précise et structurée. Utilise les informations du contexte si pertinentes."""
+Contexte de notre base de données locale:
+{local_context}
+
+{conversation_context}
+
+INSTRUCTIONS IMPORTANTES:
+- Réponds de manière conversationnelle, naturelle et empathique
+- Utilise les informations du web en priorité car elles sont à jour
+- Structure ta réponse avec des emojis et des sections claires
+- Si c'est une question médicale, ajoute toujours un disclaimer
+- Si c'est une question générale (non médicale), réponds normalement sans disclaimer médical
+- Cite tes sources quand tu utilises les infos du web
+- Sois précis, factuel et vérifié"""
                 
-                # Appeler le LLM
+                # 5. APPELER LE LLM
                 llm_response = llm.generate_response(
                     enriched_message,
-                    self.conversation_history,
+                    self.conversation_history[-10:],  # Derniers 10 messages pour contexte
                     language
                 )
                 
                 if llm_response:
-                    # Ajouter le disclaimer
-                    response = llm_response + "\n\n---\n⚠️ *Ces informations sont à but éducatif. Consultez un médecin pour un avis personnalisé.*"
-                    self._save_response(response)
-                    return response
+                    # Ajouter les sources web si disponibles
+                    if web_results and web_results.get("sources"):
+                        llm_response += "\n\n---\n**📚 Sources consultées:**\n"
+                        for i, source in enumerate(web_results["sources"][:3], 1):
+                            reliability = {"very_high": "⭐⭐⭐", "high": "⭐⭐", "medium": "⭐"}.get(source.get("reliability", "medium"), "⭐")
+                            llm_response += f"{i}. {source.get('source', 'Source')} {reliability}\n"
+                            if source.get('url'):
+                                llm_response += f"   🔗 {source['url']}\n"
+                    
+                    # Ajouter disclaimer seulement pour questions médicales
+                    medical_keywords = ["symptôme", "maladie", "douleur", "traitement", "médicament", "santé", "médecin", "diagnostic"]
+                    is_medical = any(keyword in user_input_lower for keyword in medical_keywords)
+                    
+                    if is_medical:
+                        llm_response += "\n\n⚠️ *Ces informations sont à but éducatif. Consultez un professionnel de santé pour un avis personnalisé.*"
+                    
+                    self._save_response(llm_response)
+                    return llm_response
+                    
             except Exception as e:
-                print(f"Erreur LLM: {e}")
+                print(f"Erreur LLM/Web: {e}")
                 # Continuer avec le mode basique si erreur
         
         # ============================================
