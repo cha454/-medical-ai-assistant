@@ -125,12 +125,13 @@ DATE ACTUELLE: {date}
     
     def _call_google(self, messages):
         """Appel à l'API Google Gemini"""
-        # Liste des modèles à essayer dans l'ordre (noms officiels 2024)
+        # Modèles Gemini disponibles en janvier 2026 (format officiel)
         models_to_try = [
-            ("v1beta/models/gemini-1.5-flash", "gemini-1.5-flash"),
-            ("v1beta/models/gemini-1.5-pro", "gemini-1.5-pro"),
-            ("v1/models/gemini-1.5-flash", "gemini-1.5-flash-v1"),
-            ("v1/models/gemini-1.5-pro", "gemini-1.5-pro-v1"),
+            ("v1beta/models/gemini-1.5-flash-latest", "gemini-1.5-flash-latest"),
+            ("v1beta/models/gemini-1.5-pro-latest", "gemini-1.5-pro-latest"),
+            ("v1/models/gemini-1.5-flash-latest", "gemini-1.5-flash-latest-v1"),
+            ("v1/models/gemini-1.5-pro-latest", "gemini-1.5-pro-latest-v1"),
+            ("v1beta/models/gemini-pro", "gemini-pro-beta"),
         ]
         
         headers = {
