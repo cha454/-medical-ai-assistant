@@ -125,7 +125,8 @@ DATE ACTUELLE: {date}
     
     def _call_google(self, messages):
         """Appel à l'API Google Gemini"""
-        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={self.google_key}"
+        # Utiliser gemini-pro ou gemini-1.5-pro au lieu de gemini-1.5-flash
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={self.google_key}"
         headers = {
             "Content-Type": "application/json"
         }
