@@ -45,6 +45,7 @@ class EnhancedMedicalChatbot:
         self.patient_name = None
         self.conversation_history = []
         self.last_topic = None
+        self.last_disease = None  # Nouvelle variable pour mémoriser la dernière maladie
         self.user_concerns = []
         
         # Détection d'émotions
@@ -210,6 +211,20 @@ class EnhancedMedicalChatbot:
             try:
                 # Enrichir le contexte avec les infos de la base de données
                 context = self._build_context_for_llm(user_input_lower)
+                
+                # Si l'utilisateur demande plus d'infos et qu'on a une maladie en contexte
+                if self.last_disease and any(word in user_input_lower for word in ["prévention", "prevention", "mesures", "éviter", "protéger"]):
+                    # Ajouter le contexte de la dernière maladie
+                    if self.last_disease in DISEASES_DATABASE:
+                        disease_info = DISEASES_DATABASE[self.last_disease]
+                        context += f"""
+
+Contexte de la conversation précédente:
+L'utilisateur a demandé des informations sur: {self.last_disease}
+Description: {disease_info['description']}
+Recommandations: {', '.join(disease_info['recommendations'])}
+
+L'utilisateur demande maintenant des mesures de prévention pour cette maladie."""
                 
                 # Construire le message enrichi
                 enriched_message = f"""Question de l'utilisateur: {user_input}
@@ -447,11 +462,21 @@ Contre-indications: {', '.join(info['contraindications'])}
 """)
                 break
         
+        # Chercher dans les topics médicaux (prévention, nutrition, etc.)
+        for category, topics in self.medical_topics.items():
+            for topic, info in topics.items():
+                if topic in query or category in query:
+                    context_parts.append(f"""
+Topic trouvé: {topic} (catégorie: {category})
+Information: {info}
+""")
+        
         # Synonymes courants
         synonyms_check = {
             "rhume": ["enrhumé", "enrhumée", "nez qui coule"],
             "grippe": ["grippé", "grippée", "syndrome grippal"],
             "migraine": ["migraineux", "mal de tête"],
+            "covid": ["covid", "covid-19", "coronavirus"],
         }
         
         for disease, syns in synonyms_check.items():
@@ -464,6 +489,20 @@ Symptômes: {', '.join(info['symptoms'])}
 Recommandations: {', '.join(info['recommendations'])}
 """)
                 break
+        
+        # Si on parle de prévention mais pas de maladie spécifique, ajouter infos générales
+        if "prévention" in query or "prevention" in query:
+            if not context_parts:
+                context_parts.append("""
+Informations générales sur la prévention:
+- Hygiène: Lavage des mains régulier
+- Alimentation équilibrée: fruits, légumes, protéines
+- Exercice: 30 minutes par jour minimum
+- Sommeil: 7-9 heures par nuit
+- Hydratation: 1,5-2 litres d'eau par jour
+- Vaccinations à jour
+- Éviter tabac et alcool excessif
+""")
         
         return "\n".join(context_parts) if context_parts else "Aucune information spécifique trouvée dans la base de données locale."
     
@@ -592,6 +631,7 @@ Souhaitez-vous une analyse de ces symptômes?""".format(
             if any(syn in query for syn in synonyms):
                 if disease_name in DISEASES_DATABASE:
                     info = DISEASES_DATABASE[disease_name]
+                    self.last_disease = disease_name  # Mémoriser la maladie
                     return f"""**{disease_name.upper()}**
 
 📝 **Description:** {info['description']}
@@ -608,6 +648,7 @@ Souhaitez-vous une analyse de ces symptômes?""".format(
         # Recherche standard
         for disease_name, info in DISEASES_DATABASE.items():
             if disease_name in query or any(symptom in query for symptom in info['symptoms']):
+                self.last_disease = disease_name  # Mémoriser la maladie
                 return f"""**{disease_name.upper()}**
 
 📝 **Description:** {info['description']}
