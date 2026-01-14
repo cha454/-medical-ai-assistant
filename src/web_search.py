@@ -1,15 +1,21 @@
 """
 Module de recherche web pour enrichir les réponses du chatbot
+Supporte: Google Custom Search, Wikipedia, DuckDuckGo, PubMed
 """
 
 import requests
 import json
+import os
 from datetime import datetime, timedelta
 
 class MedicalWebSearch:
     def __init__(self):
         self.cache = {}
         self.cache_duration = timedelta(hours=24)  # Cache de 24h
+        
+        # Clés API Google Custom Search (optionnel)
+        self.google_api_key = os.environ.get('GOOGLE_SEARCH_API_KEY')
+        self.google_cx = os.environ.get('GOOGLE_SEARCH_CX')  # Custom Search Engine ID
         
         # Sources médicales fiables
         self.trusted_sources = [
@@ -41,18 +47,29 @@ class MedicalWebSearch:
             "last_updated": datetime.now().isoformat()
         }
         
-        # 1. Recherche Wikipedia (gratuit et fiable)
+        # 1. Recherche Google Custom Search (si configuré)
+        if self.google_api_key and self.google_cx:
+            google_results = self._search_google(query, language)
+            if google_results:
+                results["sources"].extend(google_results)
+                # Utiliser le premier résultat Google comme résumé si pas de Wikipedia
+                if google_results and not results.get("summary"):
+                    results["summary"] = google_results[0].get("extract", "")
+        
+        # 2. Recherche Wikipedia (gratuit et fiable)
         wiki_result = self._search_wikipedia(query, language)
         if wiki_result:
             results["sources"].append(wiki_result)
-            results["summary"] = wiki_result.get("extract", "")
+            # Wikipedia en priorité pour le résumé
+            if wiki_result.get("extract"):
+                results["summary"] = wiki_result.get("extract", "")
         
-        # 2. Recherche DuckDuckGo (gratuit, pas de clé API)
+        # 3. Recherche DuckDuckGo (gratuit, pas de clé API)
         ddg_results = self._search_duckduckgo(query)
         if ddg_results:
             results["sources"].extend(ddg_results)
         
-        # 3. Recherche PubMed (articles scientifiques gratuits)
+        # 4. Recherche PubMed (articles scientifiques gratuits)
         pubmed_results = self._search_pubmed(query)
         if pubmed_results:
             results["sources"].extend(pubmed_results)
@@ -64,6 +81,49 @@ class MedicalWebSearch:
         }
         
         return results
+    
+    def _search_google(self, query, language="fr"):
+        """Recherche sur Google Custom Search API"""
+        if not self.google_api_key or not self.google_cx:
+            return []
+        
+        try:
+            url = "https://www.googleapis.com/customsearch/v1"
+            params = {
+                "key": self.google_api_key,
+                "cx": self.google_cx,
+                "q": query,
+                "lr": f"lang_{language}",  # Langue des résultats
+                "num": 5  # Nombre de résultats (max 10)
+            }
+            
+            response = requests.get(url, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results = []
+                
+                for item in data.get("items", []):
+                    # Vérifier si c'est une source fiable
+                    url_lower = item.get("link", "").lower()
+                    is_trusted = any(source in url_lower for source in self.trusted_sources)
+                    
+                    results.append({
+                        "source": "Google",
+                        "title": item.get("title", ""),
+                        "extract": item.get("snippet", ""),
+                        "url": item.get("link", ""),
+                        "reliability": "very_high" if is_trusted else "high"
+                    })
+                
+                print(f"✓ Google: {len(results)} résultats trouvés")
+                return results
+            else:
+                print(f"Google API Error: {response.status_code}")
+                if response.status_code == 429:
+                    print("⚠️ Limite de requêtes Google atteinte (100/jour gratuit)")
+        except Exception as e:
+            print(f"Google search error: {e}")
+        return []
     
     def _search_wikipedia(self, query, language="fr"):
         """Recherche sur Wikipedia"""

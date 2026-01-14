@@ -35,10 +35,13 @@ Un assistant médical intelligent basé sur l'IA qui permet de discuter en langa
 - Changement de langue instantané
 
 ### 🤖 Intelligence Artificielle
+- **LLM intégré** : Google Gemini, OpenAI GPT, Anthropic Claude, Groq, HuggingFace
+- **Recherche web en temps réel** : Google Custom Search, Wikipedia, DuckDuckGo, PubMed
 - **55+ maladies** dans la base de connaissances
 - **60+ médicaments** avec interactions
 - **Machine Learning** (scikit-learn) pour la classification
 - **Base de données SQLite** pour l'historique
+- **Réponses vérifiées** avec sources citées
 
 ### 📊 Dashboard Admin (optionnel)
 - Statistiques en temps réel
@@ -76,6 +79,31 @@ python app.py
 ```
 
 L'application sera accessible sur `http://localhost:5000`
+
+## 🔑 Configuration des APIs (Optionnel)
+
+Pour activer les fonctionnalités avancées, créez un fichier `.env` à la racine :
+
+```env
+# LLM Provider (choisissez-en un)
+GOOGLE_API_KEY=votre_cle_google_gemini
+OPENAI_API_KEY=votre_cle_openai
+ANTHROPIC_API_KEY=votre_cle_anthropic
+GROQ_API_KEY=votre_cle_groq
+HUGGINGFACE_API_KEY=votre_cle_huggingface
+
+# Recherche Web Google (optionnel - 100 requêtes/jour gratuit)
+GOOGLE_SEARCH_API_KEY=votre_cle_google_search
+GOOGLE_SEARCH_CX=votre_search_engine_id
+
+# Email (optionnel)
+SENDGRID_API_KEY=votre_cle_sendgrid
+SENDGRID_FROM_EMAIL=votre_email@exemple.com
+```
+
+**📖 Guide détaillé:** Voir [GOOGLE_SEARCH_SETUP.md](GOOGLE_SEARCH_SETUP.md) pour configurer la recherche Google
+
+**Sans configuration:** L'assistant fonctionne avec Wikipedia, DuckDuckGo et PubMed (gratuit, illimité)
 
 ## 📁 Structure du Projet
 

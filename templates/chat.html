@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +12,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: #f7f7f8;
@@ -19,7 +20,7 @@
             display: flex;
             flex-direction: column;
         }
-        
+
         /* Header */
         .header {
             background: white;
@@ -28,31 +29,31 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
-        
+
         .header-left {
             display: flex;
             align-items: center;
             gap: 12px;
         }
-        
+
         .logo {
             font-size: 24px;
         }
-        
+
         .title {
             font-size: 18px;
             font-weight: 600;
             color: #111827;
         }
-        
+
         .header-right {
             display: flex;
             align-items: center;
             gap: 12px;
         }
-        
+
         .btn-icon {
             background: transparent;
             border: none;
@@ -63,12 +64,12 @@
             transition: all 0.2s;
             color: #6b7280;
         }
-        
+
         .btn-icon:hover {
             background: #f3f4f6;
             color: #111827;
         }
-        
+
         /* Chat Container */
         .chat-container {
             flex: 1;
@@ -79,7 +80,7 @@
             margin: 0 auto;
             overflow: hidden;
         }
-        
+
         /* Messages */
         .messages {
             flex: 1;
@@ -87,30 +88,31 @@
             padding: 24px;
             scroll-behavior: smooth;
         }
-        
+
         .message {
             margin-bottom: 24px;
             animation: fadeIn 0.3s ease-out;
         }
-        
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        
+
         .message-header {
             display: flex;
             align-items: center;
             gap: 12px;
             margin-bottom: 8px;
         }
-        
+
         .avatar {
             width: 32px;
             height: 32px;
@@ -121,39 +123,39 @@
             font-size: 18px;
             flex-shrink: 0;
         }
-        
+
         .avatar-user {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        
+
         .avatar-bot {
             background: #10b981;
         }
-        
+
         .message-author {
             font-weight: 600;
             font-size: 14px;
             color: #111827;
         }
-        
+
         .message-content {
             margin-left: 44px;
             line-height: 1.6;
             color: #374151;
             font-size: 15px;
         }
-        
+
         .message-content p {
             margin-bottom: 12px;
         }
-        
+
         .message-actions {
             margin-left: 44px;
             margin-top: 8px;
             display: flex;
             gap: 8px;
         }
-        
+
         .action-btn {
             background: transparent;
             border: 1px solid #e5e7eb;
@@ -164,12 +166,12 @@
             color: #6b7280;
             transition: all 0.2s;
         }
-        
+
         .action-btn:hover {
             background: #f9fafb;
             border-color: #d1d5db;
         }
-        
+
         /* Empty State */
         .empty-state {
             flex: 1;
@@ -180,25 +182,25 @@
             padding: 48px 24px;
             text-align: center;
         }
-        
+
         .empty-icon {
             font-size: 64px;
             margin-bottom: 24px;
         }
-        
+
         .empty-title {
             font-size: 24px;
             font-weight: 600;
             color: #111827;
             margin-bottom: 12px;
         }
-        
+
         .empty-subtitle {
             font-size: 16px;
             color: #6b7280;
             margin-bottom: 32px;
         }
-        
+
         .suggestions {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -206,7 +208,7 @@
             max-width: 700px;
             width: 100%;
         }
-        
+
         .suggestion {
             background: white;
             border: 1px solid #e5e7eb;
@@ -216,37 +218,37 @@
             transition: all 0.2s;
             text-align: left;
         }
-        
+
         .suggestion:hover {
             border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102,126,234,0.15);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
             transform: translateY(-2px);
         }
-        
+
         .suggestion-icon {
             font-size: 20px;
             margin-bottom: 8px;
         }
-        
+
         .suggestion-text {
             font-size: 14px;
             color: #374151;
             font-weight: 500;
         }
-        
+
         /* Input Area */
         .input-area {
             padding: 16px 24px 24px;
             background: white;
             border-top: 1px solid #e5e7eb;
         }
-        
+
         .input-container {
             max-width: 900px;
             margin: 0 auto;
             position: relative;
         }
-        
+
         .input-wrapper {
             display: flex;
             align-items: flex-end;
@@ -257,12 +259,12 @@
             padding: 12px 16px;
             transition: all 0.2s;
         }
-        
+
         .input-wrapper:focus-within {
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
-        
+
         #messageInput {
             flex: 1;
             border: none;
@@ -273,17 +275,17 @@
             max-height: 200px;
             line-height: 1.5;
         }
-        
+
         #messageInput::placeholder {
             color: #9ca3af;
         }
-        
+
         .input-actions {
             display: flex;
             gap: 8px;
             align-items: center;
         }
-        
+
         .btn-voice {
             background: transparent;
             border: none;
@@ -293,21 +295,28 @@
             transition: all 0.2s;
             border-radius: 8px;
         }
-        
+
         .btn-voice:hover {
             background: #f3f4f6;
         }
-        
+
         .btn-voice.recording {
             color: #ef4444;
             animation: pulse 1.5s ease-in-out infinite;
         }
-        
+
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
-        
+
         .btn-send {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
@@ -319,17 +328,17 @@
             transition: all 0.2s;
             font-size: 14px;
         }
-        
+
         .btn-send:hover:not(:disabled) {
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
-        
+
         .btn-send:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        
+
         /* Loading */
         .typing-indicator {
             display: flex;
@@ -340,7 +349,7 @@
             width: fit-content;
             margin-left: 44px;
         }
-        
+
         .typing-dot {
             width: 8px;
             height: 8px;
@@ -348,70 +357,75 @@
             border-radius: 50%;
             animation: typing 1.4s ease-in-out infinite;
         }
-        
+
         .typing-dot:nth-child(2) {
             animation-delay: 0.2s;
         }
-        
+
         .typing-dot:nth-child(3) {
             animation-delay: 0.4s;
         }
-        
+
         @keyframes typing {
-            0%, 60%, 100% {
+
+            0%,
+            60%,
+            100% {
                 transform: translateY(0);
             }
+
             30% {
                 transform: translateY(-10px);
             }
         }
-        
+
         /* Responsive */
         @media (max-width: 768px) {
             .header {
                 padding: 12px 16px;
             }
-            
+
             .title {
                 font-size: 16px;
             }
-            
+
             .messages {
                 padding: 16px;
             }
-            
+
             .input-area {
                 padding: 12px 16px 16px;
             }
-            
+
             .suggestions {
                 grid-template-columns: 1fr;
             }
-            
+
             .empty-title {
                 font-size: 20px;
             }
         }
-        
+
         /* Scrollbar */
         .messages::-webkit-scrollbar {
             width: 6px;
         }
-        
+
         .messages::-webkit-scrollbar-track {
             background: transparent;
         }
-        
+
         .messages::-webkit-scrollbar-thumb {
             background: #d1d5db;
             border-radius: 3px;
         }
-        
+
         .messages::-webkit-scrollbar-thumb:hover {
             background: #9ca3af;
         }
     </style>
 </head>
+
 <body>
     <!-- Header -->
     <div class="header">
@@ -438,7 +452,7 @@
                 <div class="empty-icon">💬</div>
                 <div class="empty-title">Comment puis-je vous aider ?</div>
                 <div class="empty-subtitle">Posez-moi vos questions médicales</div>
-                
+
                 <div class="suggestions">
                     <div class="suggestion" onclick="sendSuggestion('Quels sont les symptômes du diabète ?')">
                         <div class="suggestion-icon">🩺</div>
@@ -448,7 +462,8 @@
                         <div class="suggestion-icon">💊</div>
                         <div class="suggestion-text">Traiter une migraine</div>
                     </div>
-                    <div class="suggestion" onclick="sendSuggestion('Puis-je prendre ibuprofène et aspirine ensemble ?')">
+                    <div class="suggestion"
+                        onclick="sendSuggestion('Puis-je prendre ibuprofène et aspirine ensemble ?')">
                         <div class="suggestion-icon">⚠️</div>
                         <div class="suggestion-text">Interactions médicamenteuses</div>
                     </div>
@@ -464,13 +479,8 @@
         <div class="input-area">
             <div class="input-container">
                 <div class="input-wrapper">
-                    <textarea 
-                        id="messageInput" 
-                        placeholder="Posez votre question médicale..."
-                        rows="1"
-                        onkeydown="handleKeyPress(event)"
-                        oninput="autoResize(this)"
-                    ></textarea>
+                    <textarea id="messageInput" placeholder="Posez votre question médicale..." rows="1"
+                        onkeydown="handleKeyPress(event)" oninput="autoResize(this)"></textarea>
                     <div class="input-actions">
                         <button class="btn-voice" onclick="toggleVoice()" title="Reconnaissance vocale">
                             🎤
@@ -557,15 +567,15 @@
 
         function addMessage(content, isUser) {
             hideEmptyState();
-            
+
             const messagesDiv = document.getElementById('messages');
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message';
-            
+
             const avatar = isUser ? '👤' : '🤖';
             const author = isUser ? 'Vous' : 'Assistant';
             const avatarClass = isUser ? 'avatar-user' : 'avatar-bot';
-            
+
             messageDiv.innerHTML = `
                 <div class="message-header">
                     <div class="avatar ${avatarClass}">${avatar}</div>
@@ -579,7 +589,7 @@
                     </div>
                 ` : ''}
             `;
-            
+
             messagesDiv.appendChild(messageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
@@ -613,35 +623,35 @@
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
-            
+
             if (!message) return;
-            
+
             // Add user message
             addMessage(message, true);
             input.value = '';
             input.style.height = 'auto';
-            
+
             // Disable send button
             const sendBtn = document.getElementById('sendBtn');
             sendBtn.disabled = true;
-            
+
             // Show typing indicator
             showTyping();
-            
+
             try {
                 const response = await fetch(`${API_URL}/api/chat`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         message: message,
                         language: 'fr'
                     })
                 });
-                
+
                 const data = await response.json();
-                
+
                 hideTyping();
-                
+
                 if (data.response) {
                     addMessage(data.response, false);
                     conversationHistory.push({
@@ -651,7 +661,7 @@
                 } else {
                     addMessage('Désolé, une erreur est survenue.', false);
                 }
-                
+
             } catch (error) {
                 hideTyping();
                 addMessage('Erreur de connexion. Veuillez réessayer.', false);
@@ -716,4 +726,5 @@
         });
     </script>
 </body>
+
 </html>
