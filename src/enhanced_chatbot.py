@@ -305,11 +305,14 @@ INSTRUCTIONS IMPORTANTES:
 - Sois chaleureux et amical pour les conversations générales"""
                 
                 # 5. APPELER LE LLM
+                print(f"📤 Envoi au LLM: {user_input[:50]}...")
                 llm_response = llm.generate_response(
                     enriched_message,
                     self.conversation_history[-10:],  # Derniers 10 messages pour contexte
                     language
                 )
+                
+                print(f"📥 Réponse LLM reçue: {bool(llm_response)}")
                 
                 if llm_response:
                     # Ajouter les sources web si disponibles
@@ -322,7 +325,7 @@ INSTRUCTIONS IMPORTANTES:
                                 llm_response += f"   🔗 {source['url']}\n"
                     
                     # Ajouter disclaimer seulement pour questions médicales
-                    medical_keywords = ["symptôme", "maladie", "douleur", "traitement", "médicament", "santé", "médecin", "diagnostic"]
+                    medical_keywords = ["symptôme", "maladie", "douleur", "traitement", "médicament", "santé", "médecin", "diagnostic", "ebola", "virus", "infection"]
                     is_medical = any(keyword in user_input_lower for keyword in medical_keywords)
                     
                     if is_medical:
@@ -330,9 +333,13 @@ INSTRUCTIONS IMPORTANTES:
                     
                     self._save_response(llm_response)
                     return llm_response
+                else:
+                    print("⚠️ LLM a retourné None - passage au mode basique")
                     
             except Exception as e:
-                print(f"Erreur LLM/Web: {e}")
+                print(f"❌ Erreur LLM/Web: {e}")
+                import traceback
+                traceback.print_exc()
                 # Continuer avec le mode basique si erreur
         
         # ============================================

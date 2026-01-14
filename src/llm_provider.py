@@ -162,9 +162,18 @@ DATE ACTUELLE: {date}
         if response.status_code == 200:
             result = response.json()
             if "candidates" in result and len(result["candidates"]) > 0:
-                return result["candidates"][0]["content"]["parts"][0]["text"]
+                candidate = result["candidates"][0]
+                # Vérifier si le contenu a été bloqué
+                if "content" in candidate and "parts" in candidate["content"]:
+                    return candidate["content"]["parts"][0]["text"]
+                else:
+                    print(f"⚠️ Google Gemini: Contenu bloqué ou vide - {result}")
+                    return None
+            else:
+                print(f"⚠️ Google Gemini: Pas de candidats - {result}")
+                return None
         else:
-            print(f"Google Gemini Error: {response.status_code} - {response.text}")
+            print(f"❌ Google Gemini Error: {response.status_code} - {response.text}")
         return None
     
     def _call_openai(self, messages):
