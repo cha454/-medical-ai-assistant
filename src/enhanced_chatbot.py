@@ -190,12 +190,18 @@ class EnhancedMedicalChatbot:
         # ============================================
         # DÉTECTION DEMANDE D'EMAIL
         # ============================================
-        email_keywords = ["envoie", "envoyer", "envoi", "mail", "email", "e-mail", "résumé", "resume"]
-        if any(kw in user_input_lower for kw in email_keywords):
-            email_response = self._handle_email_request(user_input, user_input_lower)
-            if email_response:
-                self._save_response(email_response)
-                return email_response
+        # Détecter uniquement si une adresse email est présente ET un mot-clé d'envoi
+        has_email_address = '@' in user_input and '.' in user_input
+        email_send_keywords = ["envoie", "envoyer", "envoi"]
+        if has_email_address and any(kw in user_input_lower for kw in email_send_keywords):
+            try:
+                email_response = self._handle_email_request(user_input, user_input_lower)
+                if email_response:
+                    self._save_response(email_response)
+                    return email_response
+            except Exception as e:
+                print(f"Erreur email: {e}")
+                # Continuer avec le mode normal si erreur
         
         # ============================================
         # UTILISER LE LLM SI DISPONIBLE
