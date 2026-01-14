@@ -125,8 +125,13 @@ DATE ACTUELLE: {date}
     
     def _call_google(self, messages):
         """Appel à l'API Google Gemini"""
-        # Utiliser gemini-pro ou gemini-1.5-pro au lieu de gemini-1.5-flash
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={self.google_key}"
+        # Liste des modèles à essayer dans l'ordre
+        models_to_try = [
+            ("v1beta/models/gemini-pro", "gemini-pro"),
+            ("v1beta/models/gemini-1.5-pro-latest", "gemini-1.5-pro-latest"),
+            ("v1/models/gemini-pro", "gemini-pro v1"),
+        ]
+        
         headers = {
             "Content-Type": "application/json"
         }
@@ -159,22 +164,34 @@ DATE ACTUELLE: {date}
             }
         }
         
-        response = requests.post(url, headers=headers, json=data, timeout=30)
-        if response.status_code == 200:
-            result = response.json()
-            if "candidates" in result and len(result["candidates"]) > 0:
-                candidate = result["candidates"][0]
-                # Vérifier si le contenu a été bloqué
-                if "content" in candidate and "parts" in candidate["content"]:
-                    return candidate["content"]["parts"][0]["text"]
+        # Essayer chaque modèle jusqu'à ce qu'un fonctionne
+        for endpoint, model_name in models_to_try:
+            url = f"https://generativelanguage.googleapis.com/{endpoint}:generateContent?key={self.google_key}"
+            
+            try:
+                response = requests.post(url, headers=headers, json=data, timeout=30)
+                if response.status_code == 200:
+                    result = response.json()
+                    if "candidates" in result and len(result["candidates"]) > 0:
+                        candidate = result["candidates"][0]
+                        # Vérifier si le contenu a été bloqué
+                        if "content" in candidate and "parts" in candidate["content"]:
+                            print(f"✓ Google Gemini ({model_name}): Réponse reçue")
+                            return candidate["content"]["parts"][0]["text"]
+                        else:
+                            print(f"⚠️ Google Gemini ({model_name}): Contenu bloqué - {result}")
+                    else:
+                        print(f"⚠️ Google Gemini ({model_name}): Pas de candidats - {result}")
+                elif response.status_code == 404:
+                    print(f"⚠️ Google Gemini ({model_name}): Modèle non trouvé, essai suivant...")
+                    continue  # Essayer le modèle suivant
                 else:
-                    print(f"⚠️ Google Gemini: Contenu bloqué ou vide - {result}")
-                    return None
-            else:
-                print(f"⚠️ Google Gemini: Pas de candidats - {result}")
-                return None
-        else:
-            print(f"❌ Google Gemini Error: {response.status_code} - {response.text}")
+                    print(f"❌ Google Gemini ({model_name}) Error: {response.status_code} - {response.text}")
+            except Exception as e:
+                print(f"❌ Google Gemini ({model_name}) Exception: {e}")
+                continue
+        
+        print("❌ Tous les modèles Google Gemini ont échoué")
         return None
     
     def _call_openai(self, messages):
