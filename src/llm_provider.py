@@ -11,6 +11,7 @@ from datetime import datetime
 class LLMProvider:
     def __init__(self):
         # Clés API (à configurer dans les variables d'environnement)
+        self.google_key = os.environ.get('GOOGLE_API_KEY')
         self.openai_key = os.environ.get('OPENAI_API_KEY')
         self.anthropic_key = os.environ.get('ANTHROPIC_API_KEY')
         self.groq_key = os.environ.get('GROQ_API_KEY')
@@ -46,7 +47,9 @@ DATE ACTUELLE: {date}
     
     def _detect_provider(self):
         """Détecte le provider disponible"""
-        if self.openai_key:
+        if self.google_key:
+            return "google"
+        elif self.openai_key:
             return "openai"
         elif self.anthropic_key:
             return "anthropic"
@@ -93,7 +96,9 @@ DATE ACTUELLE: {date}
         
         # Appeler le provider approprié
         try:
-            if self.active_provider == "openai":
+            if self.active_provider == "google":
+                return self._call_google(messages)
+            elif self.active_provider == "openai":
                 return self._call_openai(messages)
             elif self.active_provider == "anthropic":
                 return self._call_anthropic(messages, system)
@@ -105,6 +110,50 @@ DATE ACTUELLE: {date}
             print(f"Erreur LLM ({self.active_provider}): {e}")
             return None
         
+        return None
+    
+    def _call_google(self, messages):
+        """Appel à l'API Google Gemini"""
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={self.google_key}"
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        # Convertir les messages au format Gemini
+        contents = []
+        for msg in messages:
+            if msg["role"] == "system":
+                # Gemini n'a pas de rôle system, on l'ajoute comme premier message user
+                contents.append({
+                    "role": "user",
+                    "parts": [{"text": msg["content"]}]
+                })
+            elif msg["role"] == "user":
+                contents.append({
+                    "role": "user",
+                    "parts": [{"text": msg["content"]}]
+                })
+            elif msg["role"] == "assistant":
+                contents.append({
+                    "role": "model",
+                    "parts": [{"text": msg["content"]}]
+                })
+        
+        data = {
+            "contents": contents,
+            "generationConfig": {
+                "temperature": 0.7,
+                "maxOutputTokens": 1500
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+        if response.status_code == 200:
+            result = response.json()
+            if "candidates" in result and len(result["candidates"]) > 0:
+                return result["candidates"][0]["content"]["parts"][0]["text"]
+        else:
+            print(f"Google Gemini Error: {response.status_code} - {response.text}")
         return None
     
     def _call_openai(self, messages):
@@ -216,6 +265,13 @@ DATE ACTUELLE: {date}
     def get_provider_info(self):
         """Retourne les informations sur le provider actif"""
         providers_info = {
+            "google": {
+                "name": "Google Gemini",
+                "model": "gemini-pro",
+                "quality": "Excellent",
+                "speed": "Rapide",
+                "cost": "Gratuit"
+            },
             "openai": {
                 "name": "OpenAI GPT-4",
                 "model": "gpt-4o-mini",
