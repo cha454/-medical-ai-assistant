@@ -114,7 +114,7 @@ DATE ACTUELLE: {date}
     
     def _call_google(self, messages):
         """Appel à l'API Google Gemini"""
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={self.google_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.google_key}"
         headers = {
             "Content-Type": "application/json"
         }
@@ -267,9 +267,9 @@ DATE ACTUELLE: {date}
         providers_info = {
             "google": {
                 "name": "Google Gemini",
-                "model": "gemini-pro",
+                "model": "gemini-1.5-flash",
                 "quality": "Excellent",
-                "speed": "Rapide",
+                "speed": "Très rapide",
                 "cost": "Gratuit"
             },
             "openai": {
