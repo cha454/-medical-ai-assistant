@@ -38,6 +38,17 @@ except ImportError:
     email_service = None
     print("⚠️ Module email non disponible")
 
+# Import du module Météo
+try:
+    from weather_service import weather_service
+    WEATHER_AVAILABLE = weather_service.is_available()
+    if WEATHER_AVAILABLE:
+        print("✓ Service météo OpenWeather activé")
+except ImportError:
+    WEATHER_AVAILABLE = False
+    weather_service = None
+    print("⚠️ Module météo non disponible")
+
 class EnhancedMedicalChatbot:
     def __init__(self):
         self.conversation_state = "greeting"
@@ -189,6 +200,20 @@ class EnhancedMedicalChatbot:
             return response
         
         # ============================================
+        # DÉTECTION DEMANDE MÉTÉO
+        # ============================================
+        weather_keywords = ["météo", "meteo", "temps qu'il fait", "température", "climat", "prévisions météo", "quel temps"]
+        if any(kw in user_input_lower for kw in weather_keywords):
+            try:
+                weather_response = self._handle_weather_request(user_input, user_input_lower, language)
+                if weather_response:
+                    self._save_response(weather_response)
+                    return weather_response
+            except Exception as e:
+                print(f"Erreur météo: {e}")
+                # Continuer avec le mode normal si erreur
+        
+        # ============================================
         # DÉTECTION DEMANDE D'EMAIL
         # ============================================
         # Détecter uniquement si une adresse email est présente ET un mot-clé d'envoi
@@ -247,6 +272,14 @@ class EnhancedMedicalChatbot:
                 
                 is_conversational = any(keyword in user_input_lower for keyword in conversational_keywords)
                 
+                # Détecter si c'est une demande de recherche poussée
+                deep_search_keywords = [
+                    "recherche poussée", "recherche approfondie", "recherche détaillée",
+                    "fais une recherche sur", "recherche complète", "analyse approfondie",
+                    "explique en détail", "tout savoir sur", "informations complètes sur"
+                ]
+                is_deep_search = any(keyword in user_input_lower for keyword in deep_search_keywords)
+                
                 # Faire une recherche web seulement pour questions factuelles (pas conversationnelles)
                 if WEB_SEARCH_AVAILABLE and not is_conversational and len(user_input.split()) >= 3:
                     print(f"🔍 Recherche web pour: {user_input}")
@@ -259,12 +292,16 @@ class EnhancedMedicalChatbot:
                         if web_results.get("summary"):
                             web_context += f"Résumé: {web_results['summary'][:800]}\n\n"
                         
-                        # Ajouter les sources
+                        # Ajouter les sources (plus de sources pour recherche poussée)
                         web_context += "Sources consultées:\n"
-                        for source in web_results["sources"][:3]:
-                            web_context += f"- {source.get('source', 'Source')}: {source.get('extract', '')[:300]}\n"
+                        max_sources = 5 if is_deep_search else 3
+                        for source in web_results["sources"][:max_sources]:
+                            web_context += f"- {source.get('source', 'Source')}: {source.get('extract', '')[:500 if is_deep_search else 300]}\n"
                             if source.get('url'):
                                 web_context += f"  URL: {source['url']}\n"
+                        
+                        if is_deep_search:
+                            web_context += "\n⚠️ RECHERCHE POUSSÉE DEMANDÉE: Fournis une analyse COMPLÈTE et DÉTAILLÉE (minimum 500 mots)\n"
                 
                 # 2. CONTEXTE de la base de données locale
                 local_context = self._build_context_for_llm(user_input_lower)
@@ -517,6 +554,150 @@ Je n'ai pas pu envoyer l'email à {email_address}.
 • Utilisez le bouton 📋 pour copier les messages manuellement
 
 Voulez-vous réessayer?"""
+    
+    def _handle_weather_request(self, user_input, user_input_lower, language="fr"):
+        """Gère les demandes de météo"""
+        # Vérifier si le service météo est disponible
+        if not WEATHER_AVAILABLE or not weather_service:
+            return """🌤️ **Service météo non disponible**
+
+Le service météo n'est pas configuré actuellement.
+
+**Pour activer ce service:**
+1. Créez un compte gratuit sur https://openweathermap.org
+2. Obtenez votre clé API (gratuit - 1000 appels/jour)
+3. Ajoutez `OPENWEATHER_API_KEY` dans vos variables d'environnement
+
+Contactez l'administrateur pour plus d'informations."""
+        
+        # Extraire le nom de la ville du message
+        city = self._extract_city_from_text(user_input)
+        
+        if not city:
+            return """🌤️ **Demande de météo**
+
+Je peux vous donner la météo de n'importe quelle ville !
+
+**Exemples:**
+• "Quelle est la météo à Paris ?"
+• "Quel temps fait-il à Lyon ?"
+• "Météo de Marseille"
+• "Température à Toulouse"
+
+De quelle ville voulez-vous connaître la météo ?"""
+        
+        # Récupérer la météo
+        print(f"🌤️ Récupération météo pour: {city}")
+        weather_data = weather_service.get_weather(city, lang=language)
+        
+        if "error" in weather_data:
+            return f"""🌤️ **Météo non disponible** ❌
+
+Je n'ai pas pu récupérer la météo pour "{city}".
+
+**Raison:** {weather_data.get('message', 'Erreur inconnue')}
+
+**Suggestions:**
+• Vérifiez l'orthographe de la ville
+• Essayez avec le nom en anglais
+• Ajoutez le code pays (ex: "Paris, FR")
+
+Exemple: "Quelle est la météo à Paris, FR ?" """
+        
+        # Formater la réponse météo
+        current = weather_data["current"]
+        location = weather_data["location"]
+        wind = weather_data["wind"]
+        
+        # Emoji selon les conditions
+        weather_emoji = self._get_weather_emoji(current["description"])
+        
+        response = f"""{weather_emoji} **Météo à {location['city']}, {location['country']}**
+
+📍 **Conditions actuelles:**
+🌡️ **Température:** {current['temperature']}{current['temp_unit']} (ressenti {current['feels_like']}{current['temp_unit']})
+☁️ **Conditions:** {current['description']}
+💧 **Humidité:** {current['humidity']}%
+💨 **Vent:** {wind['speed']} {wind['speed_unit']}
+👁️ **Visibilité:** {weather_data['visibility']} m
+
+📊 **Températures:**
+🔻 Min: {current['temp_min']}{current['temp_unit']}
+🔺 Max: {current['temp_max']}{current['temp_unit']}
+
+🌅 **Soleil:**
+🌄 Lever: {weather_data['sunrise']}
+🌇 Coucher: {weather_data['sunset']}
+
+📅 Dernière mise à jour: {weather_data['timestamp']}
+
+---
+💡 **Conseil santé:** """
+        
+        # Ajouter un conseil santé selon la météo
+        temp = current['temperature']
+        if temp < 5:
+            response += "Il fait froid ! Couvrez-vous bien pour éviter les rhumes. ❄️"
+        elif temp > 30:
+            response += "Il fait chaud ! Hydratez-vous régulièrement et évitez le soleil aux heures chaudes. ☀️"
+        elif current['humidity'] > 80:
+            response += "Forte humidité ! Aérez bien votre intérieur et restez hydraté. 💧"
+        else:
+            response += "Conditions agréables ! Profitez-en pour une activité en extérieur. 🚶"
+        
+        return response
+    
+    def _extract_city_from_text(self, text):
+        """Extrait le nom de la ville du texte"""
+        # Patterns courants
+        patterns = [
+            r"météo (?:à|a|de|du) ([a-zA-ZÀ-ÿ\s\-]+)",
+            r"temps (?:à|a|de|du) ([a-zA-ZÀ-ÿ\s\-]+)",
+            r"température (?:à|a|de|du) ([a-zA-ZÀ-ÿ\s\-]+)",
+            r"(?:à|a) ([a-zA-ZÀ-ÿ\s\-]+)\s*\?",
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, text.lower())
+            if match:
+                city = match.group(1).strip()
+                # Nettoyer les mots parasites
+                city = re.sub(r'\s+(svp|stp|merci|please)$', '', city)
+                return city.title()
+        
+        # Villes françaises courantes (détection directe)
+        french_cities = [
+            "paris", "lyon", "marseille", "toulouse", "nice", "nantes", 
+            "strasbourg", "montpellier", "bordeaux", "lille", "rennes",
+            "reims", "toulon", "grenoble", "dijon", "angers", "nîmes",
+            "villeurbanne", "clermont-ferrand", "aix-en-provence"
+        ]
+        
+        text_lower = text.lower()
+        for city in french_cities:
+            if city in text_lower:
+                return city.title()
+        
+        return None
+    
+    def _get_weather_emoji(self, description):
+        """Retourne un emoji selon la description météo"""
+        description_lower = description.lower()
+        
+        if "ensoleillé" in description_lower or "clear" in description_lower:
+            return "☀️"
+        elif "nuage" in description_lower or "cloud" in description_lower:
+            return "☁️"
+        elif "pluie" in description_lower or "rain" in description_lower:
+            return "🌧️"
+        elif "orage" in description_lower or "storm" in description_lower:
+            return "⛈️"
+        elif "neige" in description_lower or "snow" in description_lower:
+            return "❄️"
+        elif "brouillard" in description_lower or "fog" in description_lower:
+            return "🌫️"
+        else:
+            return "🌤️"
     
     def _add_empathy(self, response, emotion):
         """Ajoute de l'empathie selon l'émotion détectée"""
