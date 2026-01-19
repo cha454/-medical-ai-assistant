@@ -16,6 +16,7 @@ class LLMProvider:
         self.anthropic_key = os.environ.get('ANTHROPIC_API_KEY')
         self.groq_key = os.environ.get('GROQ_API_KEY')
         self.huggingface_key = os.environ.get('HUGGINGFACE_API_KEY')
+        self.glm_key = os.environ.get('GLM_API_KEY')
         
         # Provider actif (par ordre de préférence)
         self.active_provider = self._detect_provider()
@@ -79,7 +80,9 @@ DATE ACTUELLE: {date}
     
     def _detect_provider(self):
         """Détecte le provider disponible"""
-        if self.google_key:
+        if self.glm_key:
+            return "glm"
+        elif self.google_key:
             return "google"
         elif self.openai_key:
             return "openai"
@@ -128,7 +131,9 @@ DATE ACTUELLE: {date}
         
         # Appeler le provider approprié
         try:
-            if self.active_provider == "google":
+            if self.active_provider == "glm":
+                return self._call_glm(messages)
+            elif self.active_provider == "google":
                 return self._call_google(messages)
             elif self.active_provider == "openai":
                 return self._call_openai(messages)
@@ -141,6 +146,38 @@ DATE ACTUELLE: {date}
         except Exception as e:
             print(f"Erreur LLM ({self.active_provider}): {e}")
             return None
+        
+        return None
+    
+    def _call_glm(self, messages):
+        """Appel à l'API Zhipu AI GLM-4"""
+        url = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.glm_key}",
+            "Content-Type": "application/json"
+        }
+        
+        data = {
+            "model": "glm-4-flash",  # Modèle rapide et gratuit
+            "messages": messages,
+            "max_tokens": 2000,
+            "temperature": 0.7,
+            "top_p": 0.9
+        }
+        
+        try:
+            response = requests.post(url, headers=headers, json=data, timeout=30)
+            if response.status_code == 200:
+                result = response.json()
+                if "choices" in result and len(result["choices"]) > 0:
+                    print(f"✓ GLM-4: Réponse reçue")
+                    return result["choices"][0]["message"]["content"]
+                else:
+                    print(f"⚠️ GLM-4: Pas de réponse - {result}")
+            else:
+                print(f"❌ GLM-4 Error: {response.status_code} - {response.text}")
+        except Exception as e:
+            print(f"❌ GLM-4 Exception: {e}")
         
         return None
     
@@ -326,6 +363,13 @@ DATE ACTUELLE: {date}
     def get_provider_info(self):
         """Retourne les informations sur le provider actif"""
         providers_info = {
+            "glm": {
+                "name": "Zhipu AI GLM-4",
+                "model": "glm-4-flash",
+                "quality": "Excellent",
+                "speed": "Très rapide",
+                "cost": "Gratuit"
+            },
             "google": {
                 "name": "Google Gemini",
                 "model": "gemini-1.5-flash",
