@@ -17,6 +17,21 @@ Un assistant médical intelligent basé sur l'IA qui permet de discuter en langa
 
 ## ✨ Fonctionnalités
 
+### 🆕 NOUVELLES FONCTIONNALITÉS
+
+#### 🌤️ Météo en Temps Réel (OpenWeather API)
+- Demandez la météo de n'importe quelle ville
+- Température, humidité, vent, conditions
+- Conseils santé adaptés à la météo
+- Exemples: "Quelle est la météo à Paris ?"
+
+#### 🔍 Recherches Poussées (OpenAI/Gemini)
+- Analyses approfondies sur n'importe quel sujet
+- Informations à jour du web (Wikipedia, sources médicales)
+- Réponses détaillées de 500+ mots
+- Sources citées et vérifiées
+- Exemples: "Fais une recherche poussée sur le diabète"
+
 ### 💬 Chat Intelligent
 - Interface conversationnelle style ChatGPT
 - Réponses en temps réel avec effet de typing
@@ -37,6 +52,7 @@ Un assistant médical intelligent basé sur l'IA qui permet de discuter en langa
 ### 🤖 Intelligence Artificielle
 - **LLM intégré** : Google Gemini, OpenAI GPT, Anthropic Claude, Groq, HuggingFace
 - **Recherche web en temps réel** : Google Custom Search, Wikipedia, DuckDuckGo, PubMed
+- **API Météo** : OpenWeather (1000 appels/jour gratuit)
 - **55+ maladies** dans la base de connaissances
 - **60+ médicaments** avec interactions
 - **Machine Learning** (scikit-learn) pour la classification
@@ -92,6 +108,9 @@ ANTHROPIC_API_KEY=votre_cle_anthropic
 GROQ_API_KEY=votre_cle_groq
 HUGGINGFACE_API_KEY=votre_cle_huggingface
 
+# Météo (NOUVEAU - Gratuit)
+OPENWEATHER_API_KEY=votre_cle_openweather
+
 # Recherche Web Google (optionnel - 100 requêtes/jour gratuit)
 GOOGLE_SEARCH_API_KEY=votre_cle_google_search
 GOOGLE_SEARCH_CX=votre_search_engine_id
@@ -101,7 +120,10 @@ SENDGRID_API_KEY=votre_cle_sendgrid
 SENDGRID_FROM_EMAIL=votre_email@exemple.com
 ```
 
-**📖 Guide détaillé:** Voir [GOOGLE_SEARCH_SETUP.md](GOOGLE_SEARCH_SETUP.md) pour configurer la recherche Google
+**📖 Guides détaillés:**
+- [GUIDE_RENDER_COMPLET.md](GUIDE_RENDER_COMPLET.md) - Déploiement sur Render avec toutes les clés API
+- [NOUVELLES_FONCTIONNALITES.md](NOUVELLES_FONCTIONNALITES.md) - Documentation des nouvelles fonctionnalités
+- [GOOGLE_SEARCH_SETUP.md](GOOGLE_SEARCH_SETUP.md) - Configuration recherche Google
 
 **Sans configuration:** L'assistant fonctionne avec Wikipedia, DuckDuckGo et PubMed (gratuit, illimité)
 
@@ -138,6 +160,9 @@ medical-ai-assistant/
 - "Quels sont les symptômes du diabète?"
 - "Puis-je prendre ibuprofène et aspirine ensemble?"
 - "Comment traiter une migraine?"
+- **🆕 "Quelle est la météo à Paris ?"**
+- **🆕 "Fais une recherche poussée sur le diabète"**
+- **🆕 "Explique en détail le système immunitaire"**
 
 ### Reconnaissance Vocale
 
