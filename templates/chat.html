@@ -42,7 +42,7 @@
         .header-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
         }
 
         .logo {
@@ -55,6 +55,13 @@
             color: #f3f4f6;
         }
 
+        .header-buttons-left {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-left: 8px;
+        }
+
         .header-right {
             display: flex;
             align-items: center;
@@ -64,12 +71,13 @@
         .btn-icon {
             background: rgba(59, 130, 246, 0.1);
             border: 1px solid rgba(59, 130, 246, 0.3);
-            padding: 8px 12px;
+            padding: 6px 12px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             transition: all 0.2s;
             color: #3b82f6;
+            white-space: nowrap;
         }
 
         .btn-icon:hover {
@@ -510,6 +518,23 @@
         @media (max-width: 768px) {
             .header {
                 padding: 12px 16px;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .header-left {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .header-buttons-left {
+                flex-direction: row;
+                gap: 8px;
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: center;
             }
 
             .title {
@@ -559,23 +584,20 @@
         <div class="header-left">
             <span class="logo">🏥</span>
             <span class="title">Assistant Médical IA</span>
+            <div class="header-buttons-left">
+                <button class="btn-icon"
+                    onclick="if(typeof chatHistory !== 'undefined') chatHistory.createNewConversation(); else location.reload();"
+                    title="Nouvelle conversation">
+                    ➕ Nouveau
+                </button>
+                <button class="btn-icon"
+                    onclick="if(typeof showHistoryModal !== 'undefined') showHistoryModal(); else alert('Historique non disponible');"
+                    title="Historique des conversations">
+                    📚 Historique
+                </button>
+            </div>
         </div>
         <div class="header-right">
-            <button class="btn-icon"
-                onclick="if(typeof chatHistory !== 'undefined') chatHistory.createNewConversation(); else location.reload();"
-                title="Nouvelle conversation">
-                ➕ Nouveau
-            </button>
-            <button class="btn-icon"
-                onclick="if(typeof showHistoryModal !== 'undefined') showHistoryModal(); else alert('Historique non disponible');"
-                title="Historique des conversations">
-                📚 Historique
-            </button>
-            <button class="btn-icon"
-                onclick="if(typeof chatHistory !== 'undefined') chatHistory.exportToPDF(); else alert('Export PDF non disponible');"
-                title="Exporter en PDF">
-                📄 PDF
-            </button>
             <button class="btn-icon" onclick="window.location.href='/'" title="Retour">
                 🏠 Accueil
             </button>
