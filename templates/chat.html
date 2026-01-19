@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- Marked.js pour convertir Markdown en HTML -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- jsPDF pour export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -33,9 +35,11 @@
             0% {
                 background-position: 0% 50%;
             }
+
             50% {
                 background-position: 100% 50%;
             }
+
             100% {
                 background-position: 0% 50%;
             }
@@ -49,7 +53,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: 
+            background-image:
                 radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
                 radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
                 radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
@@ -59,9 +63,12 @@
         }
 
         @keyframes float {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: translateY(0) scale(1);
             }
+
             50% {
                 transform: translateY(-20px) scale(1.05);
             }
@@ -612,8 +619,14 @@
             <span class="title">Assistant Médical IA</span>
         </div>
         <div class="header-right">
-            <button class="btn-icon" onclick="clearChat()" title="Nouvelle conversation">
-                🔄 Nouveau
+            <button class="btn-icon" onclick="chatHistory.createNewConversation()" title="Nouvelle conversation">
+                ➕ Nouveau
+            </button>
+            <button class="btn-icon" onclick="showHistoryModal()" title="Historique des conversations">
+                📚 Historique
+            </button>
+            <button class="btn-icon" onclick="chatHistory.exportToPDF()" title="Exporter en PDF">
+                📄 PDF
             </button>
             <button class="btn-icon" onclick="window.location.href='/'" title="Retour">
                 🏠 Accueil
@@ -672,11 +685,27 @@
         </div>
     </div>
 
+    <!-- Modal Historique -->
+    <div id="historyModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📚 Historique des Conversations</h2>
+                <button class="modal-close" onclick="closeHistoryModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="conversationsList" class="conversations-list">
+                    <!-- Les conversations seront ajoutées ici dynamiquement -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inclure le CSS du modal -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='history-modal.css') }}">
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='chat-history.js') }}"></script>
     <script>
-        const API_URL = window.location.origin;
-        let conversationHistory = [];
-        let isRecording = false;
-        let recognition = null;
 
         // Initialize Speech Recognition
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -846,6 +875,9 @@
                         user: message,
                         assistant: data.response
                     });
+
+                    // Sauvegarder dans l'historique persistant
+                    chatHistory.saveMessage(message, data.response);
                 } else {
                     addMessage('Désolé, une erreur est survenue.', false);
                 }
@@ -858,6 +890,77 @@
                 input.focus();
             }
         }
+
+        // Fonctions pour gérer le modal d'historique
+        function showHistoryModal() {
+            const modal = document.getElementById('historyModal');
+            const conversationsList = document.getElementById('conversationsList');
+
+            // Récupérer toutes les conversations
+            const conversations = chatHistory.getConversationList();
+
+            if (conversations.length === 0) {
+                conversationsList.innerHTML = `
+                    <div class="empty-history">
+                        <div class="empty-history-icon">📭</div>
+                        <div class="empty-history-text">Aucune conversation sauvegardée</div>
+                    </div>
+                `;
+            } else {
+                conversationsList.innerHTML = conversations.map(conv => {
+                    const date = new Date(conv.updatedAt).toLocaleString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    const messageCount = conv.messages.length / 2;
+                    const isActive = conv.id === chatHistory.currentConversationId;
+
+                    return `
+                        <div class="conversation-item ${isActive ? 'active' : ''}" onclick="loadConversationFromModal('${conv.id}')">
+                            <div class="conversation-info">
+                                <div class="conversation-title">${conv.title}</div>
+                                <div class="conversation-meta">${date} • ${messageCount} message${messageCount > 1 ? 's' : ''}</div>
+                            </div>
+                            <div class="conversation-actions" onclick="event.stopPropagation()">
+                                <button class="conversation-btn delete" onclick="deleteConversationFromModal('${conv.id}')" title="Supprimer">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeHistoryModal() {
+            const modal = document.getElementById('historyModal');
+            modal.style.display = 'none';
+        }
+
+        function loadConversationFromModal(conversationId) {
+            chatHistory.loadConversation(conversationId);
+            closeHistoryModal();
+        }
+
+        function deleteConversationFromModal(conversationId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
+                chatHistory.deleteConversation(conversationId);
+                showHistoryModal(); // Rafraîchir la liste
+            }
+        }
+
+        // Fermer le modal en cliquant en dehors
+        document.addEventListener('click', function (event) {
+            const modal = document.getElementById('historyModal');
+            if (event.target === modal) {
+                closeHistoryModal();
+            }
+        });
 
         function copyMessage(btn) {
             const messageContent = btn.closest('.message').querySelector('.message-content').innerText;
