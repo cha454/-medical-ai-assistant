@@ -25,12 +25,16 @@ Un assistant médical intelligent basé sur l'IA qui permet de discuter en langa
 - Conseils santé adaptés à la météo
 - Exemples: "Quelle est la météo à Paris ?"
 
-#### 🔍 Recherches Poussées (OpenAI/Gemini)
-- Analyses approfondies sur n'importe quel sujet
-- Informations à jour du web (Wikipedia, sources médicales)
-- Réponses détaillées de 500+ mots
-- Sources citées et vérifiées
+#### 🔍 Recherche Web Multi-Sources (Version 2.0) 🆕
+- **7 moteurs de recherche** : Google, Wikipedia, DuckDuckGo, PubMed, Bing, Brave, Google Scholar
+- **Système de fiabilité** avec notation ⭐⭐⭐
+- **Croisement automatique** des sources pour garantir la fiabilité
+- **Jusqu'à 8 sources** affichées avec détails complets
+- **14 sources médicales prioritaires** (OMS, PubMed, etc.)
+- **Statistiques de qualité** (nombre de sources, fiabilité)
+- **Informations détaillées** : titre, extrait, auteurs, date, URL
 - Exemples: "Fais une recherche poussée sur le diabète"
+- **Voir** : `AMELIORATIONS_RECHERCHE_WEB.md` pour les détails
 
 ### 💬 Chat Intelligent
 - Interface conversationnelle style ChatGPT
@@ -51,7 +55,11 @@ Un assistant médical intelligent basé sur l'IA qui permet de discuter en langa
 
 ### 🤖 Intelligence Artificielle
 - **LLM intégré** : Google Gemini, OpenAI GPT, Anthropic Claude, Groq, HuggingFace
-- **Recherche web en temps réel** : Google Custom Search, Wikipedia, DuckDuckGo, PubMed
+- **Recherche web multi-sources (v2.0)** 🆕 : 
+  - 7 moteurs : Google, Wikipedia, DuckDuckGo, PubMed, Bing, Brave, Google Scholar
+  - Système de fiabilité ⭐⭐⭐
+  - Croisement automatique des sources
+  - 14 sources médicales prioritaires
 - **API Météo** : OpenWeather (1000 appels/jour gratuit)
 - **55+ maladies** dans la base de connaissances
 - **60+ médicaments** avec interactions
@@ -111,9 +119,15 @@ HUGGINGFACE_API_KEY=votre_cle_huggingface
 # Météo (NOUVEAU - Gratuit)
 OPENWEATHER_API_KEY=votre_cle_openweather
 
-# Recherche Web Google (optionnel - 100 requêtes/jour gratuit)
-GOOGLE_SEARCH_API_KEY=votre_cle_google_search
+# Recherche Web - Sources Gratuites (déjà actives sans config)
+# Wikipedia, DuckDuckGo, PubMed = 3 sources gratuites illimitées
+
+# Recherche Web - Sources Optionnelles (pour améliorer la qualité)
+GOOGLE_SEARCH_API_KEY=votre_cle_google_search  # 100/jour gratuit
 GOOGLE_SEARCH_CX=votre_search_engine_id
+BING_SEARCH_API_KEY=votre_cle_bing            # 1000/mois gratuit
+BRAVE_SEARCH_API_KEY=votre_cle_brave          # 2000/mois gratuit
+SERPAPI_KEY=votre_cle_serpapi                 # 100/mois gratuit (Google Scholar)
 
 # Email (optionnel)
 SENDGRID_API_KEY=votre_cle_sendgrid
@@ -121,11 +135,14 @@ SENDGRID_FROM_EMAIL=votre_email@exemple.com
 ```
 
 **📖 Guides détaillés:**
+- [AMELIORATIONS_RECHERCHE_WEB.md](AMELIORATIONS_RECHERCHE_WEB.md) 🆕 - Documentation complète recherche multi-sources
+- [CONFIGURATION_SOURCES_RECHERCHE.md](CONFIGURATION_SOURCES_RECHERCHE.md) 🆕 - Guide configuration des sources
+- [RESUME_AMELIORATIONS.md](RESUME_AMELIORATIONS.md) 🆕 - Résumé visuel avant/après
 - [GUIDE_RENDER_COMPLET.md](GUIDE_RENDER_COMPLET.md) - Déploiement sur Render avec toutes les clés API
 - [NOUVELLES_FONCTIONNALITES.md](NOUVELLES_FONCTIONNALITES.md) - Documentation des nouvelles fonctionnalités
 - [GOOGLE_SEARCH_SETUP.md](GOOGLE_SEARCH_SETUP.md) - Configuration recherche Google
 
-**Sans configuration:** L'assistant fonctionne avec Wikipedia, DuckDuckGo et PubMed (gratuit, illimité)
+**Sans configuration:** L'assistant fonctionne avec Wikipedia, DuckDuckGo et PubMed (3 sources gratuites illimitées)
 
 ## 📁 Structure du Projet
 
