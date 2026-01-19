@@ -282,26 +282,39 @@ class EnhancedMedicalChatbot:
                 
                 # Faire une recherche web seulement pour questions factuelles (pas conversationnelles)
                 if WEB_SEARCH_AVAILABLE and not is_conversational and len(user_input.split()) >= 3:
-                    print(f"🔍 Recherche web pour: {user_input}")
+                    print(f"🔍 Recherche web multi-sources pour: {user_input}")
                     web_results = web_search.search_medical_info(user_input, language)
                     
                     if web_results and web_results.get("sources"):
-                        web_context = "\n\n**Informations trouvées sur le web (à jour):**\n"
+                        # Compter les sources par fiabilité
+                        very_high_sources = [s for s in web_results["sources"] if s.get("reliability") == "very_high"]
+                        high_sources = [s for s in web_results["sources"] if s.get("reliability") == "high"]
+                        
+                        web_context = "\n\n**Informations vérifiées sur le web (multi-sources):**\n"
+                        web_context += f"✓ {len(web_results['sources'])} sources consultées ({len(very_high_sources)} très fiables, {len(high_sources)} fiables)\n\n"
                         
                         # Ajouter le résumé Wikipedia si disponible
                         if web_results.get("summary"):
-                            web_context += f"Résumé: {web_results['summary'][:800]}\n\n"
+                            web_context += f"**Résumé principal:**\n{web_results['summary'][:900]}\n\n"
                         
-                        # Ajouter les sources (plus de sources pour recherche poussée)
-                        web_context += "Sources consultées:\n"
-                        max_sources = 5 if is_deep_search else 3
-                        for source in web_results["sources"][:max_sources]:
-                            web_context += f"- {source.get('source', 'Source')}: {source.get('extract', '')[:500 if is_deep_search else 300]}\n"
+                        # Ajouter les sources détaillées (plus de sources pour recherche poussée)
+                        web_context += "**Sources détaillées consultées:**\n"
+                        max_sources = 8 if is_deep_search else 5
+                        for idx, source in enumerate(web_results["sources"][:max_sources], 1):
+                            reliability_stars = "⭐⭐⭐" if source.get("reliability") == "very_high" else "⭐⭐" if source.get("reliability") == "high" else "⭐"
+                            web_context += f"\n{idx}. **{source.get('source', 'Source')}** {reliability_stars}\n"
+                            if source.get('title'):
+                                web_context += f"   Titre: {source['title'][:150]}\n"
+                            web_context += f"   Extrait: {source.get('extract', '')[:600 if is_deep_search else 350]}\n"
+                            if source.get('authors'):
+                                web_context += f"   Auteurs: {source['authors']}\n"
+                            if source.get('date'):
+                                web_context += f"   Date: {source['date']}\n"
                             if source.get('url'):
-                                web_context += f"  URL: {source['url']}\n"
+                                web_context += f"   URL: {source['url']}\n"
                         
                         if is_deep_search:
-                            web_context += "\n⚠️ RECHERCHE POUSSÉE DEMANDÉE: Fournis une analyse COMPLÈTE et DÉTAILLÉE (minimum 500 mots)\n"
+                            web_context += "\n⚠️ RECHERCHE POUSSÉE DEMANDÉE: Fournis une analyse COMPLÈTE, DÉTAILLÉE et VÉRIFIÉE (minimum 500 mots) en croisant TOUTES les sources ci-dessus\n"
                 
                 # 2. CONTEXTE de la base de données locale
                 local_context = self._build_context_for_llm(user_input_lower)
@@ -331,27 +344,37 @@ Contexte de notre base de données locale:
 
 INSTRUCTIONS CRITIQUES - À SUIVRE ABSOLUMENT:
 
-⚠️ RÈGLE #1 - UTILISER LES INFORMATIONS WEB NATURELLEMENT:
+⚠️ RÈGLE #1 - UTILISER LES INFORMATIONS WEB VÉRIFIÉES:
 - Si des informations web sont fournies ci-dessus, tu DOIS les utiliser en priorité
-- Ces informations sont À JOUR et VÉRIFIÉES
-- VARIE ta façon de citer les sources (ne répète pas toujours la même phrase):
-  * Parfois: "D'après mes recherches..."
-  * Parfois: "Selon les informations disponibles..."
+- Ces informations sont À JOUR, VÉRIFIÉES et proviennent de SOURCES MULTIPLES
+- CROISE les informations entre les différentes sources pour garantir la fiabilité
+- Privilégie les sources ⭐⭐⭐ (très fiables) comme PubMed, OMS, institutions médicales
+- VARIE ta façon de présenter les informations (ne répète pas toujours la même phrase):
+  * Parfois: "D'après plusieurs sources fiables..."
+  * Parfois: "Selon les informations vérifiées..."
   * Parfois: commence DIRECTEMENT par la réponse sans formule
-  * Parfois: "Les dernières informations indiquent que..."
+  * Parfois: "Les dernières données indiquent que..."
   * Parfois: intègre la source dans la phrase naturellement
+  * Parfois: "Après vérification auprès de sources médicales..."
 - Pour les questions simples et directes, réponds DIRECTEMENT sans formule d'introduction
 - NE réponds JAMAIS avec des informations obsolètes si tu as des données web récentes
-- Les infos web sont plus fiables que tes connaissances de base
+- Les infos web multi-sources sont plus fiables que tes connaissances de base
 
-RÈGLE #2 - RÉPONDRE AUX QUESTIONS FACTUELLES:
+RÈGLE #2 - GARANTIR LA FIABILITÉ:
+- Si plusieurs sources disent la même chose → haute confiance, affirme clairement
+- Si les sources divergent → mentionne les différentes perspectives
+- Cite le nombre de sources consultées pour renforcer la crédibilité
+- Pour les infos médicales critiques, mentionne les sources très fiables (⭐⭐⭐)
+- Exemple: "Selon 5 sources médicales fiables dont l'OMS et PubMed..."
+
+RÈGLE #3 - RÉPONDRE AUX QUESTIONS FACTUELLES:
 - Pour les questions sur des événements récents (2024, 2025, 2026), utilise UNIQUEMENT les infos web
 - Si la question porte sur "qui a gagné", "résultat", "vainqueur", donne la réponse DIRECTEMENT
 - Exemple: "Le Maroc a remporté la CAN 2025 !" au lieu de "D'après mes recherches, le Maroc..."
 - Ne dis JAMAIS "je n'ai pas accès" si des infos web sont fournies
 - Sois PRÉCIS et FACTUEL avec les données web
 
-RÈGLE #3 - STYLE DE RÉPONSE NATUREL:
+RÈGLE #4 - STYLE DE RÉPONSE NATUREL:
 - Tu es un assistant conversationnel amical, chaleureux et engageant
 - Réponds de manière humaine, empathique et enthousiaste
 - Structure tes réponses avec des emojis, titres et sections claires
@@ -360,7 +383,7 @@ RÈGLE #3 - STYLE DE RÉPONSE NATUREL:
 - Cite tes sources web de manière explicite
 - Termine par une question engageante
 
-RÈGLE #4 - QUESTIONS MÉDICALES:
+RÈGLE #5 - QUESTIONS MÉDICALES:
 - Ajoute un disclaimer à la fin pour les questions médicales
 - Recommande toujours de consulter un professionnel"""
                 

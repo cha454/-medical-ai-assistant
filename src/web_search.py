@@ -1,12 +1,13 @@
 """
 Module de recherche web pour enrichir les réponses du chatbot
-Supporte: Google Custom Search, Wikipedia, DuckDuckGo, PubMed
+Supporte: Google Custom Search, Wikipedia, DuckDuckGo, PubMed, Bing, Brave Search
 """
 
 import requests
 import json
 import os
 from datetime import datetime, timedelta
+from urllib.parse import quote
 
 class MedicalWebSearch:
     def __init__(self):
@@ -16,6 +17,12 @@ class MedicalWebSearch:
         # Clés API Google Custom Search (optionnel)
         self.google_api_key = os.environ.get('GOOGLE_SEARCH_API_KEY')
         self.google_cx = os.environ.get('GOOGLE_SEARCH_CX')  # Custom Search Engine ID
+        
+        # Clé API Bing Search (optionnel)
+        self.bing_api_key = os.environ.get('BING_SEARCH_API_KEY')
+        
+        # Clé API Brave Search (optionnel)
+        self.brave_api_key = os.environ.get('BRAVE_SEARCH_API_KEY')
         
         # Sources médicales fiables
         self.trusted_sources = [
@@ -27,7 +34,12 @@ class MedicalWebSearch:
             "inserm.fr",
             "mayoclinic.org",
             "nih.gov",
-            "cdc.gov"
+            "cdc.gov",
+            "webmd.com",
+            "healthline.com",
+            "medlineplus.gov",
+            "ncbi.nlm.nih.gov",
+            "cochrane.org"
         ]
     
     def search_medical_info(self, query, language="fr"):
@@ -73,6 +85,26 @@ class MedicalWebSearch:
         pubmed_results = self._search_pubmed(query)
         if pubmed_results:
             results["sources"].extend(pubmed_results)
+        
+        # 5. Recherche Bing (si configuré)
+        if self.bing_api_key:
+            bing_results = self._search_bing(query, language)
+            if bing_results:
+                results["sources"].extend(bing_results)
+        
+        # 6. Recherche Brave Search (si configuré)
+        if self.brave_api_key:
+            brave_results = self._search_brave(query, language)
+            if brave_results:
+                results["sources"].extend(brave_results)
+        
+        # 7. Recherche Scholar Google (articles académiques)
+        scholar_results = self._search_google_scholar(query)
+        if scholar_results:
+            results["sources"].extend(scholar_results)
+        
+        # Trier les résultats par fiabilité
+        results["sources"] = self._rank_sources(results["sources"])
         
         # Mettre en cache
         self.cache[cache_key] = {
@@ -249,16 +281,26 @@ class MedicalWebSearch:
         if not results or not results.get("sources"):
             return None
         
-        formatted = f"""**📚 Informations trouvées sur le web:**\n\n"""
+        formatted = f"""**📚 Informations vérifiées sur le web:**\n\n"""
         
         # Résumé principal
         if results.get("summary"):
-            formatted += f"{results['summary'][:500]}...\n\n"
+            formatted += f"{results['summary'][:600]}...\n\n"
         
-        # Sources
+        # Statistiques des sources
+        total_sources = len(results["sources"])
+        very_high = sum(1 for s in results["sources"] if s.get("reliability") == "very_high")
+        high = sum(1 for s in results["sources"] if s.get("reliability") == "high")
+        
+        formatted += f"**📊 Qualité de la recherche:**\n"
+        formatted += f"• {total_sources} sources consultées\n"
+        formatted += f"• {very_high} sources très fiables (⭐⭐⭐)\n"
+        formatted += f"• {high} sources fiables (⭐⭐)\n\n"
+        
+        # Sources détaillées
         formatted += "**🔍 Sources consultées:**\n\n"
         
-        for i, source in enumerate(results["sources"][:5], 1):
+        for i, source in enumerate(results["sources"][:8], 1):  # Augmenté à 8 sources
             reliability_emoji = {
                 "very_high": "⭐⭐⭐",
                 "high": "⭐⭐",
@@ -267,15 +309,170 @@ class MedicalWebSearch:
             
             formatted += f"{i}. **{source.get('source', 'Source')}** {reliability_emoji}\n"
             if source.get("title"):
-                formatted += f"   {source['title'][:100]}\n"
+                formatted += f"   📄 {source['title'][:120]}\n"
+            if source.get("extract") and len(source.get("extract", "")) > 20:
+                formatted += f"   💬 {source['extract'][:150]}...\n"
+            if source.get("authors"):
+                formatted += f"   👥 {source['authors']}\n"
+            if source.get("date"):
+                formatted += f"   📅 {source['date']}\n"
             if source.get("url"):
                 formatted += f"   🔗 {source['url']}\n"
             formatted += "\n"
         
-        formatted += f"\n📅 **Dernière mise à jour:** {datetime.now().strftime('%d/%m/%Y %H:%M')}\n"
-        formatted += "\n⚠️ **Important:** Vérifiez toujours avec un professionnel de santé."
+        formatted += f"\n📅 **Dernière mise à jour:** {datetime.now().strftime('%d/%m/%Y à %H:%M')}\n"
+        formatted += f"🔄 **Données mises en cache pour 24h**\n\n"
+        formatted += "⚠️ **Ces informations sont à but éducatif. Consultez un professionnel de santé pour un avis personnalisé.**"
         
         return formatted
+    
+    def _search_bing(self, query, language="fr"):
+        """Recherche sur Bing Search API"""
+        if not self.bing_api_key:
+            return []
+        
+        try:
+            url = "https://api.bing.microsoft.com/v7.0/search"
+            headers = {"Ocp-Apim-Subscription-Key": self.bing_api_key}
+            params = {
+                "q": query,
+                "mkt": "fr-FR" if language == "fr" else "en-US",
+                "count": 5,
+                "responseFilter": "Webpages"
+            }
+            
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results = []
+                
+                for item in data.get("webPages", {}).get("value", []):
+                    url_lower = item.get("url", "").lower()
+                    is_trusted = any(source in url_lower for source in self.trusted_sources)
+                    
+                    results.append({
+                        "source": "Bing",
+                        "title": item.get("name", ""),
+                        "extract": item.get("snippet", ""),
+                        "url": item.get("url", ""),
+                        "reliability": "very_high" if is_trusted else "high"
+                    })
+                
+                print(f"✓ Bing: {len(results)} résultats trouvés")
+                return results
+            else:
+                print(f"Bing API Error: {response.status_code}")
+        except Exception as e:
+            print(f"Bing search error: {e}")
+        return []
+    
+    def _search_brave(self, query, language="fr"):
+        """Recherche sur Brave Search API"""
+        if not self.brave_api_key:
+            return []
+        
+        try:
+            url = "https://api.search.brave.com/res/v1/web/search"
+            headers = {
+                "Accept": "application/json",
+                "X-Subscription-Token": self.brave_api_key
+            }
+            params = {
+                "q": query,
+                "country": "FR" if language == "fr" else "US",
+                "search_lang": language,
+                "count": 5
+            }
+            
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results = []
+                
+                for item in data.get("web", {}).get("results", []):
+                    url_lower = item.get("url", "").lower()
+                    is_trusted = any(source in url_lower for source in self.trusted_sources)
+                    
+                    results.append({
+                        "source": "Brave",
+                        "title": item.get("title", ""),
+                        "extract": item.get("description", ""),
+                        "url": item.get("url", ""),
+                        "reliability": "very_high" if is_trusted else "high"
+                    })
+                
+                print(f"✓ Brave: {len(results)} résultats trouvés")
+                return results
+            else:
+                print(f"Brave API Error: {response.status_code}")
+        except Exception as e:
+            print(f"Brave search error: {e}")
+        return []
+    
+    def _search_google_scholar(self, query):
+        """Recherche sur Google Scholar (scraping léger)"""
+        try:
+            # Utiliser l'API Serpapi si disponible, sinon scraping basique
+            serpapi_key = os.environ.get('SERPAPI_KEY')
+            
+            if serpapi_key:
+                url = "https://serpapi.com/search"
+                params = {
+                    "engine": "google_scholar",
+                    "q": query,
+                    "api_key": serpapi_key,
+                    "num": 3
+                }
+                
+                response = requests.get(url, params=params, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    results = []
+                    
+                    for item in data.get("organic_results", []):
+                        results.append({
+                            "source": "Google Scholar",
+                            "title": item.get("title", ""),
+                            "extract": item.get("snippet", ""),
+                            "url": item.get("link", ""),
+                            "authors": item.get("publication_info", {}).get("authors", ""),
+                            "reliability": "very_high"
+                        })
+                    
+                    print(f"✓ Google Scholar: {len(results)} résultats trouvés")
+                    return results
+        except Exception as e:
+            print(f"Google Scholar search error: {e}")
+        return []
+    
+    def _rank_sources(self, sources):
+        """Trie les sources par fiabilité et pertinence"""
+        reliability_order = {
+            "very_high": 3,
+            "high": 2,
+            "medium": 1
+        }
+        
+        # Trier par fiabilité puis par source
+        sorted_sources = sorted(
+            sources,
+            key=lambda x: (
+                reliability_order.get(x.get("reliability", "medium"), 0),
+                x.get("source", "")
+            ),
+            reverse=True
+        )
+        
+        # Dédupliquer par URL
+        seen_urls = set()
+        unique_sources = []
+        for source in sorted_sources:
+            url = source.get("url", "")
+            if url and url not in seen_urls:
+                seen_urls.add(url)
+                unique_sources.append(source)
+        
+        return unique_sources
     
     def search_and_format(self, query, language="fr"):
         """Recherche et formate en une seule étape"""
