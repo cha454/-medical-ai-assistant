@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat - Assistant Médical IA</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Marked.js pour convertir Markdown en HTML -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -212,6 +214,117 @@
 
         .message-content p {
             margin-bottom: 12px;
+        }
+
+        /* Styling Markdown dans les messages */
+        .message-content h1,
+        .message-content h2,
+        .message-content h3,
+        .message-content h4 {
+            font-weight: 600;
+            color: #111827;
+            margin-top: 20px;
+            margin-bottom: 12px;
+        }
+
+        .message-content h1 {
+            font-size: 24px;
+        }
+
+        .message-content h2 {
+            font-size: 20px;
+        }
+
+        .message-content h3 {
+            font-size: 18px;
+        }
+
+        .message-content h4 {
+            font-size: 16px;
+        }
+
+        .message-content ul,
+        .message-content ol {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        .message-content li {
+            margin-bottom: 6px;
+        }
+
+        .message-content strong {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .message-content em {
+            font-style: italic;
+        }
+
+        .message-content code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #ef4444;
+        }
+
+        .message-content pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 12px;
+        }
+
+        .message-content pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        .message-content blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 16px;
+            margin: 12px 0;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .message-content a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .message-content a:hover {
+            text-decoration: underline;
+        }
+
+        .message-content hr {
+            border: none;
+            border-top: 1px solid #e5e7eb;
+            margin: 20px 0;
+        }
+
+        .message-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+        }
+
+        .message-content th,
+        .message-content td {
+            border: 1px solid #e5e7eb;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .message-content th {
+            background: #f9fafb;
+            font-weight: 600;
         }
 
         .message-actions {
@@ -641,12 +754,22 @@
             const author = isUser ? 'Vous' : 'Assistant';
             const avatarClass = isUser ? 'avatar-user' : 'avatar-bot';
 
+            // Convertir Markdown en HTML pour les messages du bot
+            let formattedContent;
+            if (isUser) {
+                // Pour l'utilisateur, juste remplacer les retours à la ligne
+                formattedContent = content.replace(/\n/g, '<br>');
+            } else {
+                // Pour le bot, convertir le Markdown en HTML
+                formattedContent = marked.parse(content);
+            }
+
             messageDiv.innerHTML = `
                 <div class="message-header">
                     <div class="avatar ${avatarClass}">${avatar}</div>
                     <div class="message-author">${author}</div>
                 </div>
-                <div class="message-content">${content.replace(/\n/g, '<br>')}</div>
+                <div class="message-content">${formattedContent}</div>
                 ${!isUser ? `
                     <div class="message-actions">
                         <button class="action-btn" onclick="copyMessage(this)">📋 Copier</button>
