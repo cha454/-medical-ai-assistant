@@ -49,6 +49,42 @@ except ImportError:
     weather_service = None
     print("⚠️ Module météo non disponible")
 
+# Import du module Calculatrice
+try:
+    from calculator_service import calculator
+    CALCULATOR_AVAILABLE = True
+    print("✓ Service calculatrice activé")
+except ImportError:
+    CALCULATOR_AVAILABLE = False
+    calculator = None
+    print("⚠️ Module calculatrice non disponible")
+
+# Import du module Conversion de devises
+try:
+    from currency_service import currency_service
+    CURRENCY_AVAILABLE = currency_service.is_available()
+    if CURRENCY_AVAILABLE:
+        print("✓ Service conversion de devises activé")
+    else:
+        print("⚠️ Service conversion de devises disponible mais pas configuré")
+except ImportError:
+    CURRENCY_AVAILABLE = False
+    currency_service = None
+    print("⚠️ Module conversion de devises non disponible")
+
+# Import du module Actualités
+try:
+    from news_service import news_service
+    NEWS_AVAILABLE = news_service.is_available()
+    if NEWS_AVAILABLE:
+        print("✓ Service actualités activé")
+    else:
+        print("⚠️ Service actualités disponible mais pas configuré (NEWS_API_KEY manquante)")
+except ImportError:
+    NEWS_AVAILABLE = False
+    news_service = None
+    print("⚠️ Module actualités non disponible")
+
 class EnhancedMedicalChatbot:
     def __init__(self):
         self.conversation_state = "greeting"
@@ -211,6 +247,45 @@ class EnhancedMedicalChatbot:
                     return weather_response
             except Exception as e:
                 print(f"Erreur météo: {e}")
+                # Continuer avec le mode normal si erreur
+        
+        # ============================================
+        # DÉTECTION DEMANDE DE CALCUL
+        # ============================================
+        if CALCULATOR_AVAILABLE and calculator and calculator.is_calculation_request(user_input):
+            try:
+                calc_result = calculator.calculate(user_input)
+                calc_response = calculator.format_response(calc_result, user_input)
+                self._save_response(calc_response)
+                return calc_response
+            except Exception as e:
+                print(f"Erreur calculatrice: {e}")
+                # Continuer avec le mode normal si erreur
+        
+        # ============================================
+        # DÉTECTION DEMANDE DE CONVERSION DE DEVISES
+        # ============================================
+        if CURRENCY_AVAILABLE and currency_service and currency_service.is_currency_request(user_input):
+            try:
+                currency_result = currency_service.parse_and_convert(user_input)
+                currency_response = currency_service.format_response(currency_result, user_input)
+                self._save_response(currency_response)
+                return currency_response
+            except Exception as e:
+                print(f"Erreur conversion devises: {e}")
+                # Continuer avec le mode normal si erreur
+        
+        # ============================================
+        # DÉTECTION DEMANDE D'ACTUALITÉS
+        # ============================================
+        if NEWS_AVAILABLE and news_service and news_service.is_news_request(user_input):
+            try:
+                news_result = news_service.parse_and_get_news(user_input)
+                news_response = news_service.format_response(news_result, user_input)
+                self._save_response(news_response)
+                return news_response
+            except Exception as e:
+                print(f"Erreur actualités: {e}")
                 # Continuer avec le mode normal si erreur
         
         # ============================================
