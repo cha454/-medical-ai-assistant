@@ -429,6 +429,28 @@ RÈGLE #5 - QUESTIONS MÉDICALES:
         # MODE BASIQUE (si LLM non disponible)
         # ============================================
         
+        # Questions conversationnelles simples (réponses directes)
+        conversational_responses = {
+            "comment tu vas": "Je vais très bien, merci ! 😊 Je suis là pour t'aider avec tes questions de santé. Comment puis-je t'aider aujourd'hui ?",
+            "comment vas-tu": "Je vais très bien, merci ! 😊 Je suis là pour t'aider avec tes questions de santé. Comment puis-je t'aider aujourd'hui ?",
+            "ça va": "Oui, ça va très bien ! 😊 Et toi, comment te sens-tu ? Y a-t-il quelque chose dont tu aimerais parler ?",
+            "tu vas bien": "Oui, je vais très bien, merci de demander ! 😊 Comment puis-je t'aider aujourd'hui ?",
+            "comment ça va": "Ça va très bien, merci ! 😊 Et toi ? Y a-t-il quelque chose que je peux faire pour toi ?",
+            "merci": "De rien ! 😊 Je suis là pour t'aider. N'hésite pas si tu as d'autres questions !",
+            "merci beaucoup": "Avec plaisir ! 😊 C'est un plaisir de t'aider. Si tu as d'autres questions, je suis là !",
+            "ok": "D'accord ! 👍 Y a-t-il autre chose que je peux faire pour toi ?",
+            "d'accord": "Parfait ! 👍 N'hésite pas si tu as d'autres questions.",
+            "qui es-tu": "Je suis un assistant médical IA 🏥 conçu pour t'aider avec des informations sur la santé. Je peux répondre à tes questions sur les maladies, symptômes, médicaments et bien plus encore !",
+            "c'est quoi ton nom": "Je suis l'Assistant Médical IA 🏥 ! Je suis là pour t'aider avec tes questions de santé.",
+            "tu t'appelles comment": "Je m'appelle Assistant Médical IA 🏥 ! Comment puis-je t'aider aujourd'hui ?",
+        }
+        
+        # Vérifier si c'est une question conversationnelle
+        for question, response in conversational_responses.items():
+            if question in user_input_lower:
+                self._save_response(response)
+                return response
+        
         # Salutations
         if any(word in user_input_lower for word in ["bonjour", "salut", "hello", "bonsoir", "hey", "coucou"]):
             response = self._greeting_response()
