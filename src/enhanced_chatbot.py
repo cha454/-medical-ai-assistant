@@ -342,7 +342,9 @@ class EnhancedMedicalChatbot:
                     "comment tu vas", "comment vas-tu", "ça va", "tu vas bien",
                     "merci", "merci beaucoup", "d'accord", "ok", "oui", "non",
                     "qui es-tu", "c'est quoi ton nom", "tu t'appelles comment",
-                    "raconte", "blague", "histoire"
+                    "raconte", "blague", "histoire", "bonjour", "salut", "hello",
+                    "bonsoir", "comment tu t'appelles", "quel est ton nom",
+                    "présente-toi", "qui tu es", "c'est qui"
                 ]
                 
                 is_conversational = any(keyword in user_input_lower for keyword in conversational_keywords)
@@ -473,14 +475,18 @@ RÈGLE #5 - QUESTIONS MÉDICALES:
                 print(f"📥 Réponse LLM reçue: {bool(llm_response)}")
                 
                 if llm_response:
-                    # Ajouter les sources web si disponibles
-                    if web_results and web_results.get("sources"):
-                        llm_response += "\n\n---\n**📚 Sources consultées:**\n"
-                        for i, source in enumerate(web_results["sources"][:3], 1):
-                            reliability = {"very_high": "⭐⭐⭐", "high": "⭐⭐", "medium": "⭐"}.get(source.get("reliability", "medium"), "⭐")
-                            llm_response += f"{i}. {source.get('source', 'Source')} {reliability}\n"
-                            if source.get('url'):
-                                llm_response += f"   🔗 {source['url']}\n"
+                    # Ajouter les sources web si disponibles (seulement si pertinentes)
+                    if web_results and web_results.get("sources") and not is_conversational:
+                        # Filtrer les sources pertinentes (pas les articles aléatoires)
+                        relevant_sources = [s for s in web_results["sources"] if s.get('extract') and len(s.get('extract', '')) > 50]
+                        
+                        if relevant_sources:
+                            llm_response += "\n\n---\n**📚 Sources consultées:**\n"
+                            for i, source in enumerate(relevant_sources[:5], 1):  # Maximum 5 sources
+                                reliability = {"very_high": "⭐⭐⭐", "high": "⭐⭐", "medium": "⭐"}.get(source.get("reliability", "medium"), "⭐")
+                                llm_response += f"{i}. {source.get('source', 'Source')} {reliability}\n"
+                                if source.get('url'):
+                                    llm_response += f"   🔗 {source['url']}\n"
                     
                     # Ajouter disclaimer seulement pour questions médicales
                     medical_keywords = ["symptôme", "maladie", "douleur", "traitement", "médicament", "santé", "médecin", "diagnostic", "ebola", "virus", "infection"]
