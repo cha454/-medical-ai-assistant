@@ -498,7 +498,35 @@ RÈGLE #5 - QUESTIONS MÉDICALES:
                     self._save_response(llm_response)
                     return llm_response
                 else:
-                    print("⚠️ LLM a retourné None - passage au mode basique")
+                    print("⚠️ LLM a retourné None - réessai avec message simplifié")
+                    
+                    # Réessayer avec un message plus simple et direct
+                    simple_message = f"""Question de l'utilisateur: {user_input}
+
+Tu es un assistant IA intelligent et conversationnel. Réponds à TOUTES les questions, même si elles ne sont pas médicales.
+
+IMPORTANT:
+- Réponds de manière naturelle, amicale et engageante
+- Si c'est une question philosophique, donne ton point de vue
+- Si c'est une question pratique, donne des conseils réalistes
+- Si c'est une question hors de ton domaine, explique ce que tu sais et suggère des alternatives
+- TOUJOURS donner une réponse, ne JAMAIS dire "je ne peux pas répondre"
+
+Réponds maintenant à la question de l'utilisateur."""
+                    
+                    print("🔄 Réessai LLM avec message simplifié...")
+                    llm_response_retry = llm.generate_response(
+                        simple_message,
+                        [],  # Pas d'historique pour simplifier
+                        language
+                    )
+                    
+                    if llm_response_retry:
+                        print("✅ Réessai réussi!")
+                        self._save_response(llm_response_retry)
+                        return llm_response_retry
+                    else:
+                        print("❌ Réessai échoué - passage au mode basique")
                     
             except Exception as e:
                 print(f"❌ Erreur LLM/Web: {e}")
