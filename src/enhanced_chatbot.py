@@ -502,14 +502,16 @@ RÈGLE #5 - QUESTIONS MÉDICALES:
             self._save_response(response)
             return response
         
-        # Demande d'aide
-        if any(word in user_input_lower for word in ["aide", "help", "comment", "peux-tu", "capable"]):
+        # Demande d'aide spécifique (pas juste "comment")
+        help_keywords = ["aide", "help", "aide-moi", "peux-tu m'aider", "que peux-tu faire", "tes capacités"]
+        if any(keyword in user_input_lower for keyword in help_keywords):
             response = self._help_response()
             self._save_response(response)
             return response
         
-        # Au revoir
-        if any(word in user_input_lower for word in ["au revoir", "bye", "merci", "stop", "adieu", "à bientôt"]):
+        # Au revoir (seulement si c'est vraiment une fin de conversation)
+        goodbye_keywords = ["au revoir", "à bientôt", "bonne journée", "bonne soirée"]
+        if any(keyword in user_input_lower for keyword in goodbye_keywords):
             response = self._goodbye_response()
             self._save_response(response)
             return response
