@@ -35,6 +35,24 @@ class NewsService:
             "entertainment": "entertainment"
         }
         
+        # Mots-clés sportifs courants pour améliorer les recherches
+        self.sports_keywords = {
+            "can": "CAN OR \"Coupe d'Afrique des Nations\" OR AFCON",
+            "coupe d'afrique": "CAN OR \"Coupe d'Afrique des Nations\" OR AFCON",
+            "afcon": "AFCON OR CAN OR \"Africa Cup of Nations\"",
+            "football": "football OR soccer",
+            "basket": "basketball OR NBA",
+            "tennis": "tennis OR ATP OR WTA",
+            "rugby": "rugby OR \"Top 14\" OR \"Six Nations\"",
+            "formule 1": "\"Formula 1\" OR F1",
+            "f1": "\"Formula 1\" OR F1",
+            "ligue 1": "\"Ligue 1\" OR \"French football\"",
+            "champions league": "\"Champions League\" OR UCL",
+            "coupe du monde": "\"World Cup\" OR \"Coupe du Monde\"",
+            "jeux olympiques": "Olympics OR \"Jeux Olympiques\"",
+            "euro": "\"Euro 2024\" OR \"European Championship\""
+        }
+        
         # Pays disponibles (NewsAPI supporte 54 pays)
         self.countries = {
             "france": "fr",
@@ -73,7 +91,9 @@ class NewsService:
         keywords = [
             "actualité", "actualités", "actualite", "actualites",
             "news", "nouvelles", "infos", "informations",
-            "dernières nouvelles", "quoi de neuf", "derniers événements"
+            "dernières nouvelles", "quoi de neuf", "derniers événements",
+            "actualité de", "actualité du", "actualité de la",
+            "news about", "news on", "news of"
         ]
         
         return any(keyword in text_lower for keyword in keywords)
@@ -193,7 +213,45 @@ class NewsService:
         """Parse le texte et récupère les actualités"""
         text_lower = text.lower()
         
-        # Détecter la catégorie
+        # Détecter une recherche spécifique EN PREMIER (priorité)
+        query = None
+        import re
+        
+        # Patterns de recherche spécifique (ordre important)
+        search_patterns = [
+            r"actualités?\s+(?:sur|de|du|de\s+la|concernant)\s+(.+)",
+            r"news\s+(?:about|on|of)\s+(.+)",
+            r"infos?\s+(?:sur|de|du|concernant)\s+(.+)",
+            r"dernières?\s+(?:actualités?|news|infos?)\s+(?:sur|de|du|de\s+la)\s+(.+)"
+        ]
+        
+        for pattern in search_patterns:
+            match = re.search(pattern, text_lower)
+            if match:
+                query = match.group(1).strip()
+                # Nettoyer la requête
+                query = query.replace("?", "").replace("!", "").strip()
+                
+                # Vérifier si c'est un mot-clé sportif connu
+                for sport_key, sport_query in self.sports_keywords.items():
+                    if sport_key in query:
+                        query = sport_query
+                        print(f"🏆 Mot-clé sportif détecté: '{sport_key}' → '{sport_query}'")
+                        break
+                
+                print(f"🔍 Recherche spécifique détectée: '{query}'")
+                break
+        
+        # Si recherche spécifique trouvée, l'utiliser directement
+        if query:
+            # Détecter la langue pour la recherche
+            language = "fr"  # Par défaut français
+            if any(word in text_lower for word in ["news", "about", "latest"]):
+                language = "en"
+            
+            return self.get_news(category=None, country="fr", query=query)
+        
+        # Sinon, détecter la catégorie
         category = None
         for cat_name, cat_code in self.categories.items():
             if cat_name in text_lower:
@@ -205,21 +263,6 @@ class NewsService:
         for country_name, country_code in self.countries.items():
             if country_name in text_lower:
                 country = country_code
-                break
-        
-        # Détecter une recherche spécifique
-        query = None
-        search_patterns = [
-            r"actualités?\s+sur\s+(.+)",
-            r"news\s+about\s+(.+)",
-            r"infos?\s+sur\s+(.+)"
-        ]
-        
-        import re
-        for pattern in search_patterns:
-            match = re.search(pattern, text_lower)
-            if match:
-                query = match.group(1).strip()
                 break
         
         return self.get_news(category=category, country=country, query=query)
