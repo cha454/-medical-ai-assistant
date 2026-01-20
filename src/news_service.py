@@ -166,13 +166,16 @@ class NewsService:
                         return {
                             "success": False,
                             "error": "Pays non supporté",
-                            "message": f"Le pays '{country}' n'est pas supporté par NewsAPI. Essaie 'France', 'USA', 'UK', 'Maroc', 'Algérie', 'Tunisie', etc."
+                            "message": f"Le pays '{country}' n'est pas supporté par NewsAPI. Essaie 'France', 'USA', 'UK', 'Maroc', 'Algérie', 'Tunisie', etc.",
+                            "suggestion": "Essaie une recherche plus générale ou utilise la recherche web."
                         }
                     
                     return {
                         "success": False,
                         "error": "Aucun article",
-                        "message": "Aucune actualité trouvée pour cette recherche. Essaie une recherche plus générale ou un autre pays."
+                        "message": "Aucune actualité trouvée pour cette recherche. Essaie une recherche plus générale ou un autre pays.",
+                        "suggestion": "Essaie une recherche plus large ou utilise la recherche web.",
+                        "original_query": query  # Garder la requête originale pour suggestion
                     }
                 
                 return {
@@ -304,25 +307,36 @@ class NewsService:
 
 En attendant, je peux t'aider avec d'autres questions ! 😊"""
             
+            # Si aucun article trouvé, suggérer d'utiliser le LLM avec recherche web
+            original_query_text = news_result.get("original_query", original_query)
+            
             return f"""📰 **Actualités**
 
-❌ Je n'ai pas pu récupérer les actualités.
+❌ Je n'ai pas trouvé d'actualités récentes via NewsAPI.
 
 **Raison :** {news_result.get('message', 'Erreur inconnue')}
 
-**💡 Exemples de demandes valides :**
-• "Quelles sont les dernières actualités ?"
-• "Actualités santé"
-• "News sport"
-• "Actualités tech"
-• "Infos science"
-• "Actualités sur le climat"
+**💡 Alternative - Recherche Web Intelligente :**
 
-**🌍 Tu peux aussi spécifier un pays :**
+Au lieu de demander "actualités sur X", essaie simplement :
+**"{original_query_text}"** (sans le mot "actualités")
+
+Je vais alors utiliser ma recherche web multi-sources (14 sources) et mon intelligence artificielle pour te trouver les informations les plus récentes !
+
+**🌐 Exemples :**
+• Au lieu de "actualités sur l'éducation au Gabon"
+  → Demande : **"éducation au Gabon"** ou **"système éducatif gabonais"**
+
+• Au lieu de "actualités sur la CAN"
+  → Demande : **"CAN 2025"** ou **"Coupe d'Afrique des Nations"**
+
+**📰 Ou essaie des recherches plus générales :**
+• "Actualités Afrique"
+• "Actualités éducation"
 • "Actualités France"
-• "News USA"
+• "News sport"
 
-Essaie de reformuler ta demande !"""
+Reformule ta question et je t'aiderai ! 😊"""
         
         articles = news_result["articles"]
         category = news_result.get("category")
