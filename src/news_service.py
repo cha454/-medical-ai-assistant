@@ -65,7 +65,7 @@ class NewsService:
             return {
                 "success": False,
                 "error": "Service non configuré",
-                "message": "L'API d'actualités n'est pas configurée."
+                "message": "L'API d'actualités n'est pas configurée. Obtiens une clé gratuite sur https://newsapi.org"
             }
         
         try:
@@ -165,15 +165,31 @@ class NewsService:
         """Formate la réponse pour l'utilisateur"""
         if not news_result["success"]:
             if news_result.get("error") == "Service non configuré":
-                return f"""📰 **Actualités**
+                return f"""📰 **Service d'Actualités Non Configuré**
 
-⚠️ Le service d'actualités n'est pas encore configuré.
+⚠️ Le service d'actualités n'est pas encore activé.
 
-**Pour l'activer :**
-1. Va sur https://newsapi.org/register
-2. Crée un compte gratuit (100 requêtes/jour)
-3. Copie ta clé API
-4. Ajoute-la dans Render : `NEWS_API_KEY`
+**🎯 Pour l'activer (5 minutes - GRATUIT) :**
+
+**Étape 1 :** Créer un compte NewsAPI
+• Va sur https://newsapi.org/register
+• Remplis le formulaire et vérifie ton email
+
+**Étape 2 :** Obtenir ta clé API
+• Copie ta clé API (ressemble à : `a1b2c3d4...`)
+
+**Étape 3 :** Ajouter dans Render
+• Render.com → Ton service → Environment
+• Add Variable : `NEWS_API_KEY` = ta clé
+• Save Changes → Attendre 3 minutes
+
+**📚 Guide détaillé :** Voir `CONFIGURER_NEWSAPI.md`
+
+**💡 Avantages :**
+✅ 100 requêtes/jour GRATUIT
+✅ Actualités de 150+ pays
+✅ 7 catégories (santé, sport, tech, science...)
+✅ Recherche par mots-clés
 
 En attendant, je peux t'aider avec d'autres questions ! 😊"""
             
@@ -183,11 +199,17 @@ En attendant, je peux t'aider avec d'autres questions ! 😊"""
 
 **Raison :** {news_result.get('message', 'Erreur inconnue')}
 
-**Exemples de demandes :**
+**💡 Exemples de demandes valides :**
 • "Quelles sont les dernières actualités ?"
 • "Actualités santé"
 • "News sport"
+• "Actualités tech"
+• "Infos science"
 • "Actualités sur le climat"
+
+**🌍 Tu peux aussi spécifier un pays :**
+• "Actualités France"
+• "News USA"
 
 Essaie de reformuler ta demande !"""
         
