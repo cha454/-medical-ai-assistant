@@ -442,7 +442,7 @@ RÈGLE #5 - QUESTIONS MÉDICALES:
             "d'accord": "Parfait ! 👍 N'hésite pas si tu as d'autres questions.",
             "qui es-tu": "Je suis un assistant médical IA 🏥 conçu pour t'aider avec des informations sur la santé. Je peux répondre à tes questions sur les maladies, symptômes, médicaments et bien plus encore !",
             "c'est quoi ton nom": "Je suis l'Assistant Médical IA 🏥 ! Je suis là pour t'aider avec tes questions de santé.",
-            "tu t'appelles comment": "Je m'appelle Assistant Médical IA 🏥 ! Comment puis-je t'aider aujourd'hui ?",
+            "tu t'appelles comment": "Je m'appelle Assistant Médical IA 🏥 ! Comment puis-je t'aider aujourd'hui ?"
         }
         
         # Vérifier si c'est une question conversationnelle
