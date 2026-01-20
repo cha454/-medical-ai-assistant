@@ -12,7 +12,11 @@ class NewsService:
     def __init__(self):
         # Clé API NewsAPI (optionnelle)
         self.api_key = os.environ.get('NEWS_API_KEY')
-        self.api_url = "https://newsapi.org/v2/top-headlines"
+        
+        # Utiliser 'everything' au lieu de 'top-headlines' pour le plan gratuit
+        # Le plan Developer ne supporte pas top-headlines sans recherche
+        self.api_url = "https://newsapi.org/v2/everything"
+        self.top_headlines_url = "https://newsapi.org/v2/top-headlines"
         
         # Catégories disponibles
         self.categories = {
@@ -84,22 +88,39 @@ class NewsService:
             }
         
         try:
+            # Pour le plan gratuit (Developer), on doit utiliser 'everything' avec une recherche
+            # On ne peut pas utiliser 'top-headlines' sans recherche
+            
+            # Si pas de recherche spécifique, créer une recherche basée sur la catégorie
+            if not query:
+                if category:
+                    # Mapper les catégories vers des mots-clés de recherche
+                    category_keywords = {
+                        "health": "health OR medical OR healthcare",
+                        "sports": "sports OR football OR basketball",
+                        "technology": "technology OR tech OR AI OR software",
+                        "science": "science OR research OR discovery",
+                        "business": "business OR economy OR finance",
+                        "entertainment": "entertainment OR movie OR music"
+                    }
+                    query = category_keywords.get(category, "news")
+                else:
+                    # Recherche générale
+                    query = "news OR actualités"
+            
+            # Paramètres pour l'API 'everything'
             params = {
                 "apiKey": self.api_key,
-                "country": country,
-                "pageSize": 5  # Limiter à 5 articles
+                "q": query,  # Recherche obligatoire pour 'everything'
+                "language": "fr" if country == "fr" else "en",  # Langue au lieu de pays
+                "sortBy": "publishedAt",  # Trier par date
+                "pageSize": 10  # Plus d'articles pour filtrer ensuite
             }
             
-            # Ajouter la catégorie si spécifiée
-            if category:
-                cat_code = self._normalize_category(category)
-                if cat_code:
-                    params["category"] = cat_code
-            
-            # Ajouter une recherche si spécifiée
-            if query:
-                params["q"] = query
-                del params["country"]  # Pas de filtre pays avec recherche
+            # Ajouter une date récente (derniers 7 jours)
+            from datetime import datetime, timedelta
+            week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+            params["from"] = week_ago
             
             # Debug: afficher les paramètres de la requête
             print(f"📰 NewsAPI Request: {self.api_url}")
