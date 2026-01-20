@@ -214,13 +214,11 @@ DATE ACTUELLE: {date}
     
     def _call_google(self, messages):
         """Appel à l'API Google Gemini"""
-        # Modèles Gemini disponibles en janvier 2026 (format officiel)
+        # Modèles Gemini disponibles (noms corrects pour janvier 2026)
         models_to_try = [
-            ("v1beta/models/gemini-1.5-flash-latest", "gemini-1.5-flash-latest"),
-            ("v1beta/models/gemini-1.5-pro-latest", "gemini-1.5-pro-latest"),
-            ("v1/models/gemini-1.5-flash-latest", "gemini-1.5-flash-latest-v1"),
-            ("v1/models/gemini-1.5-pro-latest", "gemini-1.5-pro-latest-v1"),
-            ("v1beta/models/gemini-pro", "gemini-pro-beta"),
+            "gemini-1.5-flash",  # Modèle le plus rapide et stable
+            "gemini-1.5-pro",    # Modèle le plus puissant
+            "gemini-pro",        # Modèle de base (fallback)
         ]
         
         headers = {
@@ -256,8 +254,8 @@ DATE ACTUELLE: {date}
         }
         
         # Essayer chaque modèle jusqu'à ce qu'un fonctionne
-        for endpoint, model_name in models_to_try:
-            url = f"https://generativelanguage.googleapis.com/{endpoint}:generateContent?key={self.google_key}"
+        for model_name in models_to_try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={self.google_key}"
             
             try:
                 response = requests.post(url, headers=headers, json=data, timeout=30)
