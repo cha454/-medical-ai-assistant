@@ -31,7 +31,7 @@ class NewsService:
             "entertainment": "entertainment"
         }
         
-        # Pays disponibles
+        # Pays disponibles (NewsAPI supporte 54 pays)
         self.countries = {
             "france": "fr",
             "français": "fr",
@@ -39,8 +39,23 @@ class NewsService:
             "fr": "fr",
             "usa": "us",
             "us": "us",
+            "états-unis": "us",
+            "etats-unis": "us",
             "uk": "gb",
-            "angleterre": "gb"
+            "angleterre": "gb",
+            "royaume-uni": "gb",
+            "allemagne": "de",
+            "espagne": "es",
+            "italie": "it",
+            "canada": "ca",
+            "belgique": "be",
+            "suisse": "ch",
+            "maroc": "ma",
+            "algérie": "dz",
+            "tunisie": "tn",
+            "sénégal": "sn",
+            "côte d'ivoire": "ci",
+            "cameroun": "cm"
         }
     
     def is_available(self) -> bool:
@@ -86,17 +101,37 @@ class NewsService:
                 params["q"] = query
                 del params["country"]  # Pas de filtre pays avec recherche
             
+            # Debug: afficher les paramètres de la requête
+            print(f"📰 NewsAPI Request: {self.api_url}")
+            print(f"   Params: {params}")
+            
             response = requests.get(self.api_url, params=params, timeout=10)
+            
+            # Debug: afficher la réponse
+            print(f"   Status: {response.status_code}")
+            if response.status_code != 200:
+                print(f"   Error: {response.text[:200]}")
+            else:
+                data = response.json()
+                print(f"   Articles trouvés: {len(data.get('articles', []))}")
             
             if response.status_code == 200:
                 data = response.json()
                 articles = data.get("articles", [])
                 
                 if not articles:
+                    # Vérifier si c'est un problème de pays non supporté
+                    if country and country not in ["fr", "us", "gb", "de", "es", "it", "ca", "be", "ch", "ma", "dz", "tn", "sn", "ci", "cm"]:
+                        return {
+                            "success": False,
+                            "error": "Pays non supporté",
+                            "message": f"Le pays '{country}' n'est pas supporté par NewsAPI. Essaie 'France', 'USA', 'UK', 'Maroc', 'Algérie', 'Tunisie', etc."
+                        }
+                    
                     return {
                         "success": False,
                         "error": "Aucun article",
-                        "message": "Aucune actualité trouvée pour cette recherche."
+                        "message": "Aucune actualité trouvée pour cette recherche. Essaie une recherche plus générale ou un autre pays."
                     }
                 
                 return {
@@ -105,6 +140,18 @@ class NewsService:
                     "total": len(articles),
                     "category": category,
                     "country": country
+                }
+            elif response.status_code == 401:
+                return {
+                    "success": False,
+                    "error": "Clé API invalide",
+                    "message": "La clé API NewsAPI est invalide ou expirée. Vérifie ta configuration."
+                }
+            elif response.status_code == 429:
+                return {
+                    "success": False,
+                    "error": "Limite atteinte",
+                    "message": "Limite de 100 requêtes/jour atteinte. Réessaie demain ou passe au plan payant."
                 }
             else:
                 error_data = response.json()
