@@ -74,12 +74,12 @@ except ImportError:
 
 # Import du module Actualités
 try:
-    from news_service import news_service
+    from news_service_v2 import news_service_v2 as news_service
     NEWS_AVAILABLE = news_service.is_available()
     if NEWS_AVAILABLE:
-        print("✓ Service actualités activé")
+        print("✓ Service actualités hybride activé (GNews + RSS)")
     else:
-        print("⚠️ Service actualités disponible mais pas configuré (NEWS_API_KEY manquante)")
+        print("⚠️ Service actualités disponible mais pas configuré")
 except ImportError:
     NEWS_AVAILABLE = False
     news_service = None
