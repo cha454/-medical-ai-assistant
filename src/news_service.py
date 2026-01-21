@@ -53,6 +53,26 @@ class NewsService:
             "euro": "\"Euro 2024\" OR \"European Championship\""
         }
         
+        # Mots-clés pour les pays africains (pour améliorer les recherches)
+        self.country_keywords = {
+            "gabon": "Gabon OR Libreville OR gabonais OR gabonaise",
+            "maroc": "Maroc OR Marrakech OR Casablanca OR Rabat OR marocain",
+            "algérie": "Algérie OR Alger OR algérien OR Algeria",
+            "tunisie": "Tunisie OR Tunis OR tunisien OR Tunisia",
+            "sénégal": "Sénégal OR Dakar OR sénégalais OR Senegal",
+            "côte d'ivoire": "\"Côte d'Ivoire\" OR Abidjan OR ivoirien OR \"Ivory Coast\"",
+            "cameroun": "Cameroun OR Yaoundé OR Douala OR camerounais OR Cameroon",
+            "mali": "Mali OR Bamako OR malien",
+            "burkina faso": "\"Burkina Faso\" OR Ouagadougou OR burkinabé",
+            "niger": "Niger OR Niamey OR nigérien",
+            "tchad": "Tchad OR N'Djamena OR tchadien OR Chad",
+            "congo": "Congo OR Brazzaville OR Kinshasa OR congolais",
+            "rdc": "RDC OR \"République Démocratique du Congo\" OR Kinshasa",
+            "guinée": "Guinée OR Conakry OR guinéen OR Guinea",
+            "bénin": "Bénin OR Cotonou OR béninois OR Benin",
+            "togo": "Togo OR Lomé OR togolais"
+        }
+        
         # Pays disponibles (NewsAPI supporte 54 pays)
         self.countries = {
             "france": "fr",
@@ -241,6 +261,14 @@ class NewsService:
                         query = sport_query
                         print(f"🏆 Mot-clé sportif détecté: '{sport_key}' → '{sport_query}'")
                         break
+                
+                # Vérifier si c'est un mot-clé pays connu
+                if query not in self.sports_keywords.values():  # Si pas déjà un mot-clé sportif
+                    for country_key, country_query in self.country_keywords.items():
+                        if country_key in query:
+                            query = country_query
+                            print(f"🌍 Mot-clé pays détecté: '{country_key}' → '{country_query}'")
+                            break
                 
                 print(f"🔍 Recherche spécifique détectée: '{query}'")
                 break
