@@ -200,7 +200,7 @@ DATE ACTUELLE: {date}
         }
         
         data = {
-            "model": "glm-4-flash",  # Modèle rapide et gratuit
+            "model": "glm-4-plus",  # Modèle GLM-4 Plus (gratuit avec quota)
             "messages": messages,
             "max_tokens": 2000,
             "temperature": 0.7,
