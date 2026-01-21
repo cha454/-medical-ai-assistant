@@ -595,9 +595,17 @@
                     title="Historique des conversations">
                     📚 Historique
                 </button>
+                <button class="btn-icon" id="voice-btn" onclick="toggleVoiceListening()" title="Reconnaissance vocale">
+                    🎤 Vocal
+                </button>
+                <button class="btn-icon" id="continuous-btn" onclick="toggleContinuousMode()"
+                    title="Mode conversation continue">
+                    💬 Mode Continu
+                </button>
             </div>
         </div>
         <div class="header-right">
+            <span id="voice-status" style="color: #60a5fa; font-size: 14px; margin-right: 12px;"></span>
             <button class="btn-icon" onclick="window.location.href='/'" title="Retour">
                 🏠 Accueil
             </button>
@@ -643,9 +651,6 @@
                     <textarea id="messageInput" placeholder="Posez votre question médicale..." rows="1"
                         onkeydown="handleKeyPress(event)" oninput="autoResize(this)"></textarea>
                     <div class="input-actions">
-                        <button class="btn-voice" onclick="toggleVoice()" title="Reconnaissance vocale">
-                            🎤
-                        </button>
                         <button class="btn-send" onclick="sendMessage()" id="sendBtn">
                             Envoyer
                         </button>
@@ -674,53 +679,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='history-modal.css') }}">
 
     <!-- Scripts -->
+    <script src="{{ url_for('static', filename='voice-assistant.js') }}"></script>
     <script src="{{ url_for('static', filename='chat-history.js') }}"></script>
     <script>
         const API_URL = window.location.origin;
         let conversationHistory = [];
-        let isRecording = false;
-        let recognition = null;
-
-        // Initialize Speech Recognition
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.lang = 'fr-FR';
-            recognition.continuous = false;
-            recognition.interimResults = false;
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                document.getElementById('messageInput').value = transcript;
-                isRecording = false;
-                document.querySelector('.btn-voice').classList.remove('recording');
-            };
-
-            recognition.onerror = () => {
-                isRecording = false;
-                document.querySelector('.btn-voice').classList.remove('recording');
-            };
-
-            recognition.onend = () => {
-                isRecording = false;
-                document.querySelector('.btn-voice').classList.remove('recording');
-            };
-        }
-
-        function toggleVoice() {
-            if (!recognition) {
-                alert('La reconnaissance vocale n\'est pas supportée par votre navigateur');
-                return;
-            }
-
-            if (isRecording) {
-                recognition.stop();
-            } else {
-                recognition.start();
-                isRecording = true;
-                document.querySelector('.btn-voice').classList.add('recording');
-            }
-        }
 
         function autoResize(textarea) {
             textarea.style.height = 'auto';
@@ -853,6 +816,11 @@
                     // Sauvegarder dans l'historique persistant
                     if (typeof chatHistory !== 'undefined') {
                         chatHistory.saveMessage(message, data.response);
+                    }
+
+                    // Lire la réponse à voix haute si l'assistant vocal est disponible
+                    if (typeof speakAIResponse !== 'undefined') {
+                        speakAIResponse(data.response);
                     }
                 } else {
                     addMessage('Désolé, une erreur est survenue.', false);
