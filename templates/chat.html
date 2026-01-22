@@ -473,6 +473,65 @@
             cursor: not-allowed;
         }
 
+        /* Bouton Vocal Style Siri */
+        .btn-voice-siri {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            padding: 10px 16px;
+            border-radius: 10px;
+            color: #3b82f6;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-voice-siri:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+            transform: scale(1.05);
+        }
+
+        .btn-voice-siri.listening {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #ef4444;
+            animation: pulse-red 1.5s ease-in-out infinite;
+        }
+
+        .btn-voice-siri.speaking {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: #22c55e;
+            color: #22c55e;
+            animation: pulse-green 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-red {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            50% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+        }
+
+        @keyframes pulse-green {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+            }
+
+            50% {
+                box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+            }
+        }
+
         /* Loading */
         .typing-indicator {
             display: flex;
@@ -595,17 +654,9 @@
                     title="Historique des conversations">
                     📚 Historique
                 </button>
-                <button class="btn-icon" id="voice-btn" onclick="toggleVoiceListening()" title="Reconnaissance vocale">
-                    🎤 Vocal
-                </button>
-                <button class="btn-icon" id="continuous-btn" onclick="toggleContinuousMode()"
-                    title="Mode conversation continue">
-                    💬 Mode Continu
-                </button>
             </div>
         </div>
         <div class="header-right">
-            <span id="voice-status" style="color: #60a5fa; font-size: 14px; margin-right: 12px;"></span>
             <button class="btn-icon" onclick="window.location.href='/'" title="Retour">
                 🏠 Accueil
             </button>
@@ -651,6 +702,10 @@
                     <textarea id="messageInput" placeholder="Posez votre question médicale..." rows="1"
                         onkeydown="handleKeyPress(event)" oninput="autoResize(this)"></textarea>
                     <div class="input-actions">
+                        <button class="btn-voice-siri" onclick="toggleVoiceConversation()" id="voiceBtn"
+                            title="Conversation vocale">
+                            🎤
+                        </button>
                         <button class="btn-send" onclick="sendMessage()" id="sendBtn">
                             Envoyer
                         </button>
@@ -679,11 +734,229 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='history-modal.css') }}">
 
     <!-- Scripts -->
-    <script src="{{ url_for('static', filename='voice-assistant.js') }}"></script>
     <script src="{{ url_for('static', filename='chat-history.js') }}"></script>
     <script>
         const API_URL = window.location.origin;
         let conversationHistory = [];
+
+        // ============================================
+        // SYSTÈME VOCAL CONTINU (COMME SIRI)
+        // ============================================
+        let voiceRecognition = null;
+        let voiceSynthesis = window.speechSynthesis;
+        let isVoiceActive = false;
+        let isSpeaking = false;
+
+        // Initialiser la reconnaissance vocale
+        function initVoiceRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                voiceRecognition = new SpeechRecognition();
+                voiceRecognition.lang = 'fr-FR';
+                voiceRecognition.continuous = false;
+                voiceRecognition.interimResults = false;
+
+                voiceRecognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    console.log('🎤 Texte reconnu:', transcript);
+
+                    // Envoyer automatiquement le message
+                    document.getElementById('messageInput').value = transcript;
+                    sendMessage();
+                };
+
+                voiceRecognition.onend = () => {
+                    console.log('🎤 Reconnaissance terminée');
+
+                    // Si le mode vocal est actif et qu'on ne parle pas, réécouter
+                    if (isVoiceActive && !isSpeaking) {
+                        setTimeout(() => {
+                            if (isVoiceActive && !isSpeaking) {
+                                startListening();
+                            }
+                        }, 500);
+                    } else {
+                        updateVoiceButton('idle');
+                    }
+                };
+
+                voiceRecognition.onerror = (event) => {
+                    console.error('❌ Erreur reconnaissance:', event.error);
+                    if (event.error !== 'no-speech' && event.error !== 'aborted') {
+                        alert('Erreur de reconnaissance vocale: ' + event.error);
+                    }
+
+                    // Réessayer si le mode est actif
+                    if (isVoiceActive && !isSpeaking) {
+                        setTimeout(() => {
+                            if (isVoiceActive && !isSpeaking) {
+                                startListening();
+                            }
+                        }, 1000);
+                    }
+                };
+
+                console.log('✓ Reconnaissance vocale initialisée');
+            } else {
+                console.error('❌ Reconnaissance vocale non supportée');
+                alert('Votre navigateur ne supporte pas la reconnaissance vocale. Utilisez Chrome ou Edge.');
+            }
+        }
+
+        // Démarrer l'écoute
+        function startListening() {
+            if (!voiceRecognition) {
+                initVoiceRecognition();
+            }
+
+            if (voiceRecognition && !isSpeaking) {
+                try {
+                    voiceRecognition.start();
+                    updateVoiceButton('listening');
+                    console.log('🎤 Écoute démarrée...');
+                } catch (error) {
+                    console.error('Erreur démarrage:', error);
+                }
+            }
+        }
+
+        // Arrêter l'écoute
+        function stopListening() {
+            if (voiceRecognition) {
+                try {
+                    voiceRecognition.stop();
+                    console.log('🛑 Écoute arrêtée');
+                } catch (error) {
+                    console.error('Erreur arrêt:', error);
+                }
+            }
+            updateVoiceButton('idle');
+        }
+
+        // Lire le texte à voix haute
+        function speakText(text) {
+            return new Promise((resolve) => {
+                // Arrêter toute synthèse en cours
+                voiceSynthesis.cancel();
+
+                // Nettoyer le texte (enlever markdown)
+                const cleanText = text
+                    .replace(/\*\*(.+?)\*\*/g, '$1')
+                    .replace(/\*(.+?)\*/g, '$1')
+                    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+                    .replace(/`(.+?)`/g, '$1')
+                    .replace(/```[\s\S]*?```/g, '')
+                    .replace(/#{1,6}\s/g, '')
+                    .replace(/>\s/g, '')
+                    .replace(/[-*+]\s/g, '')
+                    .replace(/\d+\.\s/g, '')
+                    .replace(/[\u{1F600}-\u{1F64F}]/gu, '')
+                    .replace(/[\u{1F300}-\u{1F5FF}]/gu, '')
+                    .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')
+                    .replace(/[\u{2600}-\u{26FF}]/gu, '')
+                    .replace(/<img[^>]*>/g, '')
+                    .replace(/<[^>]+>/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+
+                if (!cleanText) {
+                    resolve();
+                    return;
+                }
+
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = 'fr-FR';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+
+                utterance.onstart = () => {
+                    isSpeaking = true;
+                    updateVoiceButton('speaking');
+                    console.log('🔊 Synthèse vocale démarrée');
+                };
+
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    console.log('🔊 Synthèse vocale terminée');
+
+                    // Réécouter automatiquement si le mode vocal est actif
+                    if (isVoiceActive) {
+                        setTimeout(() => {
+                            if (isVoiceActive && !isSpeaking) {
+                                startListening();
+                            }
+                        }, 500);
+                    } else {
+                        updateVoiceButton('idle');
+                    }
+
+                    resolve();
+                };
+
+                utterance.onerror = (event) => {
+                    console.error('❌ Erreur synthèse vocale:', event.error);
+                    isSpeaking = false;
+                    resolve();
+                };
+
+                voiceSynthesis.speak(utterance);
+            });
+        }
+
+        // Mettre à jour l'apparence du bouton vocal
+        function updateVoiceButton(state) {
+            const voiceBtn = document.getElementById('voiceBtn');
+            if (!voiceBtn) return;
+
+            voiceBtn.classList.remove('listening', 'speaking');
+
+            switch (state) {
+                case 'listening':
+                    voiceBtn.classList.add('listening');
+                    voiceBtn.textContent = '🎤';
+                    break;
+                case 'speaking':
+                    voiceBtn.classList.add('speaking');
+                    voiceBtn.textContent = '🔊';
+                    break;
+                case 'idle':
+                default:
+                    voiceBtn.textContent = '🎤';
+                    break;
+            }
+        }
+
+        // Toggle conversation vocale
+        function toggleVoiceConversation() {
+            if (!voiceRecognition) {
+                initVoiceRecognition();
+            }
+
+            if (!isVoiceActive) {
+                // Démarrer la conversation vocale
+                isVoiceActive = true;
+                startListening();
+                console.log('🎤 Mode conversation vocale ACTIVÉ');
+            } else {
+                // Arrêter la conversation vocale
+                isVoiceActive = false;
+                stopListening();
+                voiceSynthesis.cancel();
+                isSpeaking = false;
+                updateVoiceButton('idle');
+                console.log('🛑 Mode conversation vocale DÉSACTIVÉ');
+            }
+        }
+
+        // Initialiser au chargement
+        window.addEventListener('load', () => {
+            initVoiceRecognition();
+        });
+
+        // ============================================
+        // FONCTIONS DE CHAT EXISTANTES
+        // ============================================
 
         function autoResize(textarea) {
             textarea.style.height = 'auto';
@@ -818,9 +1091,9 @@
                         chatHistory.saveMessage(message, data.response);
                     }
 
-                    // Lire la réponse à voix haute si l'assistant vocal est disponible
-                    if (typeof speakAIResponse !== 'undefined') {
-                        speakAIResponse(data.response);
+                    // Lire la réponse à voix haute si le mode vocal est actif
+                    if (isVoiceActive) {
+                        await speakText(data.response);
                     }
                 } else {
                     addMessage('Désolé, une erreur est survenue.', false);
