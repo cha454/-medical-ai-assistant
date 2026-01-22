@@ -37,9 +37,95 @@ class MedicalImageSearch:
             "source": None
         }
         
+        # Traduction simple français -> anglais pour mots courants
+        translations = {
+            "chat": "cat",
+            "chien": "dog",
+            "cœur": "heart",
+            "coeur": "heart",
+            "poumons": "lungs",
+            "poumon": "lung",
+            "cerveau": "brain",
+            "foie": "liver",
+            "rein": "kidney",
+            "reins": "kidneys",
+            "estomac": "stomach",
+            "intestin": "intestine",
+            "os": "bone",
+            "muscle": "muscle",
+            "sang": "blood",
+            "peau": "skin",
+            "œil": "eye",
+            "oeil": "eye",
+            "yeux": "eyes",
+            "oreille": "ear",
+            "nez": "nose",
+            "bouche": "mouth",
+            "dent": "tooth",
+            "dents": "teeth",
+            "main": "hand",
+            "pied": "foot",
+            "jambe": "leg",
+            "bras": "arm",
+            "tête": "head",
+            "tete": "head",
+            "corps": "body",
+            "cellule": "cell",
+            "cellules": "cells",
+            "virus": "virus",
+            "bactérie": "bacteria",
+            "bacterie": "bacteria",
+            "maladie": "disease",
+            "symptôme": "symptom",
+            "symptome": "symptom",
+            "traitement": "treatment",
+            "médicament": "medicine",
+            "medicament": "medicine",
+            "hôpital": "hospital",
+            "hopital": "hospital",
+            "médecin": "doctor",
+            "medecin": "doctor",
+            "infirmière": "nurse",
+            "infirmiere": "nurse",
+            "patient": "patient",
+            "chirurgie": "surgery",
+            "opération": "operation",
+            "operation": "operation",
+            "radiographie": "x-ray",
+            "scanner": "ct scan",
+            "irm": "mri",
+            "échographie": "ultrasound",
+            "echographie": "ultrasound",
+            "fracture": "fracture",
+            "blessure": "injury",
+            "douleur": "pain",
+            "fièvre": "fever",
+            "fievre": "fever",
+            "toux": "cough",
+            "rhume": "cold",
+            "grippe": "flu",
+            "diabète": "diabetes",
+            "diabete": "diabetes",
+            "cancer": "cancer",
+            "tumeur": "tumor",
+            "infection": "infection",
+            "inflammation": "inflammation",
+            "allergie": "allergy",
+            "asthme": "asthma",
+            "hypertension": "hypertension",
+            "cholestérol": "cholesterol",
+            "cholesterol": "cholesterol"
+        }
+        
+        # Traduire la requête si c'est un mot français courant
+        search_query = query.lower().strip()
+        if search_query in translations:
+            search_query = translations[search_query]
+            print(f"🌍 Traduction: '{query}' → '{search_query}'")
+        
         # Essayer Google Images en priorité
         if self.google_api_key and self.google_cx:
-            google_images = self._search_google_images(query, max_results)
+            google_images = self._search_google_images(search_query, max_results)
             if google_images:
                 results["images"] = google_images
                 results["source"] = "Google Images"
@@ -47,7 +133,7 @@ class MedicalImageSearch:
         
         # Essayer Bing Images
         if self.bing_api_key:
-            bing_images = self._search_bing_images(query, max_results)
+            bing_images = self._search_bing_images(search_query, max_results)
             if bing_images:
                 results["images"] = bing_images
                 results["source"] = "Bing Images"
@@ -55,7 +141,7 @@ class MedicalImageSearch:
         
         # Essayer Unsplash (photos de qualité)
         if self.unsplash_api_key:
-            unsplash_images = self._search_unsplash(query, max_results)
+            unsplash_images = self._search_unsplash(search_query, max_results)
             if unsplash_images:
                 results["images"] = unsplash_images
                 results["source"] = "Unsplash"
@@ -63,7 +149,7 @@ class MedicalImageSearch:
         
         # Essayer Pixabay (gratuit, pas de clé requise pour certaines requêtes)
         if self.pixabay_api_key:
-            pixabay_images = self._search_pixabay(query, max_results)
+            pixabay_images = self._search_pixabay(search_query, max_results)
             if pixabay_images:
                 results["images"] = pixabay_images
                 results["source"] = "Pixabay"
@@ -255,9 +341,9 @@ class MedicalImageSearch:
         
         # Patterns courants
         patterns = [
-            "image de ", "image d'", "image du ", "image des ",
-            "photo de ", "photo d'", "photo du ", "photo des ",
-            "montre-moi ", "montre moi ",
+            "image de ", "image d'", "image du ", "image des ", "image d ", "image un ",
+            "photo de ", "photo d'", "photo du ", "photo des ", "photo d ", "photo un ",
+            "montre-moi ", "montre moi ", "montre-moi une image de ", "montre moi une image de ",
             "voir ", "affiche ", "afficher ",
             "à quoi ressemble ", "ressemble "
         ]
@@ -268,10 +354,27 @@ class MedicalImageSearch:
                 query = text_lower.split(pattern, 1)[1].strip()
                 # Nettoyer
                 query = query.rstrip('?!.,;')
+                
+                # Supprimer les articles français au début
+                articles = ["un ", "une ", "le ", "la ", "les ", "l'", "des ", "du ", "de la "]
+                for article in articles:
+                    if query.startswith(article):
+                        query = query[len(article):].strip()
+                        break
+                
                 return query
         
-        # Si aucun pattern trouvé, retourner le texte complet
-        return text.strip()
+        # Si aucun pattern trouvé, retourner le texte complet nettoyé
+        query = text.strip()
+        
+        # Supprimer les articles au début
+        articles = ["un ", "une ", "le ", "la ", "les ", "l'", "des ", "du ", "de la "]
+        for article in articles:
+            if query.lower().startswith(article):
+                query = query[len(article):].strip()
+                break
+        
+        return query
 
 # Instance globale
 image_search = MedicalImageSearch()
