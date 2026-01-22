@@ -303,28 +303,45 @@ class MedicalImageSearch:
         return []
     
     def format_image_results(self, results: Dict[str, Any]) -> str:
-        """Formate les résultats de recherche d'images pour affichage"""
+        """Formate les résultats de recherche d'images pour affichage avec images intégrées"""
         if not results or not results.get("images"):
             return "❌ Aucune image trouvée pour cette recherche."
         
         images = results["images"]
         source = results.get("source", "Web")
         
+        # Utiliser HTML pour afficher les images directement
         formatted = f"""🖼️ **{len(images)} images trouvées** (source: {source})
 
 **Recherche:** {results.get('query', '')}
 
+---
+
 """
         
         for i, img in enumerate(images[:6], 1):  # Maximum 6 images
-            formatted += f"""**Image {i}:**
-- 📸 Titre: {img.get('title', 'Sans titre')[:100]}
-- 🔗 URL: {img.get('url', '')}
-- 📏 Dimensions: {img.get('width', '?')}x{img.get('height', '?')}
+            img_url = img.get('url', '')
+            thumbnail = img.get('thumbnail', img_url)  # Utiliser thumbnail si disponible
+            title = img.get('title', 'Sans titre')[:100]
+            width = img.get('width', '?')
+            height = img.get('height', '?')
+            photographer = img.get('photographer', '')
+            source_url = img.get('source_url', '')
+            
+            # Afficher l'image directement avec HTML
+            formatted += f"""**Image {i}:** {title}
+
+<img src="{img_url}" alt="{title}" style="max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" loading="lazy" />
+
 """
-            if img.get('photographer'):
-                formatted += f"- 👤 Photographe: {img['photographer']}\n"
-            formatted += "\n"
+            
+            # Informations supplémentaires
+            formatted += f"📏 **Dimensions:** {width}x{height}\n"
+            if photographer:
+                formatted += f"👤 **Photographe:** {photographer}\n"
+            if source_url:
+                formatted += f"🔗 **Source:** [Voir sur {source}]({source_url})\n"
+            formatted += "\n---\n\n"
         
         formatted += """
 ⚠️ **Note importante:**
