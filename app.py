@@ -23,6 +23,7 @@ from medical_knowledge import get_disease_info, get_drug_info, check_emergency, 
 from database import MedicalDatabase
 from api_routes import api_bp
 from api_integration import api_integration
+from teach_routes import teach_bp
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
@@ -30,6 +31,7 @@ CORS(app)
 
 # Enregistrer les nouvelles routes API
 app.register_blueprint(api_bp)
+app.register_blueprint(teach_bp)
 
 # Initialisation de la base de données
 db = MedicalDatabase()
