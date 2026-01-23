@@ -1,15 +1,36 @@
 /**
- * Système Vocal Ultra-Simple
+ * Système Vocal Ultra-Simple avec Retry
  * UN CLIC = CONVERSATION AUTOMATIQUE
  */
 
 // Fonction principale - Démarrer la conversation vocale
 function startVoiceConversation() {
-    console.log('🎤 Démarrage conversation vocale...');
+    console.log('🎤 Clic sur le bouton vocal...');
 
+    // Vérifier si le système vocal est chargé
     if (!window.siriVoiceAssistant) {
-        console.error('❌ Assistant vocal non disponible');
-        alert('Le système vocal n\'est pas encore chargé. Veuillez rafraîchir la page.');
+        console.warn('⏳ Système vocal en cours de chargement...');
+        showNotification('⏳ Chargement du système vocal...', 'info');
+
+        // Réessayer après 1 seconde
+        setTimeout(() => {
+            if (window.siriVoiceAssistant) {
+                console.log('✓ Système vocal chargé !');
+                startVoiceConversation();
+            } else {
+                console.error('❌ Système vocal toujours pas chargé');
+                showNotification('⚠️ Veuillez patienter...', 'info');
+
+                // Dernière tentative après 2 secondes
+                setTimeout(() => {
+                    if (window.siriVoiceAssistant) {
+                        startVoiceConversation();
+                    } else {
+                        alert('Le système vocal n\'est pas disponible.\nVeuillez rafraîchir la page (F5).');
+                    }
+                }, 2000);
+            }
+        }, 1000);
         return;
     }
 
@@ -73,35 +94,60 @@ function showNotification(message, type = 'info') {
 
         setTimeout(() => {
             notification.style.display = 'none';
-        }, 2000);
+        }, 2500);
     }
 }
 
-// Intégration avec le système Siri
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🎤 Initialisation système vocal ultra-simple...');
+// Initialisation avec retry automatique
+let initRetryCount = 0;
+const maxRetries = 15; // 15 tentatives = 7.5 secondes
 
-    // Attendre que siriVoiceAssistant soit initialisé
-    setTimeout(() => {
-        if (window.siriVoiceAssistant) {
-            console.log('✓ Système vocal prêt !');
+function initVoiceSystem() {
+    if (window.siriVoiceAssistant) {
+        console.log('✓ Système vocal Siri prêt !');
 
-            // Remplacer la fonction updateUI
-            siriVoiceAssistant.updateUI = function (state) {
-                updateVoiceButton(state);
-            };
+        // Remplacer la fonction updateUI
+        const originalUpdateUI = siriVoiceAssistant.updateUI;
+        siriVoiceAssistant.updateUI = function (state) {
+            updateVoiceButton(state);
+            if (originalUpdateUI) {
+                originalUpdateUI.call(siriVoiceAssistant, state);
+            }
+        };
 
-            // Message de bienvenue
-            setTimeout(() => {
-                showNotification('Cliquez sur 🎤 pour parler !', 'info');
-            }, 1000);
-        } else {
-            console.error('❌ Assistant vocal non chargé');
-        }
-    }, 500);
-});
+        // Message de bienvenue
+        setTimeout(() => {
+            showNotification('✅ Système vocal prêt ! Cliquez sur 🎤', 'success');
+        }, 1000);
 
-// Fonction de compatibilité (au cas où)
+        return true;
+    }
+
+    initRetryCount++;
+    if (initRetryCount < maxRetries) {
+        console.log(`⏳ Attente du système vocal... (${initRetryCount}/${maxRetries})`);
+        setTimeout(initVoiceSystem, 500);
+    } else {
+        console.error('❌ Impossible de charger le système vocal');
+        showNotification('❌ Système vocal non disponible - Rafraîchir la page', 'error');
+    }
+
+    return false;
+}
+
+// Démarrage automatique
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('🎤 Initialisation système vocal...');
+        setTimeout(initVoiceSystem, 300);
+    });
+} else {
+    // DOM déjà chargé
+    console.log('🎤 DOM déjà chargé, initialisation immédiate...');
+    setTimeout(initVoiceSystem, 300);
+}
+
+// Fonction de compatibilité
 function toggleVoiceConversation() {
     startVoiceConversation();
 }
