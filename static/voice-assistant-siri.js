@@ -596,7 +596,7 @@ function toggleHandsFreeMode() {
     const isActive = siriVoiceAssistant.toggleHandsFreeMode();
 
     // Mettre à jour le bouton
-    const handsFreeBt = document.getElementById('handsfree-btn');
+    const handsFreeBtn = document.getElementById('handsfree-btn');
     if (handsFreeBtn) {
         if (isActive) {
             handsFreeBtn.innerHTML = '🤚 Mains Libres ON';

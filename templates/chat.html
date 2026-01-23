@@ -869,6 +869,129 @@
         .messages::-webkit-scrollbar-thumb:hover {
             background: rgba(59, 130, 246, 0.5);
         }
+
+        /* Visualiseur Audio */
+        .audio-visualizer {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 4px;
+            align-items: flex-end;
+            height: 60px;
+            padding: 10px 20px;
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 30px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            z-index: 1000;
+        }
+
+        .visualizer-bar {
+            width: 4px;
+            height: 20%;
+            background: linear-gradient(to top, #3b82f6, #60a5fa);
+            border-radius: 2px;
+            animation: visualizer-pulse 0.5s ease-in-out infinite alternate;
+        }
+
+        .visualizer-bar:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .visualizer-bar:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .visualizer-bar:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .visualizer-bar:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        .visualizer-bar:nth-child(5) {
+            animation-delay: 0.4s;
+        }
+
+        .visualizer-bar:nth-child(6) {
+            animation-delay: 0.5s;
+        }
+
+        @keyframes visualizer-pulse {
+            0% {
+                height: 20%;
+            }
+
+            100% {
+                height: 80%;
+            }
+        }
+
+        .audio-visualizer.speaking .visualizer-bar {
+            background: linear-gradient(to top, #22c55e, #4ade80);
+        }
+
+        /* Notification Vocale */
+        .voice-notification {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 20px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #f3f4f6;
+            font-size: 14px;
+            z-index: 1001;
+            animation: notification-slide 0.3s ease-out;
+        }
+
+        .voice-notification.success {
+            border-color: #22c55e;
+            color: #22c55e;
+        }
+
+        .voice-notification.error {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .voice-notification.info {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        @keyframes notification-slide {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Animation pulse pour les boutons */
+        .pulse {
+            animation: pulse-animation 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-animation {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
     </style>
 </head>
 
@@ -896,6 +1019,9 @@
             </div>
         </div>
         <div class="header-right">
+            <button class="btn-icon" onclick="toggleHandsFreeMode()" id="handsfree-btn" title="Mode mains libres">
+                🤚 Mains Libres
+            </button>
             <button class="btn-icon" onclick="window.location.href='/'" title="Retour">
                 🏠 Accueil
             </button>
@@ -1024,762 +1150,24 @@
     <!-- Inclure le CSS du modal -->
     <link rel="stylesheet" href="{{ url_for('static', filename='history-modal.css') }}">
 
+    <!-- Visualiseur Audio -->
+    <div id="audio-visualizer" class="audio-visualizer" style="display: none;">
+        <div class="visualizer-bar"></div>
+        <div class="visualizer-bar"></div>
+        <div class="visualizer-bar"></div>
+        <div class="visualizer-bar"></div>
+        <div class="visualizer-bar"></div>
+        <div class="visualizer-bar"></div>
+    </div>
+
+    <!-- Notification Vocale -->
+    <div id="voice-notification" class="voice-notification" style="display: none;"></div>
+
     <!-- Scripts -->
     <script src="{{ url_for('static', filename='chat-history.js') }}"></script>
-    <script>
-        const API_URL = window.location.origin;
-        let conversationHistory = [];
-
-        // ============================================
-        // SYSTÈME VOCAL CONTINU (COMME SIRI)
-        // ============================================
-        let voiceRecognition = null;
-        let voiceSynthesis = window.speechSynthesis;
-        let isVoiceActive = false;
-        let isSpeaking = false;
-        let isSilentMode = false;
-        let voiceSettings = {
-            voice: null,
-            rate: 1.0,
-            pitch: 1.0,
-            volume: 1.0
-        };
-
-        // ============================================
-        // FEEDBACK SONORE (Web Audio API)
-        // ============================================
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-        function playSound(type) {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            switch (type) {
-                case 'start': // Ding - Son de démarrage
-                    oscillator.frequency.value = 800;
-                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.3);
-                    break;
-
-                case 'end': // Bip - Son de fin
-                    oscillator.frequency.value = 600;
-                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.2);
-                    break;
-
-                case 'send': // Swoosh - Son d'envoi
-                    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime);
-                    oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.2);
-                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.2);
-                    break;
-
-                case 'error': // Son d'erreur
-                    oscillator.frequency.value = 300;
-                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.4);
-                    break;
-            }
-        }
-
-        // ============================================
-        // MODE DISCRET
-        // ============================================
-        function toggleSilentMode() {
-            isSilentMode = !isSilentMode;
-            const silentBtn = document.getElementById('silentBtn');
-
-            if (isSilentMode) {
-                silentBtn.classList.add('active');
-                silentBtn.textContent = '🔕';
-                silentBtn.title = 'Mode discret activé';
-                console.log('🔕 Mode discret ACTIVÉ');
-            } else {
-                silentBtn.classList.remove('active');
-                silentBtn.textContent = '🔇';
-                silentBtn.title = 'Mode discret';
-                console.log('🔊 Mode discret DÉSACTIVÉ');
-            }
-        }
-
-        // ============================================
-        // COMMANDES VOCALES
-        // ============================================
-        function detectVoiceCommand(text) {
-            const lowerText = text.toLowerCase().trim();
-
-            // Commande: Stop / Arrête
-            if (lowerText === 'stop' || lowerText === 'arrête' || lowerText === 'arrête') {
-                console.log('🛑 Commande: STOP');
-                toggleVoiceConversation(); // Arrêter la conversation
-                return true;
-            }
-
-            // Commande: Répète
-            if (lowerText === 'répète' || lowerText === 'repete' || lowerText === 'encore') {
-                console.log('🔄 Commande: RÉPÈTE');
-                regenerateResponse();
-                return true;
-            }
-
-            // Commande: Plus fort
-            if (lowerText.includes('plus fort') || lowerText.includes('volume plus')) {
-                console.log('🔊 Commande: PLUS FORT');
-                voiceSettings.volume = Math.min(1.0, voiceSettings.volume + 0.2);
-                playSound('start');
-                return true;
-            }
-
-            // Commande: Moins fort
-            if (lowerText.includes('moins fort') || lowerText.includes('volume moins')) {
-                console.log('🔉 Commande: MOINS FORT');
-                voiceSettings.volume = Math.max(0.2, voiceSettings.volume - 0.2);
-                playSound('end');
-                return true;
-            }
-
-            // Commande: Plus vite
-            if (lowerText.includes('plus vite') || lowerText.includes('plus rapide')) {
-                console.log('⏩ Commande: PLUS VITE');
-                voiceSettings.rate = Math.min(2.0, voiceSettings.rate + 0.2);
-                playSound('start');
-                return true;
-            }
-
-            // Commande: Moins vite / Plus lent
-            if (lowerText.includes('moins vite') || lowerText.includes('plus lent')) {
-                console.log('⏪ Commande: PLUS LENT');
-                voiceSettings.rate = Math.max(0.5, voiceSettings.rate - 0.2);
-                playSound('end');
-                return true;
-            }
-
-            // Commande: Mode discret
-            if (lowerText.includes('mode discret') || lowerText.includes('silence')) {
-                console.log('🔕 Commande: MODE DISCRET');
-                toggleSilentMode();
-                return true;
-            }
-
-            // Commande: Efface / Nouveau
-            if (lowerText === 'efface' || lowerText === 'nouveau' || lowerText === 'recommence') {
-                console.log('🗑️ Commande: NOUVEAU');
-                clearChat();
-                playSound('send');
-                return true;
-            }
-
-            return false; // Pas une commande
-        }
-
-        // Initialiser la reconnaissance vocale
-        function initVoiceRecognition() {
-            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                voiceRecognition = new SpeechRecognition();
-                voiceRecognition.lang = 'fr-FR';
-                voiceRecognition.continuous = false;
-                voiceRecognition.interimResults = false;
-
-                voiceRecognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    console.log('🎤 Texte reconnu:', transcript);
-
-                    // Vérifier si c'est une commande vocale
-                    if (detectVoiceCommand(transcript)) {
-                        playSound('send');
-                        return; // Ne pas envoyer le message
-                    }
-
-                    // Envoyer automatiquement le message
-                    document.getElementById('messageInput').value = transcript;
-                    playSound('send'); // Son d'envoi
-                    sendMessage();
-                };
-
-                voiceRecognition.onend = () => {
-                    console.log('🎤 Reconnaissance terminée');
-
-                    // Si le mode vocal est actif et qu'on ne parle pas, réécouter
-                    if (isVoiceActive && !isSpeaking) {
-                        setTimeout(() => {
-                            if (isVoiceActive && !isSpeaking) {
-                                startListening();
-                            }
-                        }, 500);
-                    } else {
-                        updateVoiceButton('idle');
-                    }
-                };
-
-                voiceRecognition.onerror = (event) => {
-                    console.error('❌ Erreur reconnaissance:', event.error);
-                    if (event.error !== 'no-speech' && event.error !== 'aborted') {
-                        playSound('error'); // Son d'erreur
-                        alert('Erreur de reconnaissance vocale: ' + event.error);
-                    }
-
-                    // Réessayer si le mode est actif
-                    if (isVoiceActive && !isSpeaking) {
-                        setTimeout(() => {
-                            if (isVoiceActive && !isSpeaking) {
-                                startListening();
-                            }
-                        }, 1000);
-                    }
-                };
-
-                console.log('✓ Reconnaissance vocale initialisée');
-            } else {
-                console.error('❌ Reconnaissance vocale non supportée');
-                alert('Votre navigateur ne supporte pas la reconnaissance vocale. Utilisez Chrome ou Edge.');
-            }
-        }
-
-        // Démarrer l'écoute
-        function startListening() {
-            if (!voiceRecognition) {
-                initVoiceRecognition();
-            }
-
-            if (voiceRecognition && !isSpeaking) {
-                try {
-                    voiceRecognition.start();
-                    updateVoiceButton('listening');
-                    playSound('start'); // Son de démarrage
-                    console.log('🎤 Écoute démarrée...');
-                } catch (error) {
-                    console.error('Erreur démarrage:', error);
-                }
-            }
-        }
-
-        // Arrêter l'écoute
-        function stopListening() {
-            if (voiceRecognition) {
-                try {
-                    voiceRecognition.stop();
-                    playSound('end'); // Son de fin
-                    console.log('🛑 Écoute arrêtée');
-                } catch (error) {
-                    console.error('Erreur arrêt:', error);
-                }
-            }
-            updateVoiceButton('idle');
-        }
-
-        // Lire le texte à voix haute
-        function speakText(text) {
-            // Ne pas parler si le mode discret est activé
-            if (isSilentMode) {
-                console.log('🔕 Mode discret: pas de synthèse vocale');
-                return Promise.resolve();
-            }
-
-            return new Promise((resolve) => {
-                // Arrêter toute synthèse en cours
-                voiceSynthesis.cancel();
-
-                // Nettoyer le texte (enlever markdown)
-                const cleanText = text
-                    .replace(/\*\*(.+?)\*\*/g, '$1')
-                    .replace(/\*(.+?)\*/g, '$1')
-                    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
-                    .replace(/`(.+?)`/g, '$1')
-                    .replace(/```[\s\S]*?```/g, '')
-                    .replace(/#{1,6}\s/g, '')
-                    .replace(/>\s/g, '')
-                    .replace(/[-*+]\s/g, '')
-                    .replace(/\d+\.\s/g, '')
-                    .replace(/[\u{1F600}-\u{1F64F}]/gu, '')
-                    .replace(/[\u{1F300}-\u{1F5FF}]/gu, '')
-                    .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')
-                    .replace(/[\u{2600}-\u{26FF}]/gu, '')
-                    .replace(/<img[^>]*>/g, '')
-                    .replace(/<[^>]+>/g, '')
-                    .replace(/\s+/g, ' ')
-                    .trim();
-
-                if (!cleanText) {
-                    resolve();
-                    return;
-                }
-
-                const utterance = new SpeechSynthesisUtterance(cleanText);
-                utterance.lang = 'fr-FR';
-
-                // Appliquer les paramètres de voix personnalisés
-                utterance.rate = voiceSettings.rate;
-                utterance.pitch = voiceSettings.pitch;
-                utterance.volume = voiceSettings.volume;
-
-                // Utiliser la voix sélectionnée si disponible
-                if (voiceSettings.voice) {
-                    utterance.voice = voiceSettings.voice;
-                }
-
-                utterance.onstart = () => {
-                    isSpeaking = true;
-                    updateVoiceButton('speaking');
-                    console.log('🔊 Synthèse vocale démarrée');
-                };
-
-                utterance.onend = () => {
-                    isSpeaking = false;
-                    console.log('🔊 Synthèse vocale terminée');
-
-                    // Réécouter automatiquement si le mode vocal est actif
-                    if (isVoiceActive) {
-                        setTimeout(() => {
-                            if (isVoiceActive && !isSpeaking) {
-                                startListening();
-                            }
-                        }, 500);
-                    } else {
-                        updateVoiceButton('idle');
-                    }
-
-                    resolve();
-                };
-
-                utterance.onerror = (event) => {
-                    console.error('❌ Erreur synthèse vocale:', event.error);
-                    isSpeaking = false;
-                    playSound('error');
-                    resolve();
-                };
-
-                voiceSynthesis.speak(utterance);
-            });
-        }
-
-        // Mettre à jour l'apparence du bouton vocal
-        function updateVoiceButton(state) {
-            const voiceBtn = document.getElementById('voiceBtn');
-            if (!voiceBtn) return;
-
-            voiceBtn.classList.remove('listening', 'speaking');
-
-            switch (state) {
-                case 'listening':
-                    voiceBtn.classList.add('listening');
-                    voiceBtn.textContent = '🎤';
-                    break;
-                case 'speaking':
-                    voiceBtn.classList.add('speaking');
-                    voiceBtn.textContent = '🔊';
-                    break;
-                case 'idle':
-                default:
-                    voiceBtn.textContent = '🎤';
-                    break;
-            }
-        }
-
-        // Toggle conversation vocale
-        function toggleVoiceConversation() {
-            if (!voiceRecognition) {
-                initVoiceRecognition();
-            }
-
-            if (!isVoiceActive) {
-                // Démarrer la conversation vocale
-                isVoiceActive = true;
-                startListening();
-                console.log('🎤 Mode conversation vocale ACTIVÉ');
-            } else {
-                // Arrêter la conversation vocale
-                isVoiceActive = false;
-                stopListening();
-                voiceSynthesis.cancel();
-                isSpeaking = false;
-                updateVoiceButton('idle');
-                console.log('🛑 Mode conversation vocale DÉSACTIVÉ');
-            }
-        }
-
-        // Initialiser au chargement
-        window.addEventListener('load', () => {
-            initVoiceRecognition();
-            loadAvailableVoices();
-        });
-
-        // ============================================
-        // PARAMÈTRES VOCAUX
-        // ============================================
-        function loadAvailableVoices() {
-            const voiceSelect = document.getElementById('voiceSelect');
-
-            function populateVoices() {
-                const voices = voiceSynthesis.getVoices();
-                const frenchVoices = voices.filter(voice => voice.lang.startsWith('fr'));
-
-                voiceSelect.innerHTML = '<option value="">Voix par défaut</option>';
-
-                frenchVoices.forEach((voice, index) => {
-                    const option = document.createElement('option');
-                    option.value = index;
-                    option.textContent = `${voice.name} (${voice.lang})`;
-                    voiceSelect.appendChild(option);
-                });
-
-                // Si aucune voix française, afficher toutes les voix
-                if (frenchVoices.length === 0) {
-                    voices.forEach((voice, index) => {
-                        const option = document.createElement('option');
-                        option.value = index;
-                        option.textContent = `${voice.name} (${voice.lang})`;
-                        voiceSelect.appendChild(option);
-                    });
-                }
-            }
-
-            // Charger les voix (peut prendre du temps)
-            populateVoices();
-            if (voiceSynthesis.onvoiceschanged !== undefined) {
-                voiceSynthesis.onvoiceschanged = populateVoices;
-            }
-        }
-
-        function toggleVoiceSettings() {
-            const menu = document.getElementById('voiceSettingsMenu');
-            menu.classList.toggle('active');
-        }
-
-        function changeVoice() {
-            const voiceSelect = document.getElementById('voiceSelect');
-            const voices = voiceSynthesis.getVoices();
-            const selectedIndex = voiceSelect.value;
-
-            if (selectedIndex === '') {
-                voiceSettings.voice = null;
-            } else {
-                voiceSettings.voice = voices[selectedIndex];
-            }
-
-            console.log('🎙️ Voix changée:', voiceSettings.voice ? voiceSettings.voice.name : 'Défaut');
-            playSound('start');
-        }
-
-        function changeRate(value) {
-            voiceSettings.rate = parseFloat(value);
-            document.getElementById('rateValue').textContent = value + 'x';
-            console.log('⏩ Vitesse:', value);
-        }
-
-        function changePitch(value) {
-            voiceSettings.pitch = parseFloat(value);
-            document.getElementById('pitchValue').textContent = value;
-            console.log('🎵 Tonalité:', value);
-        }
-
-        function changeVolume(value) {
-            voiceSettings.volume = parseFloat(value);
-            const percentage = Math.round(value * 100);
-            document.getElementById('volumeValue').textContent = percentage + '%';
-            console.log('🔊 Volume:', percentage + '%');
-        }
-
-        // Fermer le menu en cliquant en dehors
-        document.addEventListener('click', function (event) {
-            const menu = document.getElementById('voiceSettingsMenu');
-            const btn = document.getElementById('voiceSettingsBtn');
-
-            if (menu && btn && !menu.contains(event.target) && !btn.contains(event.target)) {
-                menu.classList.remove('active');
-            }
-        });
-
-        // ============================================
-        // FONCTIONS DE CHAT EXISTANTES
-        // ============================================
-
-        function autoResize(textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.height = textarea.scrollHeight + 'px';
-        }
-
-        function handleKeyPress(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
-        }
-
-        function sendSuggestion(text) {
-            document.getElementById('messageInput').value = text;
-            sendMessage();
-        }
-
-        function hideEmptyState() {
-            const emptyState = document.getElementById('emptyState');
-            if (emptyState) {
-                emptyState.style.display = 'none';
-            }
-        }
-
-        function addMessage(content, isUser) {
-            hideEmptyState();
-
-            const messagesDiv = document.getElementById('messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
-
-            const avatar = isUser ? '👤' : '🤖';
-            const author = isUser ? 'Vous' : 'Assistant';
-            const avatarClass = isUser ? 'avatar-user' : 'avatar-bot';
-
-            // Convertir Markdown en HTML pour les messages du bot
-            let formattedContent;
-            if (isUser) {
-                // Pour l'utilisateur, juste remplacer les retours à la ligne
-                formattedContent = content.replace(/\n/g, '<br>');
-            } else {
-                // Pour le bot, convertir le Markdown en HTML
-                formattedContent = marked.parse(content);
-            }
-
-            messageDiv.innerHTML = `
-                <div class="message-header">
-                    <div class="avatar ${avatarClass}">${avatar}</div>
-                    <div class="message-author">${author}</div>
-                </div>
-                <div class="message-content">${formattedContent}</div>
-                ${!isUser ? `
-                    <div class="message-actions">
-                        <button class="action-btn" onclick="copyMessage(this)">📋 Copier</button>
-                        <button class="action-btn" onclick="regenerateResponse()">🔄 Régénérer</button>
-                    </div>
-                ` : ''}
-            `;
-
-            messagesDiv.appendChild(messageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-        function showTyping() {
-            hideEmptyState();
-            const messagesDiv = document.getElementById('messages');
-            const typingDiv = document.createElement('div');
-            typingDiv.id = 'typing';
-            typingDiv.className = 'message';
-            typingDiv.innerHTML = `
-                <div class="message-header">
-                    <div class="avatar avatar-bot">🤖</div>
-                    <div class="message-author">Assistant</div>
-                </div>
-                <div class="typing-indicator">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                </div>
-            `;
-            messagesDiv.appendChild(typingDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-        function hideTyping() {
-            const typing = document.getElementById('typing');
-            if (typing) typing.remove();
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const message = input.value.trim();
-
-            if (!message) return;
-
-            // Add user message
-            addMessage(message, true);
-            input.value = '';
-            input.style.height = 'auto';
-
-            // Disable send button
-            const sendBtn = document.getElementById('sendBtn');
-            sendBtn.disabled = true;
-
-            // Show typing indicator
-            showTyping();
-
-            try {
-                const response = await fetch(`${API_URL}/api/chat`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: message,
-                        language: 'fr'
-                    })
-                });
-
-                const data = await response.json();
-
-                hideTyping();
-
-                if (data.response) {
-                    addMessage(data.response, false);
-                    conversationHistory.push({
-                        user: message,
-                        assistant: data.response
-                    });
-
-                    // Sauvegarder dans l'historique persistant
-                    if (typeof chatHistory !== 'undefined') {
-                        chatHistory.saveMessage(message, data.response);
-                    }
-
-                    // Lire la réponse à voix haute si le mode vocal est actif
-                    if (isVoiceActive) {
-                        await speakText(data.response);
-                    }
-                } else {
-                    addMessage('Désolé, une erreur est survenue.', false);
-                }
-
-            } catch (error) {
-                hideTyping();
-                addMessage('Erreur de connexion. Veuillez réessayer.', false);
-            } finally {
-                sendBtn.disabled = false;
-                input.focus();
-            }
-        }
-
-        // Fonctions pour gérer le modal d'historique
-        function showHistoryModal() {
-            const modal = document.getElementById('historyModal');
-            const conversationsList = document.getElementById('conversationsList');
-
-            // Récupérer toutes les conversations
-            const conversations = chatHistory.getConversationList();
-
-            if (conversations.length === 0) {
-                conversationsList.innerHTML = `
-                    <div class="empty-history">
-                        <div class="empty-history-icon">📭</div>
-                        <div class="empty-history-text">Aucune conversation sauvegardée</div>
-                    </div>
-                `;
-            } else {
-                conversationsList.innerHTML = conversations.map(conv => {
-                    const date = new Date(conv.updatedAt).toLocaleString('fr-FR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                    const messageCount = conv.messages.length / 2;
-                    const isActive = conv.id === chatHistory.currentConversationId;
-
-                    return `
-                        <div class="conversation-item ${isActive ? 'active' : ''}" onclick="loadConversationFromModal('${conv.id}')">
-                            <div class="conversation-info">
-                                <div class="conversation-title">${conv.title}</div>
-                                <div class="conversation-meta">${date} • ${messageCount} message${messageCount > 1 ? 's' : ''}</div>
-                            </div>
-                            <div class="conversation-actions" onclick="event.stopPropagation()">
-                                <button class="conversation-btn delete" onclick="deleteConversationFromModal('${conv.id}')" title="Supprimer">
-                                    🗑️
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-
-            modal.style.display = 'flex';
-        }
-
-        function closeHistoryModal() {
-            const modal = document.getElementById('historyModal');
-            modal.style.display = 'none';
-        }
-
-        function loadConversationFromModal(conversationId) {
-            chatHistory.loadConversation(conversationId);
-            closeHistoryModal();
-        }
-
-        function deleteConversationFromModal(conversationId) {
-            if (confirm('Êtes-vous sûr de vouloir supprimer cette conversation ?')) {
-                chatHistory.deleteConversation(conversationId);
-                showHistoryModal(); // Rafraîchir la liste
-            }
-        }
-
-        // Fermer le modal en cliquant en dehors
-        document.addEventListener('click', function (event) {
-            const modal = document.getElementById('historyModal');
-            if (event.target === modal) {
-                closeHistoryModal();
-            }
-        });
-
-        function copyMessage(btn) {
-            const messageContent = btn.closest('.message').querySelector('.message-content').innerText;
-            navigator.clipboard.writeText(messageContent).then(() => {
-                btn.textContent = '✅ Copié';
-                setTimeout(() => {
-                    btn.textContent = '📋 Copier';
-                }, 2000);
-            });
-        }
-
-        function regenerateResponse() {
-            if (conversationHistory.length > 0) {
-                const lastMessage = conversationHistory[conversationHistory.length - 1].user;
-                document.getElementById('messageInput').value = lastMessage;
-                sendMessage();
-            }
-        }
-
-        function clearChat() {
-            const messagesDiv = document.getElementById('messages');
-            messagesDiv.innerHTML = `
-                <div class="empty-state" id="emptyState">
-                    <div class="empty-icon">💬</div>
-                    <div class="empty-title">Comment puis-je vous aider ?</div>
-                    <div class="empty-subtitle">Posez-moi vos questions médicales</div>
-                    
-                    <div class="suggestions">
-                        <div class="suggestion" onclick="sendSuggestion('Quels sont les symptômes du diabète ?')">
-                            <div class="suggestion-icon">🩺</div>
-                            <div class="suggestion-text">Symptômes du diabète</div>
-                        </div>
-                        <div class="suggestion" onclick="sendSuggestion('Comment traiter une migraine ?')">
-                            <div class="suggestion-icon">💊</div>
-                            <div class="suggestion-text">Traiter une migraine</div>
-                        </div>
-                        <div class="suggestion" onclick="sendSuggestion('Puis-je prendre ibuprofène et aspirine ensemble ?')">
-                            <div class="suggestion-icon">⚠️</div>
-                            <div class="suggestion-text">Interactions médicamenteuses</div>
-                        </div>
-                        <div class="suggestion" onclick="sendSuggestion('Que faire en cas de fièvre ?')">
-                            <div class="suggestion-icon">🌡️</div>
-                            <div class="suggestion-text">Fièvre - Que faire ?</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            conversationHistory = [];
-        }
-
-        // Focus input on load
-        window.addEventListener('load', () => {
-            document.getElementById('messageInput').focus();
-        });
-    </script>
+    <script src="{{ url_for('static', filename='voice-assistant-siri.js') }}"></script>
+    <script src="{{ url_for('static', filename='voice-integration.js') }}"></script>
+    <script src="{{ url_for('static', filename='chat-functions.js') }}"></script>
 </body>
 
 </html>
