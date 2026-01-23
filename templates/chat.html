@@ -486,6 +486,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+            overflow: hidden;
         }
 
         .btn-voice-siri:hover {
@@ -506,6 +508,239 @@
             border-color: #22c55e;
             color: #22c55e;
             animation: pulse-green 1.5s ease-in-out infinite;
+        }
+
+        /* Visualisation Audio */
+        .audio-visualizer {
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 2px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .btn-voice-siri.listening .audio-visualizer,
+        .btn-voice-siri.speaking .audio-visualizer {
+            opacity: 1;
+        }
+
+        .audio-bar {
+            width: 3px;
+            background: currentColor;
+            border-radius: 2px;
+            animation: audioWave 0.8s ease-in-out infinite;
+        }
+
+        .audio-bar:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .audio-bar:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .audio-bar:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .audio-bar:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        .audio-bar:nth-child(5) {
+            animation-delay: 0.2s;
+        }
+
+        .audio-bar:nth-child(6) {
+            animation-delay: 0.1s;
+        }
+
+        @keyframes audioWave {
+
+            0%,
+            100% {
+                height: 4px;
+            }
+
+            50% {
+                height: 16px;
+            }
+        }
+
+        /* Bouton Mode Discret */
+        .btn-silent-mode {
+            background: rgba(107, 114, 128, 0.1);
+            border: 2px solid rgba(107, 114, 128, 0.3);
+            padding: 10px 16px;
+            border-radius: 10px;
+            color: #6b7280;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-silent-mode:hover {
+            background: rgba(107, 114, 128, 0.2);
+            border-color: #6b7280;
+        }
+
+        .btn-silent-mode.active {
+            background: rgba(251, 191, 36, 0.2);
+            border-color: #fbbf24;
+            color: #fbbf24;
+        }
+
+        /* Bouton Paramètres Vocaux */
+        .btn-voice-settings {
+            background: rgba(139, 92, 246, 0.1);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            padding: 10px 16px;
+            border-radius: 10px;
+            color: #8b5cf6;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-voice-settings:hover {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: #8b5cf6;
+            transform: scale(1.05);
+        }
+
+        /* Menu Paramètres Vocaux */
+        .voice-settings-menu {
+            position: absolute;
+            bottom: 80px;
+            right: 24px;
+            background: rgba(15, 23, 42, 0.98);
+            border: 2px solid rgba(139, 92, 246, 0.5);
+            border-radius: 16px;
+            padding: 20px;
+            min-width: 300px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+        }
+
+        .voice-settings-menu.active {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .voice-settings-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f3f4f6;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .voice-setting-group {
+            margin-bottom: 16px;
+        }
+
+        .voice-setting-label {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .voice-setting-select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            color: #f3f4f6;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .voice-setting-select:hover {
+            border-color: #8b5cf6;
+        }
+
+        .voice-setting-select:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+
+        .voice-setting-slider {
+            width: 100%;
+            height: 6px;
+            background: rgba(139, 92, 246, 0.2);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .voice-setting-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .voice-setting-slider::-webkit-slider-thumb:hover {
+            background: #a78bfa;
+            transform: scale(1.2);
+        }
+
+        .voice-setting-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .voice-setting-slider::-moz-range-thumb:hover {
+            background: #a78bfa;
+            transform: scale(1.2);
+        }
+
+        .voice-setting-value {
+            display: inline-block;
+            margin-left: 8px;
+            color: #8b5cf6;
+            font-weight: 600;
         }
 
         @keyframes pulse-red {
@@ -702,9 +937,25 @@
                     <textarea id="messageInput" placeholder="Posez votre question médicale..." rows="1"
                         onkeydown="handleKeyPress(event)" oninput="autoResize(this)"></textarea>
                     <div class="input-actions">
+                        <button class="btn-silent-mode" onclick="toggleSilentMode()" id="silentBtn"
+                            title="Mode discret">
+                            🔇
+                        </button>
                         <button class="btn-voice-siri" onclick="toggleVoiceConversation()" id="voiceBtn"
                             title="Conversation vocale">
                             🎤
+                            <div class="audio-visualizer">
+                                <div class="audio-bar"></div>
+                                <div class="audio-bar"></div>
+                                <div class="audio-bar"></div>
+                                <div class="audio-bar"></div>
+                                <div class="audio-bar"></div>
+                                <div class="audio-bar"></div>
+                            </div>
+                        </button>
+                        <button class="btn-voice-settings" onclick="toggleVoiceSettings()" id="voiceSettingsBtn"
+                            title="Paramètres vocaux">
+                            ⚙️
                         </button>
                         <button class="btn-send" onclick="sendMessage()" id="sendBtn">
                             Envoyer
@@ -730,6 +981,42 @@
         </div>
     </div>
 
+    <!-- Menu Paramètres Vocaux -->
+    <div id="voiceSettingsMenu" class="voice-settings-menu">
+        <div class="voice-settings-title">⚙️ Paramètres Vocaux</div>
+
+        <div class="voice-setting-group">
+            <label class="voice-setting-label">Voix</label>
+            <select id="voiceSelect" class="voice-setting-select" onchange="changeVoice()">
+                <option value="">Voix par défaut</option>
+            </select>
+        </div>
+
+        <div class="voice-setting-group">
+            <label class="voice-setting-label">
+                Vitesse <span class="voice-setting-value" id="rateValue">1.0x</span>
+            </label>
+            <input type="range" id="rateSlider" class="voice-setting-slider" min="0.5" max="2.0" step="0.1" value="1.0"
+                oninput="changeRate(this.value)">
+        </div>
+
+        <div class="voice-setting-group">
+            <label class="voice-setting-label">
+                Tonalité <span class="voice-setting-value" id="pitchValue">1.0</span>
+            </label>
+            <input type="range" id="pitchSlider" class="voice-setting-slider" min="0.5" max="2.0" step="0.1" value="1.0"
+                oninput="changePitch(this.value)">
+        </div>
+
+        <div class="voice-setting-group">
+            <label class="voice-setting-label">
+                Volume <span class="voice-setting-value" id="volumeValue">100%</span>
+            </label>
+            <input type="range" id="volumeSlider" class="voice-setting-slider" min="0" max="1" step="0.1" value="1.0"
+                oninput="changeVolume(this.value)">
+        </div>
+    </div>
+
     <!-- Inclure le CSS du modal -->
     <link rel="stylesheet" href="{{ url_for('static', filename='history-modal.css') }}">
 
@@ -746,6 +1033,151 @@
         let voiceSynthesis = window.speechSynthesis;
         let isVoiceActive = false;
         let isSpeaking = false;
+        let isSilentMode = false;
+        let voiceSettings = {
+            voice: null,
+            rate: 1.0,
+            pitch: 1.0,
+            volume: 1.0
+        };
+
+        // ============================================
+        // FEEDBACK SONORE (Web Audio API)
+        // ============================================
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch (type) {
+                case 'start': // Ding - Son de démarrage
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+
+                case 'end': // Bip - Son de fin
+                    oscillator.frequency.value = 600;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                    break;
+
+                case 'send': // Swoosh - Son d'envoi
+                    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                    break;
+
+                case 'error': // Son d'erreur
+                    oscillator.frequency.value = 300;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.4);
+                    break;
+            }
+        }
+
+        // ============================================
+        // MODE DISCRET
+        // ============================================
+        function toggleSilentMode() {
+            isSilentMode = !isSilentMode;
+            const silentBtn = document.getElementById('silentBtn');
+
+            if (isSilentMode) {
+                silentBtn.classList.add('active');
+                silentBtn.textContent = '🔕';
+                silentBtn.title = 'Mode discret activé';
+                console.log('🔕 Mode discret ACTIVÉ');
+            } else {
+                silentBtn.classList.remove('active');
+                silentBtn.textContent = '🔇';
+                silentBtn.title = 'Mode discret';
+                console.log('🔊 Mode discret DÉSACTIVÉ');
+            }
+        }
+
+        // ============================================
+        // COMMANDES VOCALES
+        // ============================================
+        function detectVoiceCommand(text) {
+            const lowerText = text.toLowerCase().trim();
+
+            // Commande: Stop / Arrête
+            if (lowerText === 'stop' || lowerText === 'arrête' || lowerText === 'arrête') {
+                console.log('🛑 Commande: STOP');
+                toggleVoiceConversation(); // Arrêter la conversation
+                return true;
+            }
+
+            // Commande: Répète
+            if (lowerText === 'répète' || lowerText === 'repete' || lowerText === 'encore') {
+                console.log('🔄 Commande: RÉPÈTE');
+                regenerateResponse();
+                return true;
+            }
+
+            // Commande: Plus fort
+            if (lowerText.includes('plus fort') || lowerText.includes('volume plus')) {
+                console.log('🔊 Commande: PLUS FORT');
+                voiceSettings.volume = Math.min(1.0, voiceSettings.volume + 0.2);
+                playSound('start');
+                return true;
+            }
+
+            // Commande: Moins fort
+            if (lowerText.includes('moins fort') || lowerText.includes('volume moins')) {
+                console.log('🔉 Commande: MOINS FORT');
+                voiceSettings.volume = Math.max(0.2, voiceSettings.volume - 0.2);
+                playSound('end');
+                return true;
+            }
+
+            // Commande: Plus vite
+            if (lowerText.includes('plus vite') || lowerText.includes('plus rapide')) {
+                console.log('⏩ Commande: PLUS VITE');
+                voiceSettings.rate = Math.min(2.0, voiceSettings.rate + 0.2);
+                playSound('start');
+                return true;
+            }
+
+            // Commande: Moins vite / Plus lent
+            if (lowerText.includes('moins vite') || lowerText.includes('plus lent')) {
+                console.log('⏪ Commande: PLUS LENT');
+                voiceSettings.rate = Math.max(0.5, voiceSettings.rate - 0.2);
+                playSound('end');
+                return true;
+            }
+
+            // Commande: Mode discret
+            if (lowerText.includes('mode discret') || lowerText.includes('silence')) {
+                console.log('🔕 Commande: MODE DISCRET');
+                toggleSilentMode();
+                return true;
+            }
+
+            // Commande: Efface / Nouveau
+            if (lowerText === 'efface' || lowerText === 'nouveau' || lowerText === 'recommence') {
+                console.log('🗑️ Commande: NOUVEAU');
+                clearChat();
+                playSound('send');
+                return true;
+            }
+
+            return false; // Pas une commande
+        }
 
         // Initialiser la reconnaissance vocale
         function initVoiceRecognition() {
@@ -760,8 +1192,15 @@
                     const transcript = event.results[0][0].transcript;
                     console.log('🎤 Texte reconnu:', transcript);
 
+                    // Vérifier si c'est une commande vocale
+                    if (detectVoiceCommand(transcript)) {
+                        playSound('send');
+                        return; // Ne pas envoyer le message
+                    }
+
                     // Envoyer automatiquement le message
                     document.getElementById('messageInput').value = transcript;
+                    playSound('send'); // Son d'envoi
                     sendMessage();
                 };
 
@@ -783,6 +1222,7 @@
                 voiceRecognition.onerror = (event) => {
                     console.error('❌ Erreur reconnaissance:', event.error);
                     if (event.error !== 'no-speech' && event.error !== 'aborted') {
+                        playSound('error'); // Son d'erreur
                         alert('Erreur de reconnaissance vocale: ' + event.error);
                     }
 
@@ -813,6 +1253,7 @@
                 try {
                     voiceRecognition.start();
                     updateVoiceButton('listening');
+                    playSound('start'); // Son de démarrage
                     console.log('🎤 Écoute démarrée...');
                 } catch (error) {
                     console.error('Erreur démarrage:', error);
@@ -825,6 +1266,7 @@
             if (voiceRecognition) {
                 try {
                     voiceRecognition.stop();
+                    playSound('end'); // Son de fin
                     console.log('🛑 Écoute arrêtée');
                 } catch (error) {
                     console.error('Erreur arrêt:', error);
@@ -835,6 +1277,12 @@
 
         // Lire le texte à voix haute
         function speakText(text) {
+            // Ne pas parler si le mode discret est activé
+            if (isSilentMode) {
+                console.log('🔕 Mode discret: pas de synthèse vocale');
+                return Promise.resolve();
+            }
+
             return new Promise((resolve) => {
                 // Arrêter toute synthèse en cours
                 voiceSynthesis.cancel();
@@ -866,9 +1314,16 @@
 
                 const utterance = new SpeechSynthesisUtterance(cleanText);
                 utterance.lang = 'fr-FR';
-                utterance.rate = 1.0;
-                utterance.pitch = 1.0;
-                utterance.volume = 1.0;
+
+                // Appliquer les paramètres de voix personnalisés
+                utterance.rate = voiceSettings.rate;
+                utterance.pitch = voiceSettings.pitch;
+                utterance.volume = voiceSettings.volume;
+
+                // Utiliser la voix sélectionnée si disponible
+                if (voiceSettings.voice) {
+                    utterance.voice = voiceSettings.voice;
+                }
 
                 utterance.onstart = () => {
                     isSpeaking = true;
@@ -897,6 +1352,7 @@
                 utterance.onerror = (event) => {
                     console.error('❌ Erreur synthèse vocale:', event.error);
                     isSpeaking = false;
+                    playSound('error');
                     resolve();
                 };
 
@@ -952,6 +1408,93 @@
         // Initialiser au chargement
         window.addEventListener('load', () => {
             initVoiceRecognition();
+            loadAvailableVoices();
+        });
+
+        // ============================================
+        // PARAMÈTRES VOCAUX
+        // ============================================
+        function loadAvailableVoices() {
+            const voiceSelect = document.getElementById('voiceSelect');
+
+            function populateVoices() {
+                const voices = voiceSynthesis.getVoices();
+                const frenchVoices = voices.filter(voice => voice.lang.startsWith('fr'));
+
+                voiceSelect.innerHTML = '<option value="">Voix par défaut</option>';
+
+                frenchVoices.forEach((voice, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `${voice.name} (${voice.lang})`;
+                    voiceSelect.appendChild(option);
+                });
+
+                // Si aucune voix française, afficher toutes les voix
+                if (frenchVoices.length === 0) {
+                    voices.forEach((voice, index) => {
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.textContent = `${voice.name} (${voice.lang})`;
+                        voiceSelect.appendChild(option);
+                    });
+                }
+            }
+
+            // Charger les voix (peut prendre du temps)
+            populateVoices();
+            if (voiceSynthesis.onvoiceschanged !== undefined) {
+                voiceSynthesis.onvoiceschanged = populateVoices;
+            }
+        }
+
+        function toggleVoiceSettings() {
+            const menu = document.getElementById('voiceSettingsMenu');
+            menu.classList.toggle('active');
+        }
+
+        function changeVoice() {
+            const voiceSelect = document.getElementById('voiceSelect');
+            const voices = voiceSynthesis.getVoices();
+            const selectedIndex = voiceSelect.value;
+
+            if (selectedIndex === '') {
+                voiceSettings.voice = null;
+            } else {
+                voiceSettings.voice = voices[selectedIndex];
+            }
+
+            console.log('🎙️ Voix changée:', voiceSettings.voice ? voiceSettings.voice.name : 'Défaut');
+            playSound('start');
+        }
+
+        function changeRate(value) {
+            voiceSettings.rate = parseFloat(value);
+            document.getElementById('rateValue').textContent = value + 'x';
+            console.log('⏩ Vitesse:', value);
+        }
+
+        function changePitch(value) {
+            voiceSettings.pitch = parseFloat(value);
+            document.getElementById('pitchValue').textContent = value;
+            console.log('🎵 Tonalité:', value);
+        }
+
+        function changeVolume(value) {
+            voiceSettings.volume = parseFloat(value);
+            const percentage = Math.round(value * 100);
+            document.getElementById('volumeValue').textContent = percentage + '%';
+            console.log('🔊 Volume:', percentage + '%');
+        }
+
+        // Fermer le menu en cliquant en dehors
+        document.addEventListener('click', function (event) {
+            const menu = document.getElementById('voiceSettingsMenu');
+            const btn = document.getElementById('voiceSettingsBtn');
+
+            if (menu && btn && !menu.contains(event.target) && !btn.contains(event.target)) {
+                menu.classList.remove('active');
+            }
         });
 
         // ============================================
