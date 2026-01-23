@@ -1077,10 +1077,9 @@
                     <textarea id="messageInput" placeholder="Posez votre question médicale..." rows="1"
                         onkeydown="handleKeyPress(event)" oninput="autoResize(this)"></textarea>
                     <div class="input-actions">
-                        <!-- UN SEUL BOUTON VOCAL STYLE SIRI -->
-                        <button class="btn-voice-siri-main" onclick="toggleVoiceConversation()"
-                            oncontextmenu="showVoiceMenu(event); return false;" id="voiceBtn"
-                            title="Clic: Activer vocal | Clic droit: Options">
+                        <!-- UN SEUL BOUTON - CLIC = PARLER -->
+                        <button class="btn-voice-siri-main" onclick="startVoiceConversation()" id="voiceBtn"
+                            title="Cliquer pour parler avec l'IA">
                             <div class="voice-icon">🎤</div>
                             <div class="audio-visualizer-inline">
                                 <div class="audio-bar"></div>
@@ -1189,7 +1188,7 @@
     <script src="{{ url_for('static', filename='chat-history.js') }}"></script>
     <script src="{{ url_for('static', filename='voice-assistant-siri.js') }}"></script>
     <script src="{{ url_for('static', filename='voice-integration.js') }}"></script>
-    <script src="{{ url_for('static', filename='voice-siri-simple.js') }}"></script>
+    <script src="{{ url_for('static', filename='voice-ultra-simple.js') }}"></script>
     <script src="{{ url_for('static', filename='chat-functions.js') }}"></script>
 </body>
 
