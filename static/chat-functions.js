@@ -188,6 +188,10 @@ async function sendMessage() {
     }
 }
 
+// Rendre la fonction globale pour qu'elle soit accessible partout
+window.sendMessage = sendMessage;
+console.log('✅ sendMessage rendue globale');
+
 // ============================================
 // FONCTIONS HISTORIQUE
 // ============================================
