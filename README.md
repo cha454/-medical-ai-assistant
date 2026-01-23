@@ -7,6 +7,16 @@ Un assistant médical intelligent basé sur l'IA qui permet de discuter en langa
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.20-orange)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
+## 📚 Documentation
+
+**🗂️ [INDEX COMPLET DE LA DOCUMENTATION](INDEX_DOCUMENTATION.md)** - Accédez à tous les guides (80+ fichiers organisés)
+
+**Guides rapides :**
+- 🚀 [Démarrage Rapide](DEMARRAGE_RAPIDE.md)
+- 🎤 [Système Vocal v2.0](GUIDE_VOCAL_AMELIORE.md)
+- 🔧 [Configuration](SETUP_LLM.md)
+- 🚢 [Déploiement](DEPLOIEMENT_RENDER.md)
+
 ## 🌐 Démo en ligne
 
 **🔗 Application:** https://medical-ai-assistant-2k1a.onrender.com/

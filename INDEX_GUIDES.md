@@ -1,5 +1,9 @@
 # 📚 INDEX COMPLET - Tous les Guides
 
+> **🆕 NOUVEAU** : Consultez **[INDEX_DOCUMENTATION.md](INDEX_DOCUMENTATION.md)** pour un index complet et organisé de TOUTE la documentation (80+ fichiers) !
+
+---
+
 ## 🎯 GUIDES HÉBERGEMENT
 
 ### 🚀 Migration & Déploiement
