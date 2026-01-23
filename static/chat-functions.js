@@ -103,10 +103,19 @@ function hideTyping() {
 }
 
 async function sendMessage() {
+    console.log('📬 sendMessage() appelée');
+
     const input = document.getElementById('messageInput');
     const message = input.value.trim();
 
-    if (!message) return;
+    console.log('📝 Message à envoyer:', message);
+
+    if (!message) {
+        console.warn('⚠️ Message vide, abandon');
+        return;
+    }
+
+    console.log('✅ Message valide, envoi en cours...');
 
     // Add user message
     addMessage(message, true);
@@ -121,6 +130,7 @@ async function sendMessage() {
     showTyping();
 
     try {
+        console.log('🌐 Envoi requête API...');
         const response = await fetch(`${API_URL}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -130,11 +140,14 @@ async function sendMessage() {
             })
         });
 
+        console.log('📡 Réponse reçue, status:', response.status);
         const data = await response.json();
+        console.log('📦 Données:', data);
 
         hideTyping();
 
         if (data.response) {
+            console.log('✅ Réponse de l\'IA:', data.response.substring(0, 50) + '...');
             addMessage(data.response, false);
             conversationHistory.push({
                 user: message,
@@ -149,21 +162,29 @@ async function sendMessage() {
             // Lire la réponse à voix haute avec le système Siri
             // Si le système vocal est actif (mode mains libres OU écoute active)
             if (window.siriVoiceAssistant) {
+                console.log('🔊 Système vocal disponible');
                 if (siriVoiceAssistant.handsFreeModeActive || siriVoiceAssistant.isListening) {
                     console.log('🔊 Lecture de la réponse vocale');
                     siriVoiceAssistant.speak(data.response);
+                } else {
+                    console.log('⚠️ Mode vocal non actif');
                 }
+            } else {
+                console.log('⚠️ Système vocal non disponible');
             }
         } else {
+            console.error('❌ Pas de réponse dans les données');
             addMessage('Désolé, une erreur est survenue.', false);
         }
 
     } catch (error) {
+        console.error('❌ Erreur:', error);
         hideTyping();
         addMessage('Erreur de connexion. Veuillez réessayer.', false);
     } finally {
         sendBtn.disabled = false;
         input.focus();
+        console.log('✅ sendMessage() terminée');
     }
 }
 

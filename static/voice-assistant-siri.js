@@ -212,17 +212,26 @@ class SiriVoiceAssistant {
     // Gérer le texte reconnu
     handleTranscript(transcript) {
         const text = transcript.trim();
-        if (!text) return;
+        console.log('🎯 handleTranscript appelé avec:', text);
 
-        console.log('📤 Envoi du message:', text);
+        if (!text) {
+            console.warn('⚠️ Texte vide, abandon');
+            return;
+        }
+
+        console.log('📤 Préparation envoi du message:', text);
 
         // Afficher dans l'input
         const messageInput = document.getElementById('messageInput');
         if (messageInput) {
             messageInput.value = text;
+            console.log('✅ Texte mis dans l\'input');
+        } else {
+            console.error('❌ Input messageInput non trouvé');
         }
 
         // Envoyer le message directement
+        console.log('🚀 Tentative d\'envoi...');
         this.sendMessage(text);
 
         // Ajouter à l'historique
@@ -231,21 +240,34 @@ class SiriVoiceAssistant {
             text: text,
             timestamp: new Date()
         });
+        console.log('✅ Message ajouté à l\'historique');
     }
 
     // Envoyer le message
     sendMessage(text) {
+        console.log('📨 sendMessage appelé');
+
         // Appeler directement la fonction sendMessage globale
         if (typeof window.sendMessage === 'function') {
-            console.log('✅ Appel de sendMessage()');
-            window.sendMessage();
+            console.log('✅ Fonction sendMessage trouvée, appel...');
+            try {
+                window.sendMessage();
+                console.log('✅ sendMessage() exécuté');
+            } catch (error) {
+                console.error('❌ Erreur lors de l\'appel:', error);
+            }
         } else {
             console.error('❌ Fonction sendMessage non trouvée');
+            console.log('Type de window.sendMessage:', typeof window.sendMessage);
+
             // Fallback: cliquer sur le bouton
             const sendButton = document.querySelector('.btn-send');
             if (sendButton) {
                 console.log('⚠️ Fallback: clic sur le bouton');
                 sendButton.click();
+                console.log('✅ Bouton cliqué');
+            } else {
+                console.error('❌ Bouton .btn-send non trouvé');
             }
         }
     }
