@@ -7,15 +7,47 @@ Un assistant médical intelligent basé sur l'IA qui permet de discuter en langa
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.20-orange)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
+## 🎉 NOUVEAUTÉS - Version 2.0 (23 janvier 2026)
+
+### 🆕 Fonctionnalités Majeures Ajoutées
+
+1. **🎓 Mode Enseignement** (NOUVEAU!)
+   - Apprenez à l'IA en discutant naturellement
+   - Support texte + vocal
+   - 8 catégories : langues locales, plantes, médical, personnel, etc.
+   - Réutilisation automatique des connaissances
+   - Base de données SQLite intégrée
+
+2. **🎤 Système Vocal Complet v2.0** (style Siri)
+   - Reconnaissance vocale continue
+   - Synthèse vocale avec paramètres
+   - 10 commandes vocales (Stop, Répète, Plus vite, etc.)
+   - Visualisation audio (6 barres animées)
+   - Mode discret
+   - Feedback sonore (4 sons)
+
+3. **🔍 Recherche Web Multi-Sources Améliorée**
+   - 6 sources : Wikipedia, PubMed, WHO, Google, Bing, Brave
+   - Brave Search API Pro intégrée
+   - Système de fiabilité ⭐⭐⭐
+   - Citations automatiques
+
 ## 📚 Documentation
+
+**👉 [LIRE EN PREMIER](LIRE_EN_PREMIER.md)** - Guide de démarrage ultra-rapide
 
 **🗂️ [INDEX COMPLET DE LA DOCUMENTATION](INDEX_DOCUMENTATION.md)** - Accédez à tous les guides (80+ fichiers organisés)
 
 **Guides rapides :**
-- 🚀 [Démarrage Rapide](DEMARRAGE_RAPIDE.md)
-- 🎤 [Système Vocal v2.0](GUIDE_VOCAL_AMELIORE.md)
-- 🔧 [Configuration](SETUP_LLM.md)
-- 🚢 [Déploiement](DEPLOIEMENT_RENDER.md)
+- 🚀 [Tester Maintenant](TESTER_MAINTENANT.md) - Test en 5 minutes
+- 🎓 [Mode Enseignement](GUIDE_MODE_ENSEIGNEMENT.md) - Guide complet
+- 🎤 [Système Vocal v2.0](GUIDE_VOCAL_AMELIORE.md) - Guide vocal
+- 🔧 [Configuration](SETUP_LLM.md) - Installation
+- 🚢 [Déploiement](DEPLOIEMENT_RENDER.md) - Production
+
+**Récapitulatifs :**
+- 📋 [Session 23 janvier 2026](SESSION_RECAP_23_JAN_2026_FINAL.md) - Récapitulatif complet
+- ✅ [Intégration Mode Enseignement](INTEGRATION_MODE_ENSEIGNEMENT_COMPLETE.md) - Détails techniques
 
 ## 🌐 Démo en ligne
 
@@ -27,24 +59,40 @@ Un assistant médical intelligent basé sur l'IA qui permet de discuter en langa
 
 ## ✨ Fonctionnalités
 
-### 🆕 NOUVELLES FONCTIONNALITÉS
+### 🆕 NOUVELLES FONCTIONNALITÉS v2.0
+
+#### 🎓 Mode Enseignement (NOUVEAU!)
+- Enseignez à l'IA en discutant naturellement
+- Support texte + vocal
+- 8 catégories de connaissances
+- Réutilisation automatique dans le chat
+- Exemples:
+  - "En Fang, Nlo signifie fièvre"
+  - "Le Kinkeliba soigne le paludisme"
+  - "Je suis allergique à la pénicilline"
+
+#### 🎤 Système Vocal Complet v2.0 (style Siri)
+- Reconnaissance vocale continue
+- Synthèse vocale avec paramètres (voix, vitesse, tonalité, volume)
+- 10 commandes vocales (Stop, Répète, Plus vite/moins vite, etc.)
+- Visualisation audio (6 barres animées)
+- Mode discret (désactive la voix)
+- Feedback sonore (4 sons : Ding, Bip, Swoosh, Erreur)
+
+#### 🔍 Recherche Web Multi-Sources v2.0
+- **6 moteurs de recherche** : Wikipedia, PubMed, WHO, Google, Bing, Brave
+- **Brave Search API Pro** intégrée
+- **Système de fiabilité** avec notation ⭐⭐⭐
+- **Croisement automatique** des sources
+- **Jusqu'à 8 sources** affichées avec détails complets
+- **Citations automatiques**
+- Exemples: "Fais une recherche poussée sur le diabète"
 
 #### 🌤️ Météo en Temps Réel (OpenWeather API)
 - Demandez la météo de n'importe quelle ville
 - Température, humidité, vent, conditions
 - Conseils santé adaptés à la météo
 - Exemples: "Quelle est la météo à Paris ?"
-
-#### 🔍 Recherche Web Multi-Sources (Version 2.0) 🆕
-- **7 moteurs de recherche** : Google, Wikipedia, DuckDuckGo, PubMed, Bing, Brave, Google Scholar
-- **Système de fiabilité** avec notation ⭐⭐⭐
-- **Croisement automatique** des sources pour garantir la fiabilité
-- **Jusqu'à 8 sources** affichées avec détails complets
-- **14 sources médicales prioritaires** (OMS, PubMed, etc.)
-- **Statistiques de qualité** (nombre de sources, fiabilité)
-- **Informations détaillées** : titre, extrait, auteurs, date, URL
-- Exemples: "Fais une recherche poussée sur le diabète"
-- **Voir** : `AMELIORATIONS_RECHERCHE_WEB.md` pour les détails
 
 ### 💬 Chat Intelligent
 - Interface conversationnelle style ChatGPT
