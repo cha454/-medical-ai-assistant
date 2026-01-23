@@ -95,6 +95,16 @@ except ImportError:
     image_search = None
     print("⚠️ Module recherche d'images non disponible")
 
+# Import du module Base de Connaissances
+try:
+    from knowledge_base import KnowledgeBase
+    KNOWLEDGE_BASE_AVAILABLE = True
+    print("✓ Base de connaissances personnalisée activée")
+except ImportError:
+    KNOWLEDGE_BASE_AVAILABLE = False
+    KnowledgeBase = None
+    print("⚠️ Module base de connaissances non disponible")
+
 class EnhancedMedicalChatbot:
     def __init__(self):
         self.conversation_state = "greeting"
@@ -104,6 +114,17 @@ class EnhancedMedicalChatbot:
         self.last_topic = None
         self.last_disease = None  # Nouvelle variable pour mémoriser la dernière maladie
         self.user_concerns = []
+        
+        # Initialiser la base de connaissances personnalisée
+        if KNOWLEDGE_BASE_AVAILABLE:
+            try:
+                self.kb = KnowledgeBase()
+                print("✓ Base de connaissances initialisée")
+            except Exception as e:
+                print(f"⚠️ Erreur initialisation base de connaissances: {e}")
+                self.kb = None
+        else:
+            self.kb = None
         
         # Détection d'émotions
         self.emotion_keywords = {
@@ -937,6 +958,22 @@ Exemple: "Quelle est la météo à Paris, FR ?" """
     def _build_context_for_llm(self, query):
         """Construit le contexte médical pour enrichir la réponse du LLM"""
         context_parts = []
+        
+        # ============================================
+        # 1. CONNAISSANCES PERSONNALISÉES APPRISES
+        # ============================================
+        if self.kb:
+            try:
+                kb_context = self.kb.get_context_for_llm(query, limit=15)
+                if kb_context:
+                    context_parts.append(kb_context)
+                    print(f"✓ Connaissances personnalisées injectées dans le contexte")
+            except Exception as e:
+                print(f"⚠️ Erreur récupération connaissances: {e}")
+        
+        # ============================================
+        # 2. BASE DE DONNÉES MÉDICALE LOCALE
+        # ============================================
         
         # Chercher dans les maladies
         for disease_name, info in DISEASES_DATABASE.items():
