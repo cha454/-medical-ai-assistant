@@ -5,7 +5,7 @@ Permet à l'utilisateur d'enseigner de nouvelles connaissances à l'IA
 
 from flask import Blueprint, render_template, request, jsonify
 from src.knowledge_base import KnowledgeBase
-from src.llm_provider import get_llm_response
+from src.llm_provider import llm
 import re
 
 teach_bp = Blueprint('teach', __name__)
@@ -126,7 +126,11 @@ def teach_api():
         context += "Assistant:"
         
         # Obtenir la réponse du LLM
-        ai_response = get_llm_response(context, language='fr')
+        if llm and llm.is_available():
+            ai_response = llm.generate_response(context, [], language='fr')
+        else:
+            # Mode basique si LLM non disponible
+            ai_response = f"Merci ! J'ai bien noté : {user_message}"
         
         # Extraire et sauvegarder la connaissance
         question, answer, category, language = extract_knowledge(user_message, ai_response)
