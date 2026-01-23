@@ -606,11 +606,37 @@ class SiriVoiceAssistant {
 // Instance globale
 let siriVoiceAssistant = null;
 
-// Initialiser au chargement
-document.addEventListener('DOMContentLoaded', () => {
-    siriVoiceAssistant = new SiriVoiceAssistant();
-    console.log('✓ Assistant vocal Siri prêt');
-});
+// Fonction d'initialisation robuste
+function initSiriVoiceAssistant() {
+    if (siriVoiceAssistant) {
+        console.log('✓ Assistant vocal déjà initialisé');
+        return;
+    }
+
+    try {
+        siriVoiceAssistant = new SiriVoiceAssistant();
+        window.siriVoiceAssistant = siriVoiceAssistant; // Rendre global
+        console.log('✓ Assistant vocal Siri prêt');
+    } catch (error) {
+        console.error('❌ Erreur initialisation:', error);
+    }
+}
+
+// Initialiser immédiatement si le DOM est prêt
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSiriVoiceAssistant);
+} else {
+    // DOM déjà chargé
+    initSiriVoiceAssistant();
+}
+
+// Backup: initialiser après 500ms si pas encore fait
+setTimeout(() => {
+    if (!siriVoiceAssistant) {
+        console.log('⚠️ Initialisation de secours...');
+        initSiriVoiceAssistant();
+    }
+}, 500);
 
 // Fonctions globales
 function toggleVoiceListening() {
