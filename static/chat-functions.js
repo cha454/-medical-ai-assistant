@@ -147,8 +147,12 @@ async function sendMessage() {
             }
 
             // Lire la réponse à voix haute avec le système Siri
-            if (window.siriVoiceAssistant && window.siriVoiceAssistant.handsFreeModeActive) {
-                window.siriVoiceAssistant.speak(data.response);
+            // Si le système vocal est actif (mode mains libres OU écoute active)
+            if (window.siriVoiceAssistant) {
+                if (siriVoiceAssistant.handsFreeModeActive || siriVoiceAssistant.isListening) {
+                    console.log('🔊 Lecture de la réponse vocale');
+                    siriVoiceAssistant.speak(data.response);
+                }
             }
         } else {
             addMessage('Désolé, une erreur est survenue.', false);

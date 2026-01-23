@@ -214,13 +214,15 @@ class SiriVoiceAssistant {
         const text = transcript.trim();
         if (!text) return;
 
+        console.log('📤 Envoi du message:', text);
+
         // Afficher dans l'input
         const messageInput = document.getElementById('messageInput');
         if (messageInput) {
             messageInput.value = text;
         }
 
-        // Envoyer le message
+        // Envoyer le message directement
         this.sendMessage(text);
 
         // Ajouter à l'historique
@@ -233,9 +235,18 @@ class SiriVoiceAssistant {
 
     // Envoyer le message
     sendMessage(text) {
-        const sendButton = document.querySelector('.btn-send');
-        if (sendButton) {
-            sendButton.click();
+        // Appeler directement la fonction sendMessage globale
+        if (typeof window.sendMessage === 'function') {
+            console.log('✅ Appel de sendMessage()');
+            window.sendMessage();
+        } else {
+            console.error('❌ Fonction sendMessage non trouvée');
+            // Fallback: cliquer sur le bouton
+            const sendButton = document.querySelector('.btn-send');
+            if (sendButton) {
+                console.log('⚠️ Fallback: clic sur le bouton');
+                sendButton.click();
+            }
         }
     }
 
