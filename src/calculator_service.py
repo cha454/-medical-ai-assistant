@@ -36,7 +36,7 @@ class CalculatorService:
             "calcul", "calculer", "calcule", "combien font", "combien fait",
             "résous", "résoudre", "équation", "addition", "soustraction",
             "multiplication", "division", "pourcentage", "racine", "carré",
-            "puissance", "×", "÷", "=", "+"
+            "puissance", "×", "÷", "=", "+", "table de multiplication"
         ]
         
         # Vérifier les mots-clés
@@ -54,6 +54,12 @@ class CalculatorService:
     def calculate(self, expression: str) -> Dict[str, Any]:
         """Effectue un calcul mathématique"""
         try:
+            # Vérifier si c'est une table de multiplication
+            table_match = re.search(r'table\s+(?:de\s+)?multiplication\s+(?:de\s+)?(\d+)', expression.lower())
+            if table_match:
+                number = int(table_match.group(1))
+                return self._generate_multiplication_table(number)
+            
             # Nettoyer l'expression
             cleaned_expr = self._clean_expression(expression)
             
@@ -89,6 +95,19 @@ class CalculatorService:
                 "error": str(e),
                 "message": f"Erreur lors du calcul : {str(e)}"
             }
+    
+    def _generate_multiplication_table(self, number: int) -> Dict[str, Any]:
+        """Génère une table de multiplication"""
+        table = []
+        for i in range(1, 11):
+            table.append(f"{number} × {i} = {number * i}")
+        
+        return {
+            "success": True,
+            "is_table": True,
+            "number": number,
+            "table": table
+        }
     
     def _clean_expression(self, text: str) -> Optional[str]:
         """Nettoie et prépare l'expression pour le calcul"""
@@ -139,7 +158,7 @@ class CalculatorService:
         expression = re.sub(r'\s+', '', expression)
         
         # Vérifier que c'est sécurisé (seulement chiffres et opérateurs)
-        if not re.match(r'^[\d\+\-\*\/\(\)\.\*\s]+$', expression):
+        if not re.match(r'^[\d\+\-\*\/\(\)\.\s]+$', expression):
             return None
         
         return expression
@@ -167,6 +186,22 @@ class CalculatorService:
     
     def format_response(self, calc_result: Dict[str, Any], original_query: str) -> str:
         """Formate la réponse pour l'utilisateur"""
+        # Table de multiplication
+        if calc_result.get("is_table"):
+            number = calc_result["number"]
+            table = calc_result["table"]
+            table_text = "\n".join(table)
+            
+            return f"""🧮 **Table de Multiplication de {number}**
+
+{table_text}
+
+---
+
+💡 **Autres tables disponibles :**
+Demande "table de multiplication de X" pour n'importe quel nombre !"""
+        
+        # Erreur
         if not calc_result["success"]:
             return f"""🧮 **Calculatrice**
 
@@ -179,9 +214,11 @@ class CalculatorService:
 • Pourcentages : "Calcule 15% de 250"
 • Puissances : "2 puissance 8"
 • Racines : "Racine carrée de 144"
+• Tables : "Table de multiplication de 5"
 
 Essaie de reformuler ta question !"""
         
+        # Résultat normal
         result = calc_result["result"]
         formatted = calc_result["formatted_result"]
         expression = calc_result["expression"]
@@ -201,6 +238,7 @@ Essaie de reformuler ta question !"""
 • Puissances : "2^8" ou "2 puissance 8"
 • Racines : "sqrt(144)"
 • Opérations : +, -, ×, ÷
+• Tables : "Table de multiplication de 5"
 
 Besoin d'un autre calcul ?"""
 
@@ -216,7 +254,8 @@ if __name__ == "__main__":
         "Calcule 45 + 12",
         "Combien font 15% de 250",
         "2 puissance 8",
-        "45 × 12"
+        "45 × 12",
+        "Table de multiplication de 5"
     ]
     
     for test in tests:
