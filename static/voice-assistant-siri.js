@@ -247,29 +247,32 @@ class SiriVoiceAssistant {
     sendMessage(text) {
         console.log('📨 sendMessage appelé');
 
-        // Appeler directement la fonction sendMessage globale
-        if (typeof window.sendMessage === 'function') {
-            console.log('✅ Fonction sendMessage trouvée, appel...');
-            try {
-                window.sendMessage();
-                console.log('✅ sendMessage() exécuté');
-            } catch (error) {
-                console.error('❌ Erreur lors de l\'appel:', error);
-            }
-        } else {
-            console.error('❌ Fonction sendMessage non trouvée');
-            console.log('Type de window.sendMessage:', typeof window.sendMessage);
-
-            // Fallback: cliquer sur le bouton
-            const sendButton = document.querySelector('.btn-send');
-            if (sendButton) {
-                console.log('⚠️ Fallback: clic sur le bouton');
-                sendButton.click();
-                console.log('✅ Bouton cliqué');
+        // Attendre un petit délai pour s'assurer que tout est chargé
+        setTimeout(() => {
+            // Appeler directement la fonction sendMessage globale
+            if (typeof window.sendMessage === 'function') {
+                console.log('✅ Fonction sendMessage trouvée, appel...');
+                try {
+                    window.sendMessage();
+                    console.log('✅ sendMessage() exécuté');
+                } catch (error) {
+                    console.error('❌ Erreur lors de l\'appel:', error);
+                }
             } else {
-                console.error('❌ Bouton .btn-send non trouvé');
+                console.error('❌ Fonction sendMessage non trouvée');
+                console.log('Type de window.sendMessage:', typeof window.sendMessage);
+
+                // Fallback: cliquer sur le bouton
+                const sendButton = document.querySelector('.btn-send');
+                if (sendButton) {
+                    console.log('⚠️ Fallback: clic sur le bouton');
+                    sendButton.click();
+                    console.log('✅ Bouton cliqué');
+                } else {
+                    console.error('❌ Bouton .btn-send non trouvé');
+                }
             }
-        }
+        }, 100); // Délai de 100ms
     }
 
     // Synthèse vocale (Text-to-Speech)
