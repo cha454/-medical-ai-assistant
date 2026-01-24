@@ -24,6 +24,33 @@ function setupVoiceIntegration() {
     console.log('✓ Intégration vocale configurée (pas d\'interception de sendMessage)');
 }
 
+// Fonction principale - Démarrer la conversation vocale (appelée par le bouton micro)
+function startVoiceConversation() {
+    console.log('🎤 Clic sur le bouton vocal...');
+
+    if (!window.siriVoiceAssistant) {
+        console.error('❌ Assistant vocal Siri non disponible');
+        alert('Le système vocal n\'est pas disponible.\nVeuillez rafraîchir la page (F5).');
+        return;
+    }
+
+    // Toggle mode mains libres
+    const isActive = siriVoiceAssistant.toggleHandsFreeMode();
+
+    // Mettre à jour le bouton principal
+    const voiceBtn = document.getElementById('voiceBtn');
+    if (voiceBtn) {
+        const btnClass = voiceBtn.classList;
+        if (isActive) {
+            btnClass.add('hands-free');
+            console.log('✅ Mode mains libres activé');
+        } else {
+            btnClass.remove('hands-free');
+            console.log('✅ Mode mains libres désactivé');
+        }
+    }
+}
+
 // Fonction pour lire la réponse de l'IA (appelée depuis chat.html)
 function speakAIResponse(text) {
     if (window.siriVoiceAssistant && !isSilentMode) {
