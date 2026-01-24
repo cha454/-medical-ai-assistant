@@ -74,8 +74,10 @@ def extract_knowledge(user_message, ai_response):
             # Format: "Mbolo = bonjour" ou "Mbolo=bonjour"
             r'^([^\s=]+)\s*=\s*(.+)$',
             # Format: "Nlo signifie fièvre en Fang"
-            r'(.+?)\s+(?:signifie|veut dire|se dit|c\'est)\s+(.+?)\s+en\s+(\w+)',
-            # Format: "bonjour en langue fang se dit MBOLO" (NOUVEAU)
+            r'(.+?)\s+(?:signifie|veut dire|c\'est)\s+(.+?)\s+en\s+(\w+)',
+            # Format: "bonjour se dit MBOLO en langue fang" (NOUVEAU - ordre différent)
+            r'(.+?)\s+se\s+dit\s+(.+?)\s+en\s+(?:langue\s+)?(\w+)',
+            # Format: "bonjour en langue fang se dit MBOLO"
             r'(.+?)\s+en\s+(?:langue\s+)?(\w+)\s+(?:signifie|veut dire|se dit|c\'est)\s+(.+)',
             # Format: "en Fang, Nlo signifie fièvre"
             r'en\s+(\w+),?\s+(.+?)\s+(?:signifie|veut dire|se dit|c\'est)\s+(.+)',
@@ -118,39 +120,31 @@ def extract_knowledge(user_message, ai_response):
                     
                     # Format: "Nlo signifie fièvre en Fang" OU "bonjour en langue fang se dit MBOLO"
                     elif len(groups) == 3:
-                        # Déterminer le format en fonction de la position de "en" dans la phrase
+                        # Déterminer le format en fonction de la position de "se dit" dans la phrase
                         words = message_lower.split()
-                        en_position = words.index('en') if 'en' in words else -1
                         
-                        if en_position >= 0 and en_position < 3:
-                            # Format: "en Fang, Nlo signifie fièvre"
-                            language = groups[0].strip()
+                        # Format: "bonjour se dit MBOLO en langue fang"
+                        if 'se' in words and 'dit' in words and words.index('se') < 3:
+                            meaning = groups[0].strip()
                             term = groups[1].strip()
-                            meaning = groups[2].strip()
-                        elif 'se dit' in message_lower or 'veut dire' in message_lower or 'signifie' in message_lower:
-                            # Vérifier si "se dit" vient APRÈS "en langue"
-                            se_dit_pos = message_lower.find('se dit')
-                            veut_dire_pos = message_lower.find('veut dire')
-                            signifie_pos = message_lower.find('signifie')
-                            keyword_pos = max(se_dit_pos, veut_dire_pos, signifie_pos)
+                            language = groups[2].strip()
+                        # Format: "bonjour en langue fang se dit MBOLO"
+                        elif 'en' in words and ('se' in words and 'dit' in words):
+                            en_pos = words.index('en')
+                            se_pos = words.index('se') if 'se' in words else 999
                             
-                            if en_position >= 0 and keyword_pos > en_position:
-                                # Format: "bonjour en langue fang se dit MBOLO"
+                            if en_pos < se_pos:
+                                # "en" vient avant "se dit" → bonjour en fang se dit MBOLO
                                 meaning = groups[0].strip()
                                 language = groups[1].strip()
                                 term = groups[2].strip()
                             else:
-                                # Format: "Nlo signifie fièvre en Fang"
+                                # Format par défaut
                                 term = groups[0].strip()
                                 meaning = groups[1].strip()
                                 language = groups[2].strip()
-                        elif '=' in user_message:
-                            # Format: "bonjour en Fang = Mbolo"
-                            meaning = groups[0].strip()
-                            language = groups[1].strip()
-                            term = groups[2].strip()
+                        # Format: "Nlo signifie fièvre en Fang"
                         else:
-                            # Format par défaut: "Nlo signifie fièvre en Fang"
                             term = groups[0].strip()
                             meaning = groups[1].strip()
                             language = groups[2].strip()
