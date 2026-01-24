@@ -63,6 +63,18 @@ class SiriVoiceAssistant {
                     this.toggleHandsFreeMode();
                 }
             },
+            'skip': () => {
+                console.log('⏭️ Commande SKIP détectée');
+                this.stopSpeaking();
+            },
+            'suivant': () => {
+                console.log('⏭️ Commande SUIVANT détectée');
+                this.stopSpeaking();
+            },
+            'passe': () => {
+                console.log('⏭️ Commande PASSE détectée');
+                this.stopSpeaking();
+            },
             'répète': () => this.repeatLastResponse(),
             'plus fort': () => this.adjustVolume(0.1),
             'moins fort': () => this.adjustVolume(-0.1),
@@ -290,7 +302,14 @@ class SiriVoiceAssistant {
         this.synthesis.cancel();
 
         // Nettoyer le texte
-        const cleanText = this.cleanTextForSpeech(text);
+        let cleanText = this.cleanTextForSpeech(text);
+
+        // RÉSUMÉ AUTOMATIQUE pour les textes longs (>200 mots)
+        const wordCount = cleanText.split(/\s+/).length;
+        if (wordCount > 200) {
+            console.log(`📊 Texte long détecté (${wordCount} mots), création d'un résumé vocal`);
+            cleanText = this.createVoiceSummary(cleanText);
+        }
 
         // Créer l'utterance
         const utterance = new SpeechSynthesisUtterance(cleanText);
@@ -435,6 +454,22 @@ class SiriVoiceAssistant {
         }
 
         return this.handsFreeModeActive;
+    }
+
+    // Créer un résumé vocal pour les textes longs
+    createVoiceSummary(text) {
+        // Prendre les 3 premières phrases
+        const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+        const firstSentences = sentences.slice(0, 3).join(' ');
+
+        // Compter le nombre de phrases restantes
+        const remainingSentences = sentences.length - 3;
+
+        if (remainingSentences > 0) {
+            return `${firstSentences} Le texte complet contient ${remainingSentences} phrases supplémentaires affichées à l'écran. Dites "skip" pour passer.`;
+        } else {
+            return firstSentences;
+        }
     }
 
     // Nettoyer le texte pour la synthèse
