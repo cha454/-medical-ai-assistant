@@ -15,61 +15,83 @@ class KnowledgeBase:
         self.use_postgres = False
         self.db_url = os.environ.get('DATABASE_URL')
         
+        # Toujours importer sqlite3 comme fallback
+        import sqlite3
+        self.sqlite3 = sqlite3
+        
         if self.db_url:
             # PostgreSQL sur Railway
-            self.use_postgres = True
-            print(f"✓ Utilisation de PostgreSQL (Railway)")
             try:
                 import psycopg2
                 self.psycopg2 = psycopg2
+                self.use_postgres = True
+                print(f"✓ Utilisation de PostgreSQL (Railway)")
             except ImportError:
                 print("⚠️ psycopg2 non installé, fallback sur SQLite")
                 self.use_postgres = False
+            except Exception as e:
+                print(f"⚠️ Erreur PostgreSQL: {e}, fallback sur SQLite")
+                self.use_postgres = False
         
-        if not self.use_postgres:
-            # SQLite en local
-            import sqlite3
-            self.sqlite3 = sqlite3
+        # Configuration SQLite (toujours nécessaire comme fallback)
+        if db_path is None:
+            # Essayer différents chemins dans l'ordre de préférence
+            possible_paths = [
+                os.environ.get('DATA_DIR'),
+                '/data',
+                os.path.join(os.getcwd(), 'data'),
+                os.getcwd(),
+            ]
             
-            if db_path is None:
-                # Essayer différents chemins dans l'ordre de préférence
-                possible_paths = [
-                    os.environ.get('DATA_DIR'),
-                    '/data',
-                    os.path.join(os.getcwd(), 'data'),
-                    os.getcwd(),
-                ]
-                
-                data_dir = None
-                for path in possible_paths:
-                    if path and os.path.exists(path):
+            data_dir = None
+            for path in possible_paths:
+                if path and os.path.exists(path):
+                    data_dir = path
+                    break
+                elif path and path != os.getcwd():
+                    try:
+                        os.makedirs(path, exist_ok=True)
                         data_dir = path
+                        print(f"✓ Dossier data créé: {path}")
                         break
-                    elif path and path != os.getcwd():
-                        try:
-                            os.makedirs(path, exist_ok=True)
-                            data_dir = path
-                            print(f"✓ Dossier data créé: {path}")
-                            break
-                        except Exception as e:
-                            continue
-                
-                if data_dir is None:
-                    data_dir = os.getcwd()
-                
-                db_path = os.path.join(data_dir, 'knowledge.db')
-                print(f"✓ Base de données SQLite: {db_path}")
+                    except Exception as e:
+                        continue
             
-            self.db_path = db_path
+            if data_dir is None:
+                data_dir = os.getcwd()
+            
+            db_path = os.path.join(data_dir, 'knowledge.db')
+            if not self.use_postgres:
+                print(f"✓ Base de données SQLite: {db_path}")
         
-        self.init_database()
+        self.db_path = db_path
+        
+        # Initialiser la base de données avec gestion d'erreur
+        try:
+            self.init_database()
+        except Exception as e:
+            if self.use_postgres:
+                print(f"⚠️ Erreur connexion PostgreSQL: {e}")
+                print("⚠️ Fallback sur SQLite")
+                self.use_postgres = False
+                self.init_database()
     
     def get_connection(self):
         """Retourne une connexion à la base de données"""
-        if self.use_postgres:
-            return self.psycopg2.connect(self.db_url)
-        else:
-            return self.sqlite3.connect(self.db_path)
+        try:
+            if self.use_postgres:
+                return self.psycopg2.connect(self.db_url)
+            else:
+                return self.sqlite3.connect(self.db_path)
+        except Exception as e:
+            # Si PostgreSQL échoue, fallback sur SQLite
+            if self.use_postgres:
+                print(f"⚠️ Erreur connexion PostgreSQL: {e}")
+                print("⚠️ Utilisation de SQLite à la place")
+                self.use_postgres = False
+                return self.sqlite3.connect(self.db_path)
+            else:
+                raise
     
     def init_database(self):
         """Initialise la base de données"""
