@@ -499,7 +499,20 @@
                 voiceRecognition.interimResults = false;
 
                 voiceRecognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
+                    const transcript = event.results[0][0].transcript.toLowerCase().trim();
+
+                    // Vérifier les commandes vocales
+                    if (transcript === 'stop' || transcript === 'arrête') {
+                        console.log('🛑 Commande STOP détectée');
+                        isVoiceActive = false;
+                        stopListening();
+                        voiceSynthesis.cancel();
+                        isSpeaking = false;
+                        updateVoiceButton('idle');
+                        return;
+                    }
+
+                    // Message normal
                     document.getElementById('messageInput').value = transcript;
                     sendMessage();
                 };
@@ -556,6 +569,16 @@
 
         function speakText(text) {
             return new Promise((resolve) => {
+                // IMPORTANT: Arrêter l'écoute pour éviter de reconnaître sa propre voix
+                if (voiceRecognition && voiceRecognition.abort) {
+                    try {
+                        voiceRecognition.abort();
+                        console.log('🛑 Arrêt de l\'écoute avant la synthèse');
+                    } catch (e) {
+                        // Ignorer les erreurs
+                    }
+                }
+
                 voiceSynthesis.cancel();
 
                 const cleanText = text
@@ -590,7 +613,7 @@
                             if (isVoiceActive && !isSpeaking) {
                                 startListening();
                             }
-                        }, 500);
+                        }, 1000); // 1 seconde de délai
                     } else {
                         updateVoiceButton('idle');
                     }
