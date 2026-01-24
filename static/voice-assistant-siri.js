@@ -247,25 +247,15 @@ class SiriVoiceAssistant {
     sendMessage(text) {
         console.log('📨 sendMessage appelé pour:', text);
 
-        // Solution directe : déclencher un clic sur le bouton Envoyer
+        // Attendre que sendMessage globale soit disponible
         setTimeout(() => {
-            const sendButton = document.getElementById('sendBtn');
-            if (sendButton) {
-                console.log('🔘 Déclenchement du bouton Envoyer');
-
-                // Créer et déclencher un événement de clic
-                const clickEvent = new MouseEvent('click', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true
-                });
-
-                sendButton.dispatchEvent(clickEvent);
-                console.log('✅ Événement clic déclenché');
+            if (typeof window.sendMessage === 'function') {
+                console.log('✅ Appel de window.sendMessage()');
+                window.sendMessage();
             } else {
-                console.error('❌ Bouton sendBtn non trouvé');
+                console.error('❌ window.sendMessage non disponible');
             }
-        }, 150); // Délai de 150ms pour s'assurer que le texte est dans l'input
+        }, 100);
     }
 
     // Synthèse vocale (Text-to-Speech)
