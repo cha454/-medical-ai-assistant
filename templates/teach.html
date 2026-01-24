@@ -79,13 +79,13 @@
         }
 
         .btn-header {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.4);
             padding: 8px 16px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
-            color: #60a5fa;
+            color: #a5b4fc;
             transition: all 0.2s;
             text-decoration: none;
             display: flex;
@@ -94,8 +94,8 @@
         }
 
         .btn-header:hover {
-            background: rgba(59, 130, 246, 0.2);
-            border-color: #3b82f6;
+            background: rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
             color: #c7d2fe;
         }
 
@@ -107,6 +107,10 @@
             width: 100%;
             margin: 0 auto;
             overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 16px 16px 0 0;
+            margin-top: 16px;
         }
 
         .messages {
@@ -167,8 +171,12 @@
         .message-content {
             margin-left: 44px;
             line-height: 1.6;
-            color: #d1d5db;
+            color: #e5e7eb;
             font-size: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .message-actions {
@@ -179,19 +187,19 @@
         }
 
         .action-btn {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.3);
             padding: 6px 12px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 13px;
-            color: #60a5fa;
+            color: #a5b4fc;
             transition: all 0.2s;
         }
 
         .action-btn:hover {
-            background: rgba(59, 130, 246, 0.2);
-            border-color: #3b82f6;
+            background: rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
         }
 
         .welcome-message {
@@ -226,8 +234,8 @@
         }
 
         .tip {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(59, 130, 246, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 16px;
             border-radius: 12px;
             text-align: left;
@@ -253,16 +261,16 @@
             display: flex;
             align-items: flex-end;
             gap: 12px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid rgba(59, 130, 246, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(102, 126, 234, 0.3);
             border-radius: 16px;
             padding: 12px 16px;
             transition: all 0.2s;
         }
 
         .input-wrapper:focus-within {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
         }
 
         #messageInput {
@@ -289,19 +297,19 @@
         }
 
         .btn-voice {
-            background: rgba(59, 130, 246, 0.2);
-            border: 2px solid rgba(59, 130, 246, 0.3);
+            background: rgba(102, 126, 234, 0.2);
+            border: 2px solid rgba(102, 126, 234, 0.3);
             padding: 10px 16px;
             border-radius: 10px;
-            color: #3b82f6;
+            color: #667eea;
             font-size: 20px;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
         .btn-voice:hover {
-            background: rgba(59, 130, 246, 0.3);
-            border-color: #3b82f6;
+            background: rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
             transform: scale(1.05);
         }
 
@@ -323,16 +331,16 @@
 
             0%,
             100% {
-                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
             }
 
             50% {
-                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+                box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
             }
         }
 
         .btn-send {
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
             padding: 10px 20px;
             border-radius: 10px;
@@ -345,7 +353,7 @@
 
         .btn-send:hover:not(:disabled) {
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
         }
 
         .btn-send:disabled {
@@ -367,7 +375,7 @@
         .typing-dot {
             width: 8px;
             height: 8px;
-            background: #3b82f6;
+            background: #667eea;
             border-radius: 50%;
             animation: typing 1.4s ease-in-out infinite;
         }
@@ -402,12 +410,12 @@
         }
 
         .messages::-webkit-scrollbar-thumb {
-            background: rgba(59, 130, 246, 0.3);
+            background: rgba(102, 126, 234, 0.3);
             border-radius: 3px;
         }
 
         .messages::-webkit-scrollbar-thumb:hover {
-            background: rgba(59, 130, 246, 0.5);
+            background: rgba(102, 126, 234, 0.5);
         }
     </style>
 </head>
@@ -491,29 +499,7 @@
                 voiceRecognition.interimResults = false;
 
                 voiceRecognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript.toLowerCase().trim();
-
-                    // Vérifier les commandes vocales
-                    if (transcript === 'stop' || transcript === 'arrête') {
-                        console.log('🛑 Commande STOP détectée');
-                        isVoiceActive = false;
-                        stopListening();
-                        voiceSynthesis.cancel();
-                        isSpeaking = false;
-                        updateVoiceButton('idle');
-                        return;
-                    }
-
-                    // Commandes pour passer la lecture
-                    if (transcript === 'skip' || transcript === 'suivant' || transcript === 'passe') {
-                        console.log('⏭️ Commande SKIP détectée');
-                        voiceSynthesis.cancel();
-                        isSpeaking = false;
-                        updateVoiceButton('idle');
-                        return;
-                    }
-
-                    // Message normal
+                    const transcript = event.results[0][0].transcript;
                     document.getElementById('messageInput').value = transcript;
                     sendMessage();
                 };
@@ -570,19 +556,9 @@
 
         function speakText(text) {
             return new Promise((resolve) => {
-                // IMPORTANT: Arrêter l'écoute pour éviter de reconnaître sa propre voix
-                if (voiceRecognition && voiceRecognition.abort) {
-                    try {
-                        voiceRecognition.abort();
-                        console.log('🛑 Arrêt de l\'écoute avant la synthèse');
-                    } catch (e) {
-                        // Ignorer les erreurs
-                    }
-                }
-
                 voiceSynthesis.cancel();
 
-                let cleanText = text
+                const cleanText = text
                     .replace(/\*\*(.+?)\*\*/g, '$1')
                     .replace(/\*(.+?)\*/g, '$1')
                     .replace(/[\u{1F600}-\u{1F64F}]/gu, '')
@@ -590,21 +566,6 @@
                     .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')
                     .replace(/[\u{2600}-\u{26FF}]/gu, '')
                     .trim();
-
-                // RÉSUMÉ AUTOMATIQUE pour les textes longs (>200 mots)
-                const wordCount = cleanText.split(/\s+/).length;
-                if (wordCount > 200) {
-                    console.log(`📊 Texte long détecté (${wordCount} mots), création d'un résumé vocal`);
-                    const sentences = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
-                    const firstSentences = sentences.slice(0, 3).join(' ');
-                    const remainingSentences = sentences.length - 3;
-
-                    if (remainingSentences > 0) {
-                        cleanText = `${firstSentences} Le texte complet contient ${remainingSentences} phrases supplémentaires affichées à l'écran. Dites "skip" pour passer.`;
-                    } else {
-                        cleanText = firstSentences;
-                    }
-                }
 
                 if (!cleanText) {
                     resolve();
@@ -629,7 +590,7 @@
                             if (isVoiceActive && !isSpeaking) {
                                 startListening();
                             }
-                        }, 1000); // 1 seconde de délai
+                        }, 500);
                     } else {
                         updateVoiceButton('idle');
                     }
