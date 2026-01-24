@@ -356,9 +356,16 @@ class EnhancedMedicalChatbot:
         # ============================================
         # DÉTECTION DEMANDE DE GÉNÉRATION D'IMAGES
         # ============================================
+        print(f"🔍 IMAGE_GENERATION_AVAILABLE: {IMAGE_GENERATION_AVAILABLE}")
+        print(f"🔍 image_generator: {image_generator}")
+        
         if IMAGE_GENERATION_AVAILABLE and image_generator:
+            print("✓ Entrée dans le bloc de génération d'images")
             detection = image_generator.detect_image_request(user_input)
+            print(f"🔍 Résultat détection: {detection}")
+            
             if detection.get('is_request'):
+                print("✓ Demande de génération d'image confirmée!")
                 try:
                     prompt = detection.get('prompt', user_input)
                     size = detection.get('size', '1024x1024')

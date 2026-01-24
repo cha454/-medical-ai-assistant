@@ -4,16 +4,32 @@ Service de génération d'images avec DALL-E (OpenAI)
 
 import os
 import requests
-from openai import OpenAI
+
+# Import OpenAI avec gestion d'erreur
+try:
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Module openai non disponible: {e}")
+    OPENAI_AVAILABLE = False
+    OpenAI = None
 
 class ImageGenerator:
     def __init__(self):
         self.api_key = os.environ.get('CLE_API_OPENAI')
-        self.enabled = bool(self.api_key)
+        self.enabled = bool(self.api_key) and OPENAI_AVAILABLE
+        
+        if not OPENAI_AVAILABLE:
+            print("⚠️ Générateur d'images: Module openai non installé")
+            return
         
         if self.enabled:
-            self.client = OpenAI(api_key=self.api_key)
-            print("✓ Générateur d'images DALL-E activé")
+            try:
+                self.client = OpenAI(api_key=self.api_key)
+                print("✓ Générateur d'images DALL-E activé")
+            except Exception as e:
+                print(f"⚠️ Erreur initialisation OpenAI: {e}")
+                self.enabled = False
         else:
             print("⚠️ Générateur d'images: Clé API OpenAI manquante")
     
@@ -108,6 +124,9 @@ class ImageGenerator:
         """
         message_lower = message.lower()
         
+        # Logs de debug
+        print(f"🔍 Détection génération d'image pour: '{message[:50]}...'")
+        
         # Mots-clés de génération d'images
         keywords = [
             'génère', 'génerer', 'genere', 'generer', 'générer',
@@ -123,6 +142,11 @@ class ImageGenerator:
         
         # Vérifier si le message contient un mot-clé
         is_request = any(keyword in message_lower for keyword in keywords)
+        
+        print(f"   → Détection: {is_request}")
+        if is_request:
+            matched_keywords = [kw for kw in keywords if kw in message_lower]
+            print(f"   → Mots-clés trouvés: {matched_keywords}")
         
         if not is_request:
             return {'is_request': False}
