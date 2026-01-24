@@ -15,6 +15,10 @@ class KnowledgeBase:
         self.use_postgres = False
         self.db_url = os.environ.get('DATABASE_URL')
         
+        # Railway utilise parfois postgres:// au lieu de postgresql://
+        if self.db_url and self.db_url.startswith('postgres://'):
+            self.db_url = self.db_url.replace('postgres://', 'postgresql://', 1)
+        
         if self.db_url:
             # Essayer PostgreSQL avec pg8000 (pure Python, pas de crash)
             try:
