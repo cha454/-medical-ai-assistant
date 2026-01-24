@@ -159,7 +159,19 @@ async function sendMessage() {
                 chatHistory.saveMessage(message, data.response);
             }
 
-            // La synthèse vocale est gérée automatiquement par voice-simple-working.js
+            // Lire la réponse à voix haute avec le système Siri
+            // Si le système vocal est actif (mode mains libres OU écoute active)
+            if (window.siriVoiceAssistant) {
+                console.log('🔊 Système vocal disponible');
+                if (siriVoiceAssistant.handsFreeModeActive || siriVoiceAssistant.isListening) {
+                    console.log('🔊 Lecture de la réponse vocale');
+                    siriVoiceAssistant.speak(data.response);
+                } else {
+                    console.log('⚠️ Mode vocal non actif');
+                }
+            } else {
+                console.log('⚠️ Système vocal non disponible');
+            }
         } else {
             console.error('❌ Pas de réponse dans les données');
             addMessage('Désolé, une erreur est survenue.', false);
