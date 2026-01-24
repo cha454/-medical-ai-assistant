@@ -49,8 +49,20 @@ class SiriVoiceAssistant {
 
         // Commandes vocales
         this.voiceCommands = {
-            'stop': () => this.stopSpeaking(),
-            'arrête': () => this.stopSpeaking(),
+            'stop': () => {
+                console.log('🛑 Commande STOP détectée');
+                this.stopSpeaking();
+                if (this.handsFreeModeActive) {
+                    this.toggleHandsFreeMode();
+                }
+            },
+            'arrête': () => {
+                console.log('🛑 Commande ARRÊTE détectée');
+                this.stopSpeaking();
+                if (this.handsFreeModeActive) {
+                    this.toggleHandsFreeMode();
+                }
+            },
             'répète': () => this.repeatLastResponse(),
             'plus fort': () => this.adjustVolume(0.1),
             'moins fort': () => this.adjustVolume(-0.1),
@@ -214,6 +226,12 @@ class SiriVoiceAssistant {
 
         if (!text) {
             console.warn('⚠️ Texte vide, abandon');
+            return;
+        }
+
+        // Vérifier les commandes vocales AVANT d'envoyer le message
+        if (this.handleVoiceCommand(text)) {
+            console.log('✅ Commande vocale traitée, pas d\'envoi de message');
             return;
         }
 
