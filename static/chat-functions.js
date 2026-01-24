@@ -3,6 +3,8 @@
  * Le système vocal est géré par voice-assistant-siri.js et voice-integration.js
  */
 
+console.log('🔵 chat-functions.js chargé');
+
 const API_URL = window.location.origin;
 let conversationHistory = [];
 
@@ -189,8 +191,9 @@ async function sendMessage() {
 }
 
 // Rendre la fonction globale pour qu'elle soit accessible partout
+console.log('🔵 Exposition de sendMessage à window...');
 window.sendMessage = sendMessage;
-console.log('✅ sendMessage rendue globale');
+console.log('✅ sendMessage rendue globale, typeof:', typeof window.sendMessage);
 
 // ============================================
 // FONCTIONS HISTORIQUE

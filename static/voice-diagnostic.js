@@ -41,6 +41,7 @@ setTimeout(() => {
 setTimeout(() => {
     console.log('3. Vérification finale après 3 secondes:');
     console.log('   - siriVoiceAssistant:', window.siriVoiceAssistant ? '✅ OK' : '❌ MANQUANT');
+    console.log('   - window.sendMessage:', typeof window.sendMessage === 'function' ? '✅ OK' : '❌ MANQUANT');
 
     if (!window.siriVoiceAssistant) {
         console.error('❌ ÉCHEC FINAL: Le système vocal n\'est pas disponible');
@@ -48,5 +49,10 @@ setTimeout(() => {
         console.error('   1. Vérifier la console pour des erreurs JavaScript');
         console.error('   2. Vérifier que voice-assistant-siri.js se charge (onglet Network)');
         console.error('   3. Vider le cache du navigateur (Ctrl+Shift+Delete)');
+    }
+
+    if (typeof window.sendMessage !== 'function') {
+        console.error('❌ ÉCHEC: window.sendMessage n\'est pas disponible');
+        console.error('   → Le fichier chat-functions.js n\'est pas chargé ou a une erreur');
     }
 }, 3000);
