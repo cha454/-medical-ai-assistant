@@ -1,9 +1,10 @@
 """
 Système de gestion de la base de connaissances personnalisée
 Permet à l'IA d'apprendre de nouvelles informations via conversation
-Support SQLite (local) et PostgreSQL (Railway)
+Utilise SQLite pour la persistance
 """
 
+import sqlite3
 import json
 from datetime import datetime
 from pathlib import Path
@@ -11,29 +12,7 @@ import os
 
 class KnowledgeBase:
     def __init__(self, db_path=None):
-        # Détecter si on utilise PostgreSQL (Railway) ou SQLite (local)
-        self.use_postgres = False
-        self.db_url = os.environ.get('DATABASE_URL')
-        
-        # Toujours importer sqlite3 comme fallback
-        import sqlite3
-        self.sqlite3 = sqlite3
-        
-        if self.db_url:
-            # PostgreSQL sur Railway
-            try:
-                import psycopg2
-                self.psycopg2 = psycopg2
-                self.use_postgres = True
-                print(f"✓ Utilisation de PostgreSQL (Railway)")
-            except ImportError:
-                print("⚠️ psycopg2 non installé, fallback sur SQLite")
-                self.use_postgres = False
-            except Exception as e:
-                print(f"⚠️ Erreur PostgreSQL: {e}, fallback sur SQLite")
-                self.use_postgres = False
-        
-        # Configuration SQLite (toujours nécessaire comme fallback)
+        # Utiliser SQLite uniquement
         if db_path is None:
             # Essayer différents chemins dans l'ordre de préférence
             possible_paths = [
@@ -61,100 +40,48 @@ class KnowledgeBase:
                 data_dir = os.getcwd()
             
             db_path = os.path.join(data_dir, 'knowledge.db')
-            if not self.use_postgres:
-                print(f"✓ Base de données SQLite: {db_path}")
+            print(f"✓ Base de données SQLite: {db_path}")
         
         self.db_path = db_path
-        
-        # Initialiser la base de données avec gestion d'erreur
-        try:
-            self.init_database()
-        except Exception as e:
-            if self.use_postgres:
-                print(f"⚠️ Erreur connexion PostgreSQL: {e}")
-                print("⚠️ Fallback sur SQLite")
-                self.use_postgres = False
-                self.init_database()
+        self.init_database()
     
     def get_connection(self):
-        """Retourne une connexion à la base de données"""
-        try:
-            if self.use_postgres:
-                return self.psycopg2.connect(self.db_url)
-            else:
-                return self.sqlite3.connect(self.db_path)
-        except Exception as e:
-            # Si PostgreSQL échoue, fallback sur SQLite
-            if self.use_postgres:
-                print(f"⚠️ Erreur connexion PostgreSQL: {e}")
-                print("⚠️ Utilisation de SQLite à la place")
-                self.use_postgres = False
-                return self.sqlite3.connect(self.db_path)
-            else:
-                raise
+        """Retourne une connexion à la base de données SQLite"""
+        return sqlite3.connect(self.db_path)
     
     def init_database(self):
         """Initialise la base de données"""
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        # Adapter la syntaxe selon le type de base de données
-        if self.use_postgres:
-            # PostgreSQL
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS knowledge (
-                    id SERIAL PRIMARY KEY,
-                    category TEXT NOT NULL,
-                    question TEXT NOT NULL,
-                    answer TEXT NOT NULL,
-                    language TEXT DEFAULT 'fr',
-                    context TEXT,
-                    tags TEXT,
-                    confidence REAL DEFAULT 1.0,
-                    source TEXT DEFAULT 'user',
-                    date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    usage_count INTEGER DEFAULT 0
-                )
-            ''')
-            
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS categories (
-                    id SERIAL PRIMARY KEY,
-                    name TEXT UNIQUE NOT NULL,
-                    description TEXT,
-                    icon TEXT,
-                    color TEXT
-                )
-            ''')
-        else:
-            # SQLite
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS knowledge (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    category TEXT NOT NULL,
-                    question TEXT NOT NULL,
-                    answer TEXT NOT NULL,
-                    language TEXT DEFAULT 'fr',
-                    context TEXT,
-                    tags TEXT,
-                    confidence REAL DEFAULT 1.0,
-                    source TEXT DEFAULT 'user',
-                    date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    usage_count INTEGER DEFAULT 0
-                )
-            ''')
-            
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS categories (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT UNIQUE NOT NULL,
-                    description TEXT,
-                    icon TEXT,
-                    color TEXT
-                )
-            ''')
+        # Table des connaissances
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS knowledge (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                category TEXT NOT NULL,
+                question TEXT NOT NULL,
+                answer TEXT NOT NULL,
+                language TEXT DEFAULT 'fr',
+                context TEXT,
+                tags TEXT,
+                confidence REAL DEFAULT 1.0,
+                source TEXT DEFAULT 'user',
+                date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                usage_count INTEGER DEFAULT 0
+            )
+        ''')
+        
+        # Table des catégories
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL,
+                description TEXT,
+                icon TEXT,
+                color TEXT
+            )
+        ''')
         
         # Insérer les catégories par défaut
         default_categories = [
@@ -169,17 +96,10 @@ class KnowledgeBase:
         ]
         
         for cat in default_categories:
-            if self.use_postgres:
-                cursor.execute('''
-                    INSERT INTO categories (name, description, icon, color)
-                    VALUES (%s, %s, %s, %s)
-                    ON CONFLICT (name) DO NOTHING
-                ''', cat)
-            else:
-                cursor.execute('''
-                    INSERT OR IGNORE INTO categories (name, description, icon, color)
-                    VALUES (?, ?, ?, ?)
-                ''', cat)
+            cursor.execute('''
+                INSERT OR IGNORE INTO categories (name, description, icon, color)
+                VALUES (?, ?, ?, ?)
+            ''', cat)
         
         conn.commit()
         conn.close()
@@ -192,22 +112,13 @@ class KnowledgeBase:
         
         tags_str = json.dumps(tags) if tags else None
         
-        if self.use_postgres:
-            cursor.execute('''
-                INSERT INTO knowledge 
-                (category, question, answer, language, context, tags, source)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                RETURNING id
-            ''', (category, question, answer, language, context, tags_str, source))
-            knowledge_id = cursor.fetchone()[0]
-        else:
-            cursor.execute('''
-                INSERT INTO knowledge 
-                (category, question, answer, language, context, tags, source)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (category, question, answer, language, context, tags_str, source))
-            knowledge_id = cursor.lastrowid
+        cursor.execute('''
+            INSERT INTO knowledge 
+            (category, question, answer, language, context, tags, source)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (category, question, answer, language, context, tags_str, source))
         
+        knowledge_id = cursor.lastrowid
         conn.commit()
         conn.close()
         
@@ -223,26 +134,25 @@ class KnowledgeBase:
         params = []
         
         if answer:
-            updates.append('answer = ' + ('%s' if self.use_postgres else '?'))
+            updates.append('answer = ?')
             params.append(answer)
         if category:
-            updates.append('category = ' + ('%s' if self.use_postgres else '?'))
+            updates.append('category = ?')
             params.append(category)
         if language:
-            updates.append('language = ' + ('%s' if self.use_postgres else '?'))
+            updates.append('language = ?')
             params.append(language)
         if context:
-            updates.append('context = ' + ('%s' if self.use_postgres else '?'))
+            updates.append('context = ?')
             params.append(context)
         if tags:
-            updates.append('tags = ' + ('%s' if self.use_postgres else '?'))
+            updates.append('tags = ?')
             params.append(json.dumps(tags))
         
         updates.append('date_updated = CURRENT_TIMESTAMP')
         params.append(knowledge_id)
         
-        placeholder = '%s' if self.use_postgres else '?'
-        query = f"UPDATE knowledge SET {', '.join(updates)} WHERE id = {placeholder}"
+        query = f"UPDATE knowledge SET {', '.join(updates)} WHERE id = ?"
         cursor.execute(query, params)
         
         conn.commit()
@@ -257,38 +167,35 @@ class KnowledgeBase:
         query_lower = query.lower()
         query_words = query_lower.split()
         
-        # Placeholder selon le type de base de données
-        ph = '%s' if self.use_postgres else '?'
-        
         # Construire une recherche flexible
-        sql = f'''
+        sql = '''
             SELECT id, category, question, answer, language, context, tags, 
                    confidence, date_created, usage_count
             FROM knowledge
             WHERE (
-                LOWER(question) LIKE {ph} OR 
-                LOWER(answer) LIKE {ph} OR 
-                LOWER(context) LIKE {ph}
+                LOWER(question) LIKE ? OR 
+                LOWER(answer) LIKE ? OR 
+                LOWER(context) LIKE ?
         '''
         params = [f'%{query_lower}%', f'%{query_lower}%', f'%{query_lower}%']
         
         # Ajouter une recherche par mots-clés individuels
         for word in query_words:
             if len(word) > 3:  # Ignorer les mots trop courts
-                sql += f' OR LOWER(question) LIKE {ph} OR LOWER(answer) LIKE {ph}'
+                sql += ' OR LOWER(question) LIKE ? OR LOWER(answer) LIKE ?'
                 params.extend([f'%{word}%', f'%{word}%'])
         
         sql += ')'
         
         if category:
-            sql += f' AND category = {ph}'
+            sql += ' AND category = ?'
             params.append(category)
         
         if language:
-            sql += f' AND language = {ph}'
+            sql += ' AND language = ?'
             params.append(language)
         
-        sql += f' ORDER BY confidence DESC, usage_count DESC, date_updated DESC LIMIT {ph}'
+        sql += ' ORDER BY confidence DESC, usage_count DESC, date_updated DESC LIMIT ?'
         params.append(limit)
         
         cursor.execute(sql, params)
@@ -316,9 +223,7 @@ class KnowledgeBase:
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        ph = '%s' if self.use_postgres else '?'
-        
-        sql = f'''
+        sql = '''
             SELECT id, category, question, answer, language, context, 
                    date_created, usage_count
             FROM knowledge
@@ -327,14 +232,14 @@ class KnowledgeBase:
         params = []
         
         if category:
-            sql += f' AND category = {ph}'
+            sql += ' AND category = ?'
             params.append(category)
         
         if language:
-            sql += f' AND language = {ph}'
+            sql += ' AND language = ?'
             params.append(language)
         
-        sql += f' ORDER BY date_updated DESC LIMIT {ph}'
+        sql += ' ORDER BY date_updated DESC LIMIT ?'
         params.append(limit)
         
         cursor.execute(sql, params)
@@ -360,13 +265,11 @@ class KnowledgeBase:
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        ph = '%s' if self.use_postgres else '?'
-        
-        cursor.execute(f'''
+        cursor.execute('''
             UPDATE knowledge 
             SET usage_count = usage_count + 1,
                 date_updated = CURRENT_TIMESTAMP
-            WHERE id = {ph}
+            WHERE id = ?
         ''', (knowledge_id,))
         
         conn.commit()
@@ -377,15 +280,14 @@ class KnowledgeBase:
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        ph = '%s' if self.use_postgres else '?'
-        cursor.execute(f'DELETE FROM knowledge WHERE id = {ph}', (knowledge_id,))
+        cursor.execute('DELETE FROM knowledge WHERE id = ?', (knowledge_id,))
         
         conn.commit()
         conn.close()
     
     def get_statistics(self):
         """Récupère les statistiques de la base de connaissances"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
         
         # Total des connaissances
