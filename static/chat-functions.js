@@ -162,17 +162,13 @@ async function sendMessage() {
             }
 
             // Lire la réponse à voix haute avec le système Siri
-            // Si le système vocal est actif (mode mains libres OU écoute active)
-            if (window.siriVoiceAssistant) {
+            // UNIQUEMENT si le mode mains libres est actif
+            if (window.siriVoiceAssistant && siriVoiceAssistant.handsFreeModeActive) {
                 console.log('🔊 Système vocal disponible');
-                if (siriVoiceAssistant.handsFreeModeActive || siriVoiceAssistant.isListening) {
-                    console.log('🔊 Lecture de la réponse vocale');
-                    siriVoiceAssistant.speak(data.response);
-                } else {
-                    console.log('⚠️ Mode vocal non actif');
-                }
+                console.log('🔊 Lecture de la réponse vocale');
+                siriVoiceAssistant.speak(data.response);
             } else {
-                console.log('⚠️ Système vocal non disponible');
+                console.log('⚠️ Mode vocal non actif');
             }
         } else {
             console.error('❌ Pas de réponse dans les données');

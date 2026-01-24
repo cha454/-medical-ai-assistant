@@ -322,11 +322,15 @@ class SiriVoiceAssistant {
 
             // Redémarrer l'écoute en mode mains libres (avec délai plus long)
             if (this.handsFreeModeActive) {
+                console.log('⏳ Attente avant redémarrage écoute...');
                 setTimeout(() => {
                     if (this.handsFreeModeActive && !this.isSpeaking) {
+                        console.log('🎤 Redémarrage écoute après synthèse');
                         this.startListening();
+                    } else {
+                        console.log('⚠️ Pas de redémarrage (mode désactivé ou synthèse en cours)');
                     }
-                }, 1000); // 1 seconde de délai
+                }, 1500); // 1.5 secondes de délai
             }
         };
 
