@@ -4,7 +4,6 @@ Permet à l'IA d'apprendre de nouvelles informations via conversation
 Support SQLite (local) et PostgreSQL (Railway avec pg8000)
 """
 
-import sqlite3
 import json
 from datetime import datetime
 from pathlib import Path
@@ -19,8 +18,8 @@ class KnowledgeBase:
         if self.db_url:
             # Essayer PostgreSQL avec pg8000 (pure Python, pas de crash)
             try:
-                import pg8000.native
-                self.pg8000 = pg8000.native
+                import pg8000.dbapi
+                self.pg8000 = pg8000.dbapi
                 self.use_postgres = True
                 print(f"✓ Utilisation de PostgreSQL avec pg8000 (Railway)")
             except ImportError:
@@ -32,6 +31,9 @@ class KnowledgeBase:
         
         # Configuration SQLite (fallback ou local)
         if not self.use_postgres:
+            import sqlite3
+            self.sqlite3 = sqlite3
+            
             if db_path is None:
                 # Essayer différents chemins dans l'ordre de préférence
                 possible_paths = [
@@ -68,124 +70,119 @@ class KnowledgeBase:
     def get_connection(self):
         """Retourne une connexion à la base de données"""
         if self.use_postgres:
-            # pg8000 utilise une URL différente
-            # Format: postgresql://user:password@host:port/database
-            return self.pg8000.Connection.from_url(self.db_url)
+            return self.pg8000.connect(self.db_url)
         else:
-            return sqlite3.connect(self.db_path)
+            return self.sqlite3.connect(self.db_path)
     
     def init_database(self):
         """Initialise la base de données"""
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        if self.use_postgres:
-            # PostgreSQL avec pg8000
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS knowledge (
-                    id SERIAL PRIMARY KEY,
-                    category TEXT NOT NULL,
-                    question TEXT NOT NULL,
-                    answer TEXT NOT NULL,
-                    language TEXT DEFAULT 'fr',
-                    context TEXT,
-                    tags TEXT,
-                    confidence REAL DEFAULT 1.0,
-                    source TEXT DEFAULT 'user',
-                    date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    usage_count INTEGER DEFAULT 0
-                )
-            ''')
-            
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS categories (
-                    id SERIAL PRIMARY KEY,
-                    name TEXT UNIQUE NOT NULL,
-                    description TEXT,
-                    icon TEXT,
-                    color TEXT
-                )
-            ''')
-            
-            # Insérer les catégories par défaut
-            default_categories = [
-                ('langue_locale', 'Langues locales et traductions', '🌍', '#3b82f6'),
-                ('medical', 'Connaissances médicales', '💊', '#10b981'),
-                ('personnel', 'Informations personnelles', '👤', '#8b5cf6'),
-                ('correction', 'Corrections et feedback', '✏️', '#f59e0b'),
-                ('preference', 'Préférences utilisateur', '⚙️', '#6b7280'),
-                ('culture', 'Culture et traditions', '🎭', '#ec4899'),
-                ('plante', 'Plantes médicinales', '🌿', '#22c55e'),
-                ('autre', 'Autres connaissances', '📚', '#64748b')
-            ]
-            
-            for cat in default_categories:
-                try:
-                    cursor.execute('''
-                        INSERT INTO categories (name, description, icon, color)
-                        VALUES (:1, :2, :3, :4)
-                        ON CONFLICT (name) DO NOTHING
-                    ''', cat)
-                except:
-                    pass  # Ignorer si existe déjà
-        else:
-            # SQLite
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS knowledge (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    category TEXT NOT NULL,
-                    question TEXT NOT NULL,
-                    answer TEXT NOT NULL,
-                    language TEXT DEFAULT 'fr',
-                    context TEXT,
-                    tags TEXT,
-                    confidence REAL DEFAULT 1.0,
-                    source TEXT DEFAULT 'user',
-                    date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    usage_count INTEGER DEFAULT 0
-                )
-            ''')
-            
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS categories (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT UNIQUE NOT NULL,
-                    description TEXT,
-                    icon TEXT,
-                    color TEXT
-                )
-            ''')
-            
-            # Insérer les catégories par défaut
-            default_categories = [
-                ('langue_locale', 'Langues locales et traductions', '🌍', '#3b82f6'),
-                ('medical', 'Connaissances médicales', '💊', '#10b981'),
-                ('personnel', 'Informations personnelles', '👤', '#8b5cf6'),
-                ('correction', 'Corrections et feedback', '✏️', '#f59e0b'),
-                ('preference', 'Préférences utilisateur', '⚙️', '#6b7280'),
-                ('culture', 'Culture et traditions', '🎭', '#ec4899'),
-                ('plante', 'Plantes médicinales', '🌿', '#22c55e'),
-                ('autre', 'Autres connaissances', '📚', '#64748b')
-            ]
-            
-            for cat in default_categories:
+        try:
+            if self.use_postgres:
+                # PostgreSQL
                 cursor.execute('''
-                    INSERT OR IGNORE INTO categories (name, description, icon, color)
-                    VALUES (?, ?, ?, ?)
-                ''', cat)
-        
-        conn.commit()
-        conn.close()
-        print("✓ Base de connaissances initialisée")
-    
-    def _placeholder(self, index=None):
-        """Retourne le placeholder approprié selon la base de données"""
-        if self.use_postgres:
-            return f':{index}' if index else ':1'
-        else:
-            return '?'
+                    CREATE TABLE IF NOT EXISTS knowledge (
+                        id SERIAL PRIMARY KEY,
+                        category TEXT NOT NULL,
+                        question TEXT NOT NULL,
+                        answer TEXT NOT NULL,
+                        language TEXT DEFAULT 'fr',
+                        context TEXT,
+                        tags TEXT,
+                        confidence REAL DEFAULT 1.0,
+                        source TEXT DEFAULT 'user',
+                        date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        usage_count INTEGER DEFAULT 0
+                    )
+                ''')
+                
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS categories (
+                        id SERIAL PRIMARY KEY,
+                        name TEXT UNIQUE NOT NULL,
+                        description TEXT,
+                        icon TEXT,
+                        color TEXT
+                    )
+                ''')
+                
+                # Insérer les catégories par défaut
+                default_categories = [
+                    ('langue_locale', 'Langues locales et traductions', '🌍', '#3b82f6'),
+                    ('medical', 'Connaissances médicales', '💊', '#10b981'),
+                    ('personnel', 'Informations personnelles', '👤', '#8b5cf6'),
+                    ('correction', 'Corrections et feedback', '✏️', '#f59e0b'),
+                    ('preference', 'Préférences utilisateur', '⚙️', '#6b7280'),
+                    ('culture', 'Culture et traditions', '🎭', '#ec4899'),
+                    ('plante', 'Plantes médicinales', '🌿', '#22c55e'),
+                    ('autre', 'Autres connaissances', '📚', '#64748b')
+                ]
+                
+                for cat in default_categories:
+                    try:
+                        cursor.execute('''
+                            INSERT INTO categories (name, description, icon, color)
+                            VALUES (%s, %s, %s, %s)
+                            ON CONFLICT (name) DO NOTHING
+                        ''', cat)
+                    except:
+                        pass
+            else:
+                # SQLite
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS knowledge (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        category TEXT NOT NULL,
+                        question TEXT NOT NULL,
+                        answer TEXT NOT NULL,
+                        language TEXT DEFAULT 'fr',
+                        context TEXT,
+                        tags TEXT,
+                        confidence REAL DEFAULT 1.0,
+                        source TEXT DEFAULT 'user',
+                        date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        usage_count INTEGER DEFAULT 0
+                    )
+                ''')
+                
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS categories (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT UNIQUE NOT NULL,
+                        description TEXT,
+                        icon TEXT,
+                        color TEXT
+                    )
+                ''')
+                
+                # Insérer les catégories par défaut
+                default_categories = [
+                    ('langue_locale', 'Langues locales et traductions', '🌍', '#3b82f6'),
+                    ('medical', 'Connaissances médicales', '💊', '#10b981'),
+                    ('personnel', 'Informations personnelles', '👤', '#8b5cf6'),
+                    ('correction', 'Corrections et feedback', '✏️', '#f59e0b'),
+                    ('preference', 'Préférences utilisateur', '⚙️', '#6b7280'),
+                    ('culture', 'Culture et traditions', '🎭', '#ec4899'),
+                    ('plante', 'Plantes médicinales', '🌿', '#22c55e'),
+                    ('autre', 'Autres connaissances', '📚', '#64748b')
+                ]
+                
+                for cat in default_categories:
+                    cursor.execute('''
+                        INSERT OR IGNORE INTO categories (name, description, icon, color)
+                        VALUES (?, ?, ?, ?)
+                    ''', cat)
+            
+            conn.commit()
+            print("✓ Base de connaissances initialisée")
+        except Exception as e:
+            print(f"⚠️ Erreur init database: {e}")
+        finally:
+            conn.close()
     
     def add_knowledge(self, question, answer, category='autre', language='fr', 
                      context=None, tags=None, source='user'):
@@ -195,225 +192,223 @@ class KnowledgeBase:
         
         tags_str = json.dumps(tags) if tags else None
         
-        cursor.execute('''
-            INSERT INTO knowledge 
-            (category, question, answer, language, context, tags, source)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (category, question, answer, language, context, tags_str, source))
-        
-        knowledge_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
-        
-        return knowledge_id
-    
-    def update_knowledge(self, knowledge_id, answer=None, category=None, 
-                        language=None, context=None, tags=None):
-        """Met à jour une connaissance existante"""
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        
-        updates = []
-        params = []
-        
-        if answer:
-            updates.append('answer = ?')
-            params.append(answer)
-        if category:
-            updates.append('category = ?')
-            params.append(category)
-        if language:
-            updates.append('language = ?')
-            params.append(language)
-        if context:
-            updates.append('context = ?')
-            params.append(context)
-        if tags:
-            updates.append('tags = ?')
-            params.append(json.dumps(tags))
-        
-        updates.append('date_updated = CURRENT_TIMESTAMP')
-        params.append(knowledge_id)
-        
-        query = f"UPDATE knowledge SET {', '.join(updates)} WHERE id = ?"
-        cursor.execute(query, params)
-        
-        conn.commit()
-        conn.close()
+        try:
+            if self.use_postgres:
+                cursor.execute('''
+                    INSERT INTO knowledge 
+                    (category, question, answer, language, context, tags, source)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id
+                ''', (category, question, answer, language, context, tags_str, source))
+                knowledge_id = cursor.fetchone()[0]
+            else:
+                cursor.execute('''
+                    INSERT INTO knowledge 
+                    (category, question, answer, language, context, tags, source)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (category, question, answer, language, context, tags_str, source))
+                knowledge_id = cursor.lastrowid
+            
+            conn.commit()
+            return knowledge_id
+        except Exception as e:
+            print(f"⚠️ Erreur add_knowledge: {e}")
+            return None
+        finally:
+            conn.close()
     
     def search_knowledge(self, query, category=None, language=None, limit=10):
         """Recherche dans les connaissances avec recherche intelligente"""
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        # Nettoyer et préparer la requête
-        query_lower = query.lower()
-        query_words = query_lower.split()
-        
-        # Construire une recherche flexible
-        sql = '''
-            SELECT id, category, question, answer, language, context, tags, 
-                   confidence, date_created, usage_count
-            FROM knowledge
-            WHERE (
-                LOWER(question) LIKE ? OR 
-                LOWER(answer) LIKE ? OR 
-                LOWER(context) LIKE ?
-        '''
-        params = [f'%{query_lower}%', f'%{query_lower}%', f'%{query_lower}%']
-        
-        # Ajouter une recherche par mots-clés individuels
-        for word in query_words:
-            if len(word) > 3:  # Ignorer les mots trop courts
-                sql += ' OR LOWER(question) LIKE ? OR LOWER(answer) LIKE ?'
-                params.extend([f'%{word}%', f'%{word}%'])
-        
-        sql += ')'
-        
-        if category:
-            sql += ' AND category = ?'
-            params.append(category)
-        
-        if language:
-            sql += ' AND language = ?'
-            params.append(language)
-        
-        sql += ' ORDER BY confidence DESC, usage_count DESC, date_updated DESC LIMIT ?'
-        params.append(limit)
-        
-        cursor.execute(sql, params)
-        results = cursor.fetchall()
-        conn.close()
-        
-        return [
-            {
-                'id': r[0],
-                'category': r[1],
-                'question': r[2],
-                'answer': r[3],
-                'language': r[4],
-                'context': r[5],
-                'tags': json.loads(r[6]) if r[6] else [],
-                'confidence': r[7],
-                'date_created': r[8],
-                'usage_count': r[9]
-            }
-            for r in results
-        ]
+        try:
+            # Nettoyer et préparer la requête
+            query_lower = query.lower()
+            query_words = query_lower.split()
+            
+            # Placeholder selon la base de données
+            ph = '%s' if self.use_postgres else '?'
+            
+            # Construire une recherche flexible
+            sql = f'''
+                SELECT id, category, question, answer, language, context, tags, 
+                       confidence, date_created, usage_count
+                FROM knowledge
+                WHERE (
+                    LOWER(question) LIKE {ph} OR 
+                    LOWER(answer) LIKE {ph} OR 
+                    LOWER(context) LIKE {ph}
+            '''
+            params = [f'%{query_lower}%', f'%{query_lower}%', f'%{query_lower}%']
+            
+            # Ajouter une recherche par mots-clés individuels
+            for word in query_words:
+                if len(word) > 3:
+                    sql += f' OR LOWER(question) LIKE {ph} OR LOWER(answer) LIKE {ph}'
+                    params.extend([f'%{word}%', f'%{word}%'])
+            
+            sql += ')'
+            
+            if category:
+                sql += f' AND category = {ph}'
+                params.append(category)
+            
+            if language:
+                sql += f' AND language = {ph}'
+                params.append(language)
+            
+            sql += f' ORDER BY confidence DESC, usage_count DESC, date_updated DESC LIMIT {ph}'
+            params.append(limit)
+            
+            cursor.execute(sql, params)
+            results = cursor.fetchall()
+            
+            return [
+                {
+                    'id': r[0],
+                    'category': r[1],
+                    'question': r[2],
+                    'answer': r[3],
+                    'language': r[4],
+                    'context': r[5],
+                    'tags': json.loads(r[6]) if r[6] else [],
+                    'confidence': r[7],
+                    'date_created': r[8],
+                    'usage_count': r[9]
+                }
+                for r in results
+            ]
+        except Exception as e:
+            print(f"⚠️ Erreur search_knowledge: {e}")
+            return []
+        finally:
+            conn.close()
     
     def get_all_knowledge(self, category=None, language=None, limit=100):
         """Récupère toutes les connaissances"""
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        sql = '''
-            SELECT id, category, question, answer, language, context, 
-                   date_created, usage_count
-            FROM knowledge
-            WHERE 1=1
-        '''
-        params = []
-        
-        if category:
-            sql += ' AND category = ?'
-            params.append(category)
-        
-        if language:
-            sql += ' AND language = ?'
-            params.append(language)
-        
-        sql += ' ORDER BY date_updated DESC LIMIT ?'
-        params.append(limit)
-        
-        cursor.execute(sql, params)
-        results = cursor.fetchall()
-        conn.close()
-        
-        return [
-            {
-                'id': r[0],
-                'category': r[1],
-                'question': r[2],
-                'answer': r[3],
-                'language': r[4],
-                'context': r[5],
-                'date_created': r[6],
-                'usage_count': r[7]
-            }
-            for r in results
-        ]
+        try:
+            ph = '%s' if self.use_postgres else '?'
+            
+            sql = f'''
+                SELECT id, category, question, answer, language, context, 
+                       date_created, usage_count
+                FROM knowledge
+                WHERE 1=1
+            '''
+            params = []
+            
+            if category:
+                sql += f' AND category = {ph}'
+                params.append(category)
+            
+            if language:
+                sql += f' AND language = {ph}'
+                params.append(language)
+            
+            sql += f' ORDER BY date_updated DESC LIMIT {ph}'
+            params.append(limit)
+            
+            cursor.execute(sql, params)
+            results = cursor.fetchall()
+            
+            return [
+                {
+                    'id': r[0],
+                    'category': r[1],
+                    'question': r[2],
+                    'answer': r[3],
+                    'language': r[4],
+                    'context': r[5],
+                    'date_created': r[6],
+                    'usage_count': r[7]
+                }
+                for r in results
+            ]
+        except Exception as e:
+            print(f"⚠️ Erreur get_all_knowledge: {e}")
+            return []
+        finally:
+            conn.close()
     
     def increment_usage(self, knowledge_id):
         """Incrémente le compteur d'utilisation"""
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        cursor.execute('''
-            UPDATE knowledge 
-            SET usage_count = usage_count + 1,
-                date_updated = CURRENT_TIMESTAMP
-            WHERE id = ?
-        ''', (knowledge_id,))
-        
-        conn.commit()
-        conn.close()
+        try:
+            ph = '%s' if self.use_postgres else '?'
+            cursor.execute(f'''
+                UPDATE knowledge 
+                SET usage_count = usage_count + 1,
+                    date_updated = CURRENT_TIMESTAMP
+                WHERE id = {ph}
+            ''', (knowledge_id,))
+            conn.commit()
+        except Exception as e:
+            print(f"⚠️ Erreur increment_usage: {e}")
+        finally:
+            conn.close()
     
     def delete_knowledge(self, knowledge_id):
         """Supprime une connaissance"""
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        cursor.execute('DELETE FROM knowledge WHERE id = ?', (knowledge_id,))
-        
-        conn.commit()
-        conn.close()
+        try:
+            ph = '%s' if self.use_postgres else '?'
+            cursor.execute(f'DELETE FROM knowledge WHERE id = {ph}', (knowledge_id,))
+            conn.commit()
+        except Exception as e:
+            print(f"⚠️ Erreur delete_knowledge: {e}")
+        finally:
+            conn.close()
     
     def get_statistics(self):
         """Récupère les statistiques de la base de connaissances"""
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        # Total des connaissances
-        cursor.execute('SELECT COUNT(*) FROM knowledge')
-        total = cursor.fetchone()[0]
-        
-        # Par catégorie
-        cursor.execute('''
-            SELECT category, COUNT(*) as count
-            FROM knowledge
-            GROUP BY category
-            ORDER BY count DESC
-        ''')
-        by_category = dict(cursor.fetchall())
-        
-        # Par langue
-        cursor.execute('''
-            SELECT language, COUNT(*) as count
-            FROM knowledge
-            GROUP BY language
-            ORDER BY count DESC
-        ''')
-        by_language = dict(cursor.fetchall())
-        
-        # Dernière mise à jour
-        cursor.execute('''
-            SELECT MAX(date_updated) FROM knowledge
-        ''')
-        last_update = cursor.fetchone()[0]
-        
-        conn.close()
-        
-        return {
-            'total': total,
-            'by_category': by_category,
-            'by_language': by_language,
-            'last_update': last_update
-        }
+        try:
+            cursor.execute('SELECT COUNT(*) FROM knowledge')
+            total = cursor.fetchone()[0]
+            
+            cursor.execute('''
+                SELECT category, COUNT(*) as count
+                FROM knowledge
+                GROUP BY category
+                ORDER BY count DESC
+            ''')
+            by_category = dict(cursor.fetchall())
+            
+            cursor.execute('''
+                SELECT language, COUNT(*) as count
+                FROM knowledge
+                GROUP BY language
+                ORDER BY count DESC
+            ''')
+            by_language = dict(cursor.fetchall())
+            
+            cursor.execute('SELECT MAX(date_updated) FROM knowledge')
+            last_update = cursor.fetchone()[0]
+            
+            return {
+                'total': total,
+                'by_category': by_category,
+                'by_language': by_language,
+                'last_update': last_update
+            }
+        except Exception as e:
+            print(f"⚠️ Erreur get_statistics: {e}")
+            return {'total': 0, 'by_category': {}, 'by_language': {}, 'last_update': None}
+        finally:
+            conn.close()
     
     def get_context_for_llm(self, query=None, limit=20):
-        """
-        Récupère les connaissances pertinentes pour injecter dans le contexte du LLM
-        """
+        """Récupère les connaissances pertinentes pour injecter dans le contexte du LLM"""
         if query:
             knowledge = self.search_knowledge(query, limit=limit)
         else:
