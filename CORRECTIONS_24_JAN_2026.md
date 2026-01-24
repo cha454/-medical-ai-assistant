@@ -1,322 +1,164 @@
-# 🔧 Corrections Appliquées - 24 Janvier 2026
+# ✅ Corrections du 24 Janvier 2026
 
-## 📋 Résumé des Problèmes Résolus
+## 🎯 Problème Principal Résolu
 
-### ✅ Problème #1: Bouton Vocal sur /teach
-**Signalé par**: Utilisateur  
-**Description**: Le bouton vocal 🎤 était toujours présent sur la page `/teach` malgré la suppression précédente  
-**Impact**: Confusion utilisateur, fonctionnalité non désirée  
+**PROBLÈME** : La base de connaissances se vidait à chaque actualisation sur Railway.
 
-**Solution Appliquée** (Commit `f9f5d8d`):
-- ✅ Suppression du bouton HTML `<button class="btn-voice">`
-- ✅ Suppression du CSS `.btn-voice` et animations
-- ✅ Suppression de tout le code JavaScript vocal:
-  - `voiceRecognition`, `voiceSynthesis`
-  - `initVoiceRecognition()`, `startListening()`, `stopListening()`
-  - `speakText()`, `updateVoiceButton()`, `toggleVoice()`
-- ✅ Suppression de l'appel `initVoiceRecognition()` dans `window.addEventListener`
-- ✅ **205 lignes supprimées**
+**CAUSE** : SQLite n'est pas persistant sur Railway sans volume (et Railway ne propose plus de volumes gratuits).
 
-**Résultat**:
-- ❌ Plus de bouton vocal sur `/teach`
-- ✅ Seul le bouton "Enseigner" reste visible
-- ✅ Page `/teach` sans vocal, page `/chat` avec vocal complet
+**SOLUTION** : Utiliser PostgreSQL (fourni gratuitement par Railway et persistant par défaut).
 
 ---
 
-### ✅ Problème #2: Base de Connaissances Non Utilisée
-**Signalé par**: Utilisateur  
-**Description**: Après avoir enseigné "Mbolo signifie bonjour en Fang" sur `/teach`, l'IA ne trouvait pas cette connaissance sur `/chat`  
-**Impact**: Fonctionnalité d'apprentissage inutile, frustration utilisateur  
+## 🔧 Modifications Effectuées
 
-**Analyse du Problème**:
-1. La base de connaissances était bien intégrée dans `enhanced_chatbot.py`
-2. La fonction `get_context_for_llm()` était appelée
-3. **MAIS**: La recherche était trop stricte (recherche exacte uniquement)
-4. **ET**: Le contexte n'était pas assez explicite pour le LLM
+### 1. Support PostgreSQL + SQLite
 
-**Solution Appliquée** (Commit `d01f29c`):
+**Fichier** : `src/knowledge_base.py`
 
-#### A. Amélioration de la Recherche (`search_knowledge`)
-**Avant**:
-```python
-sql = '''
-    SELECT ... FROM knowledge
-    WHERE (question LIKE ? OR answer LIKE ? OR context LIKE ?)
-'''
-params = [f'%{query}%', f'%{query}%', f'%{query}%']
+Le code détecte automatiquement :
+- **Railway** (avec `DATABASE_URL`) → PostgreSQL ✅
+- **Local** (sans `DATABASE_URL`) → SQLite ✅
+
+**Avantages** :
+- ✅ Détection automatique
+- ✅ Pas de configuration manuelle
+- ✅ Fonctionne partout
+
+### 2. Dépendance PostgreSQL
+
+**Fichier** : `requirements.txt`
+
+Ajout de :
+```
+psycopg2-binary>=2.9.0
 ```
 
-**Après**:
-```python
-# Recherche insensible à la casse
-query_lower = query.lower()
-query_words = query_lower.split()
+### 3. Tracking de knowledge.db
 
-sql = '''
-    SELECT ... FROM knowledge
-    WHERE (
-        LOWER(question) LIKE ? OR 
-        LOWER(answer) LIKE ? OR 
-        LOWER(context) LIKE ?
-'''
-params = [f'%{query_lower}%', f'%{query_lower}%', f'%{query_lower}%']
+**Fichier** : `.gitignore`
 
-# Recherche par mots-clés individuels
-for word in query_words:
-    if len(word) > 3:  # Ignorer les mots trop courts
-        sql += ' OR LOWER(question) LIKE ? OR LOWER(answer) LIKE ?'
-        params.extend([f'%{word}%', f'%{word}%'])
+Modification pour permettre le tracking de `knowledge.db` en local :
 ```
-
-**Avantages**:
-- ✅ Recherche insensible à la casse (LOWER)
-- ✅ Recherche par mots-clés individuels (>3 lettres)
-- ✅ Trouve même si la formulation est différente
-- ✅ Exemple: "Comment dit-on bonjour en Fang ?" trouve "Mbolo signifie bonjour en langue Fang"
-
-#### B. Amélioration du Contexte LLM (`get_context_for_llm`)
-**Avant**:
-```python
-context = "📚 CONNAISSANCES PERSONNALISÉES APPRISES :\n\n"
-for k in knowledge:
-    context += f"• {k['question']}\n"
-    context += f"  → {k['answer']}\n"
-context += "Utilise ces connaissances pour répondre de manière personnalisée.\n"
-```
-
-**Après**:
-```python
-context = "📚 **CONNAISSANCES PERSONNALISÉES APPRISES PAR L'UTILISATEUR** :\n\n"
-context += "⚠️ IMPORTANT: Ces connaissances ont été enseignées par l'utilisateur. Utilise-les EN PRIORITÉ pour répondre.\n\n"
-
-for k in knowledge:
-    context += f"**Question/Contexte:** {k['question']}\n"
-    context += f"**Réponse apprise:** {k['answer']}\n"
-    context += f"**Catégorie:** {k['category']}\n"
-    if k['language'] != 'fr':
-        context += f"**Langue:** {k['language']}\n"
-    if k.get('context'):
-        context += f"**Contexte additionnel:** {k['context']}\n"
-    context += "\n"
-
-context += "---\n"
-context += "💡 **INSTRUCTION:** Si la question de l'utilisateur correspond à une de ces connaissances, "
-context += "réponds en utilisant EXACTEMENT les informations apprises ci-dessus. "
-context += "L'utilisateur a pris le temps de t'enseigner ces informations, respecte-les !\n"
-```
-
-**Avantages**:
-- ✅ Instructions très claires pour le LLM
-- ✅ Priorité explicite aux connaissances apprises
-- ✅ Format structuré (Question, Réponse, Catégorie, Langue)
-- ✅ Contexte additionnel si disponible
-- ✅ Instruction finale pour respecter les enseignements
-
-**Résultat**:
-- ✅ L'IA trouve maintenant les connaissances apprises
-- ✅ Fonctionne avec différentes formulations
-- ✅ Respecte les enseignements de l'utilisateur
-
----
-
-## 📊 Statistiques des Corrections
-
-### Commits
-- **Total**: 3 commits
-- **f9f5d8d**: FIX: Suppression complète du bouton vocal et code vocal dans teach.html
-- **d01f29c**: IMPROVE: Amélioration recherche dans base de connaissances
-- **e19f1f2**: DOCS: Ajout guide de test de la base de connaissances
-
-### Lignes de Code
-- **Supprimées**: 205 lignes (vocal sur /teach)
-- **Modifiées**: 39 lignes (recherche + contexte)
-- **Ajoutées**: 214 lignes (documentation)
-
-### Fichiers Modifiés
-1. `templates/teach.html` - Suppression vocal
-2. `src/knowledge_base.py` - Amélioration recherche et contexte
-3. `TEST_BASE_CONNAISSANCES.md` - Documentation (nouveau)
-
----
-
-## 🧪 Tests à Effectuer
-
-### Test 1: Vérifier Absence Vocal sur /teach
-1. Aller sur https://medical-ai-assistant-production.up.railway.app/teach
-2. ✅ Vérifier qu'il n'y a PAS de bouton 🎤
-3. ✅ Vérifier que seul le bouton "Enseigner" est présent
-4. ✅ Taper un message et cliquer sur "Enseigner"
-5. ✅ Vérifier que ça fonctionne normalement
-
-### Test 2: Vérifier Base de Connaissances
-1. Sur `/teach`, enseigner: **"Mbolo signifie bonjour en langue Fang"**
-2. Aller sur `/knowledge` et vérifier que c'est enregistré
-3. Aller sur `/chat` et rafraîchir (F5)
-4. Poser la question: **"Comment dit-on bonjour en Fang ?"**
-5. ✅ L'IA devrait répondre avec "Mbolo"
-
-### Test 3: Vérifier Variantes de Questions
-Tester différentes formulations:
-- "Que veut dire Mbolo ?"
-- "Mbolo c'est quoi ?"
-- "Traduis Mbolo"
-- "Comment on dit bonjour en langue Fang ?"
-
-✅ L'IA devrait utiliser la connaissance apprise dans tous les cas
-
----
-
-## 📚 Documentation Créée
-
-### Nouveaux Documents
-1. **TEST_BASE_CONNAISSANCES.md** - Guide complet de test
-   - Scénarios de test détaillés
-   - Exemples (langues, plantes, infos personnelles)
-   - Guide de débogage
-   - Checklist de validation
-
-2. **CORRECTIONS_24_JAN_2026.md** (ce document)
-   - Résumé de toutes les corrections
-   - Détails techniques
-   - Tests à effectuer
-
-### Documents Mis à Jour
-- **SESSION_RECAP_24_JAN_2026.md** - Récapitulatif complet de la session
-- **SYNTHESE_RAPIDE.md** - Vue d'ensemble rapide
-- **INDEX_COMPLET.md** - Navigation dans la documentation
-
----
-
-## 🔍 Vérification des Logs
-
-### Logs Attendus (Console Navigateur)
-```
-✓ Base de connaissances initialisée
-✓ Connaissances personnalisées injectées dans le contexte
-```
-
-### Logs Attendus (Railway)
-```
-✓ Base de connaissances personnalisée activée
-✓ Base de connaissances initialisée
-🔍 Recherche web multi-sources pour: [question]
-✓ Connaissances personnalisées injectées dans le contexte
+*.db
+!knowledge.db
 ```
 
 ---
 
-## 🎯 Résultats Attendus
+## 🚀 Configuration Railway (3 Étapes)
 
-### Page /teach
-- ❌ Pas de bouton vocal
-- ✅ Bouton "Enseigner" uniquement
-- ✅ Enregistrement des connaissances fonctionne
-- ✅ Design harmonisé (fond noir, couleurs bleues)
+### Étape 1 : Ajouter PostgreSQL
 
-### Page /chat
-- ✅ Bouton vocal 🎤 présent et fonctionnel
-- ✅ Mode mains libres fonctionne
-- ✅ Commandes vocales (stop, skip) fonctionnent
-- ✅ Utilise les connaissances apprises sur /teach
+1. Aller sur https://railway.app
+2. Ouvrir ton projet `medical-ai-assistant`
+3. Cliquer sur **"+ New"** (en haut à droite)
+4. Sélectionner **"Database"**
+5. Choisir **"PostgreSQL"**
+6. Attendre 30 secondes
 
-### Page /knowledge
-- ✅ Affiche toutes les connaissances
-- ✅ Statistiques visibles
-- ✅ Suppression fonctionne
-- ✅ Design harmonisé
+✅ Railway crée automatiquement `DATABASE_URL`
 
----
+### Étape 2 : Vérifier
 
-## 🚀 Déploiement
+1. Cliquer sur ton service `medical-ai-assistant`
+2. Aller dans **"Variables"**
+3. Vérifier que `DATABASE_URL` existe
 
-### Status
-- ✅ Code commité et poussé sur GitHub
-- ✅ Déploiement automatique sur Railway en cours
-- ⏳ Attendre 2-3 minutes pour que les changements soient actifs
+### Étape 3 : Redéployer
 
-### URLs de Production
-- **Chat**: https://medical-ai-assistant-production.up.railway.app/chat
-- **Teach**: https://medical-ai-assistant-production.up.railway.app/teach
-- **Knowledge**: https://medical-ai-assistant-production.up.railway.app/knowledge
+1. Aller dans **"Deployments"**
+2. Cliquer sur **"Redeploy"**
+3. Attendre 2-3 minutes
 
 ---
 
-## 💡 Leçons Apprises
+## ✅ Test de Persistance
 
-### 1. Suppression de Fonctionnalités
-- Toujours vérifier TOUS les fichiers (HTML, CSS, JS)
-- Supprimer le code ET les références
-- Tester après chaque suppression
+### Test 1 : Enseigner
+1. Aller sur `/teach`
+2. Dire : **"Mbolo signifie bonjour en Fang"**
+3. L'IA confirme
 
-### 2. Recherche dans Base de Données
-- La recherche exacte est trop stricte
-- Utiliser LOWER() pour insensibilité à la casse
-- Rechercher par mots-clés individuels
-- Ignorer les mots trop courts (<3 lettres)
+### Test 2 : Vérifier
+1. Aller sur `/knowledge`
+2. ✅ La connaissance apparaît
 
-### 3. Contexte pour LLM
-- Les instructions doivent être TRÈS explicites
-- Utiliser des mots-clés forts: "IMPORTANT", "EN PRIORITÉ", "EXACTEMENT"
-- Structurer le contexte clairement
-- Ajouter des instructions finales
+### Test 3 : Actualiser
+1. Appuyer sur **F5**
+2. ✅ La connaissance est TOUJOURS là
 
-### 4. Tests
-- Toujours tester avec différentes formulations
-- Tester après actualisation de la page
-- Vérifier les logs pour comprendre le comportement
+### Test 4 : Redémarrer
+1. Railway → Settings → Restart
+2. Attendre le redémarrage
+3. Aller sur `/knowledge`
+4. ✅ La connaissance est TOUJOURS là
 
----
-
-## 🔄 Prochaines Améliorations Possibles
-
-### Court Terme
-- [ ] Recherche par similarité sémantique (embeddings)
-- [ ] Synonymes et variations linguistiques
-- [ ] Correction orthographique automatique
-
-### Moyen Terme
-- [ ] Interface de gestion avancée des connaissances
-- [ ] Export/Import en masse
-- [ ] Catégorisation automatique améliorée
-- [ ] Validation collaborative des connaissances
-
-### Long Terme
-- [ ] Apprentissage automatique des patterns
-- [ ] Suggestions de connaissances manquantes
-- [ ] Intégration avec bases de données externes
-- [ ] API pour accès externe aux connaissances
+### Test 5 : Utiliser
+1. Aller sur `/chat`
+2. Demander : **"Comment dit-on bonjour en Fang ?"**
+3. ✅ L'IA répond : **"Mbolo"**
 
 ---
 
-## 📞 Support
+## 📋 Vérification des Logs
 
-### Si Problème Persiste
-1. Vérifier les logs Railway
-2. Vérifier la console du navigateur (F12)
-3. Vérifier que `knowledge.db` existe
-4. Tester avec le script de débogage dans `TEST_BASE_CONNAISSANCES.md`
+Dans les logs Railway, tu dois voir :
 
-### Contacts
-- **Documentation**: Voir `INDEX_COMPLET.md` pour tous les guides
-- **Tests**: Voir `TEST_BASE_CONNAISSANCES.md`
-- **Récapitulatif**: Voir `SESSION_RECAP_24_JAN_2026.md`
+```
+✓ Utilisation de PostgreSQL (Railway)
+```
 
----
+Si tu vois ça, c'est bon ! 🎉
 
-## ✅ Checklist Finale
+Si tu vois :
+```
+✓ Base de données SQLite: /app/knowledge.db
+```
 
-- [x] Bouton vocal supprimé de /teach
-- [x] Recherche améliorée dans base de connaissances
-- [x] Contexte LLM amélioré
-- [x] Documentation créée
-- [x] Code commité et poussé
-- [x] Déploiement en cours
-- [ ] Tests utilisateur à effectuer
+C'est que PostgreSQL n'est pas configuré (retour à l'étape 1).
 
 ---
 
-**Date**: 24 Janvier 2026  
-**Commits**: `f9f5d8d`, `d01f29c`, `e19f1f2`  
-**Status**: ✅ Corrections Appliquées et Déployées  
-**Prochaine Étape**: Tests Utilisateur
+## 🐛 Dépannage
+
+### La base se vide toujours
+
+**Vérifications** :
+1. PostgreSQL est créé ? (Railway Dashboard → Databases)
+2. `DATABASE_URL` existe ? (Variables)
+3. Les logs montrent "PostgreSQL" ? (Logs)
+
+### Erreur "No module named 'psycopg2'"
+
+**Solution** : Attendre le redéploiement (installe automatiquement).
+
+### Erreur "could not connect to server"
+
+**Solution** : PostgreSQL pas créé → Retour à l'étape 1.
+
+---
+
+## 📚 Documentation Complète
+
+Pour plus de détails, voir :
+- `SOLUTION_PERSISTANCE_POSTGRESQL.md` - Guide complet
+- `RAILWAY_VOLUME_SETUP.md` - Ancienne solution (volumes)
+
+---
+
+## 🎉 Résultat
+
+Après configuration :
+- ✅ Connaissances **persistantes**
+- ✅ Survivent aux **actualisations**
+- ✅ Survivent aux **redémarrages**
+- ✅ Survivent aux **redéploiements**
+- ✅ L'IA les **utilise correctement**
+
+**Problème résolu ! 🚀**
+
+---
+
+**Date** : 24 Janvier 2026  
+**Status** : ✅ Code Prêt - Configuration Railway Requise
