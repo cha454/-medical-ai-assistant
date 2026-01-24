@@ -247,26 +247,13 @@ class SiriVoiceAssistant {
     sendMessage(text) {
         console.log('📨 sendMessage appelé pour:', text);
 
-        // Attendre que sendMessage globale soit disponible avec retry
-        let retryCount = 0;
-        const maxRetries = 50; // 5 secondes max
-
-        const tryCallSendMessage = () => {
-            if (typeof window.sendMessage === 'function') {
-                console.log('✅ Appel de window.sendMessage()');
-                window.sendMessage();
-            } else {
-                retryCount++;
-                if (retryCount < maxRetries) {
-                    console.log(`⏳ Attente de window.sendMessage... (${retryCount}/${maxRetries})`);
-                    setTimeout(tryCallSendMessage, 100);
-                } else {
-                    console.error('❌ window.sendMessage non disponible après 5 secondes');
-                }
-            }
-        };
-
-        tryCallSendMessage();
+        // Appeler directement window.sendMessage (elle est maintenant chargée avant ce script)
+        if (typeof window.sendMessage === 'function') {
+            console.log('✅ Appel de window.sendMessage()');
+            window.sendMessage();
+        } else {
+            console.error('❌ window.sendMessage non disponible (chat-functions.js pas chargé)');
+        }
     }
 
     // Synthèse vocale (Text-to-Speech)
