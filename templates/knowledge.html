@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de Connaissances - Assistant Médical IA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #000000;
+            color: #f3f4f6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            font-size: 24px;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #f3f4f6;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        .btn-header {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #60a5fa;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-header:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 600;
+            color: #3b82f6;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+
+        .knowledge-list {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .knowledge-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .knowledge-header h2 {
+            font-size: 18px;
+            color: #f3f4f6;
+        }
+
+        .knowledge-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            transition: background 0.2s;
+        }
+
+        .knowledge-item:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .knowledge-item:last-child {
+            border-bottom: none;
+        }
+
+        .knowledge-content {
+            flex: 1;
+        }
+
+        .knowledge-question {
+            font-weight: 600;
+            color: #f3f4f6;
+            margin-bottom: 8px;
+        }
+
+        .knowledge-answer {
+            color: #9ca3af;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .knowledge-meta {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .knowledge-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #ef4444;
+            transition: all 0.2s;
+        }
+
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-left">
+            <span class="logo">📚</span>
+            <div>
+                <div class="title">Base de Connaissances</div>
+                <div class="subtitle">Gérez les connaissances apprises</div>
+            </div>
+        </div>
+        <div>
+            <a href="/teach" class="btn-header">🎓 Retour à l'enseignement</a>
+            <a href="/chat" class="btn-header">💬 Chat</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total }}</div>
+                <div class="stat-label">Connaissances totales</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.categories }}</div>
+                <div class="stat-label">Catégories</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.recent }}</div>
+                <div class="stat-label">Ajoutées récemment</div>
+            </div>
+        </div>
+
+        <div class="knowledge-list">
+            <div class="knowledge-header">
+                <h2>Toutes les connaissances</h2>
+            </div>
+
+            {% if knowledge %}
+            {% for item in knowledge %}
+            <div class="knowledge-item" id="knowledge-{{ item.id }}">
+                <div class="knowledge-content">
+                    <div class="knowledge-question">{{ item.question }}</div>
+                    <div class="knowledge-answer">{{ item.answer }}</div>
+                    <div class="knowledge-meta">
+                        <span>📁 {{ item.category or 'Non catégorisé' }}</span>
+                        <span>📅 {{ item.created_at }}</span>
+                    </div>
+                </div>
+                <div class="knowledge-actions">
+                    <button class="btn-delete" onclick="deleteKnowledge({{ item.id }})">🗑️ Supprimer</button>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <div>Aucune connaissance enregistrée</div>
+                <div style="margin-top: 8px; font-size: 14px;">
+                    Utilisez le mode enseignement pour ajouter des connaissances
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        async function deleteKnowledge(id) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer cette connaissance ?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/knowledge/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    // Supprimer l'élément du DOM
+                    const element = document.getElementById(`knowledge-${id}`);
+                    if (element) {
+                        element.remove();
+                    }
+
+                    // Recharger la page si c'était le dernier élément
+                    const remaining = document.querySelectorAll('.knowledge-item').length;
+                    if (remaining === 0) {
+                        location.reload();
+                    }
+                } else {
+                    alert('Erreur lors de la suppression');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la suppression');
+            }
+        }
+    </script>
+</body>
+
+</html>

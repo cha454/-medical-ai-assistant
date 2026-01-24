@@ -761,10 +761,6 @@
                         document.getElementById('knowledgeCount').textContent =
                             `${data.knowledge_count} connaissance${data.knowledge_count > 1 ? 's' : ''}`;
                     }
-
-                    if (isVoiceActive) {
-                        await speakText(data.response);
-                    }
                 } else {
                     addMessage('Désolé, une erreur est survenue.', false);
                 }
