@@ -19,15 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupVoiceIntegration() {
-    // Intercepter l'envoi de message pour la synthèse vocale
-    const originalSendMessage = window.sendMessage;
-
-    window.sendMessage = async function () {
-        await originalSendMessage();
-
-        // Après l'envoi, attendre la réponse et la lire
-        // La lecture sera gérée dans la fonction qui reçoit la réponse
-    };
+    // NE PAS intercepter sendMessage - elle est déjà définie dans chat-functions.js
+    // La synthèse vocale est gérée directement dans chat-functions.js
+    console.log('✓ Intégration vocale configurée (pas d\'interception de sendMessage)');
 }
 
 // Fonction pour lire la réponse de l'IA (appelée depuis chat.html)
