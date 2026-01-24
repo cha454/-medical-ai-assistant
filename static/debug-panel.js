@@ -9,10 +9,10 @@ function createDebugPanel() {
     panel.id = 'debug-panel';
     panel.style.cssText = `
         position: fixed;
-        bottom: 10px;
+        top: 80px;
         right: 10px;
-        width: 400px;
-        max-height: 300px;
+        width: 350px;
+        max-height: 250px;
         background: rgba(0, 0, 0, 0.95);
         border: 2px solid #3b82f6;
         border-radius: 12px;
