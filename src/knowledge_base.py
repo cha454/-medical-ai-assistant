@@ -1,7 +1,7 @@
 """
 Système de gestion de la base de connaissances personnalisée
 Permet à l'IA d'apprendre de nouvelles informations via conversation
-Utilise SQLite pour la persistance
+Support SQLite (local) et PostgreSQL (Railway avec pg8000)
 """
 
 import sqlite3
@@ -12,97 +12,180 @@ import os
 
 class KnowledgeBase:
     def __init__(self, db_path=None):
-        # Utiliser SQLite uniquement
-        if db_path is None:
-            # Essayer différents chemins dans l'ordre de préférence
-            possible_paths = [
-                os.environ.get('DATA_DIR'),
-                '/data',
-                os.path.join(os.getcwd(), 'data'),
-                os.getcwd(),
-            ]
-            
-            data_dir = None
-            for path in possible_paths:
-                if path and os.path.exists(path):
-                    data_dir = path
-                    break
-                elif path and path != os.getcwd():
-                    try:
-                        os.makedirs(path, exist_ok=True)
-                        data_dir = path
-                        print(f"✓ Dossier data créé: {path}")
-                        break
-                    except Exception as e:
-                        continue
-            
-            if data_dir is None:
-                data_dir = os.getcwd()
-            
-            db_path = os.path.join(data_dir, 'knowledge.db')
-            print(f"✓ Base de données SQLite: {db_path}")
+        # Détecter si on utilise PostgreSQL (Railway) ou SQLite (local)
+        self.use_postgres = False
+        self.db_url = os.environ.get('DATABASE_URL')
         
-        self.db_path = db_path
+        if self.db_url:
+            # Essayer PostgreSQL avec pg8000 (pure Python, pas de crash)
+            try:
+                import pg8000.native
+                self.pg8000 = pg8000.native
+                self.use_postgres = True
+                print(f"✓ Utilisation de PostgreSQL avec pg8000 (Railway)")
+            except ImportError:
+                print("⚠️ pg8000 non installé, utilisation de SQLite")
+                self.use_postgres = False
+            except Exception as e:
+                print(f"⚠️ Erreur PostgreSQL: {e}, utilisation de SQLite")
+                self.use_postgres = False
+        
+        # Configuration SQLite (fallback ou local)
+        if not self.use_postgres:
+            if db_path is None:
+                # Essayer différents chemins dans l'ordre de préférence
+                possible_paths = [
+                    os.environ.get('DATA_DIR'),
+                    '/data',
+                    os.path.join(os.getcwd(), 'data'),
+                    os.getcwd(),
+                ]
+                
+                data_dir = None
+                for path in possible_paths:
+                    if path and os.path.exists(path):
+                        data_dir = path
+                        break
+                    elif path and path != os.getcwd():
+                        try:
+                            os.makedirs(path, exist_ok=True)
+                            data_dir = path
+                            print(f"✓ Dossier data créé: {path}")
+                            break
+                        except Exception as e:
+                            continue
+                
+                if data_dir is None:
+                    data_dir = os.getcwd()
+                
+                db_path = os.path.join(data_dir, 'knowledge.db')
+                print(f"✓ Base de données SQLite: {db_path}")
+            
+            self.db_path = db_path
+        
         self.init_database()
     
     def get_connection(self):
-        """Retourne une connexion à la base de données SQLite"""
-        return sqlite3.connect(self.db_path)
+        """Retourne une connexion à la base de données"""
+        if self.use_postgres:
+            # pg8000 utilise une URL différente
+            # Format: postgresql://user:password@host:port/database
+            return self.pg8000.Connection.from_url(self.db_url)
+        else:
+            return sqlite3.connect(self.db_path)
     
     def init_database(self):
         """Initialise la base de données"""
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        # Table des connaissances
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS knowledge (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                category TEXT NOT NULL,
-                question TEXT NOT NULL,
-                answer TEXT NOT NULL,
-                language TEXT DEFAULT 'fr',
-                context TEXT,
-                tags TEXT,
-                confidence REAL DEFAULT 1.0,
-                source TEXT DEFAULT 'user',
-                date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                usage_count INTEGER DEFAULT 0
-            )
-        ''')
-        
-        # Table des catégories
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS categories (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT UNIQUE NOT NULL,
-                description TEXT,
-                icon TEXT,
-                color TEXT
-            )
-        ''')
-        
-        # Insérer les catégories par défaut
-        default_categories = [
-            ('langue_locale', 'Langues locales et traductions', '🌍', '#3b82f6'),
-            ('medical', 'Connaissances médicales', '💊', '#10b981'),
-            ('personnel', 'Informations personnelles', '👤', '#8b5cf6'),
-            ('correction', 'Corrections et feedback', '✏️', '#f59e0b'),
-            ('preference', 'Préférences utilisateur', '⚙️', '#6b7280'),
-            ('culture', 'Culture et traditions', '🎭', '#ec4899'),
-            ('plante', 'Plantes médicinales', '🌿', '#22c55e'),
-            ('autre', 'Autres connaissances', '📚', '#64748b')
-        ]
-        
-        for cat in default_categories:
+        if self.use_postgres:
+            # PostgreSQL avec pg8000
             cursor.execute('''
-                INSERT OR IGNORE INTO categories (name, description, icon, color)
-                VALUES (?, ?, ?, ?)
-            ''', cat)
+                CREATE TABLE IF NOT EXISTS knowledge (
+                    id SERIAL PRIMARY KEY,
+                    category TEXT NOT NULL,
+                    question TEXT NOT NULL,
+                    answer TEXT NOT NULL,
+                    language TEXT DEFAULT 'fr',
+                    context TEXT,
+                    tags TEXT,
+                    confidence REAL DEFAULT 1.0,
+                    source TEXT DEFAULT 'user',
+                    date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    usage_count INTEGER DEFAULT 0
+                )
+            ''')
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS categories (
+                    id SERIAL PRIMARY KEY,
+                    name TEXT UNIQUE NOT NULL,
+                    description TEXT,
+                    icon TEXT,
+                    color TEXT
+                )
+            ''')
+            
+            # Insérer les catégories par défaut
+            default_categories = [
+                ('langue_locale', 'Langues locales et traductions', '🌍', '#3b82f6'),
+                ('medical', 'Connaissances médicales', '💊', '#10b981'),
+                ('personnel', 'Informations personnelles', '👤', '#8b5cf6'),
+                ('correction', 'Corrections et feedback', '✏️', '#f59e0b'),
+                ('preference', 'Préférences utilisateur', '⚙️', '#6b7280'),
+                ('culture', 'Culture et traditions', '🎭', '#ec4899'),
+                ('plante', 'Plantes médicinales', '🌿', '#22c55e'),
+                ('autre', 'Autres connaissances', '📚', '#64748b')
+            ]
+            
+            for cat in default_categories:
+                try:
+                    cursor.execute('''
+                        INSERT INTO categories (name, description, icon, color)
+                        VALUES (:1, :2, :3, :4)
+                        ON CONFLICT (name) DO NOTHING
+                    ''', cat)
+                except:
+                    pass  # Ignorer si existe déjà
+        else:
+            # SQLite
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS knowledge (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    category TEXT NOT NULL,
+                    question TEXT NOT NULL,
+                    answer TEXT NOT NULL,
+                    language TEXT DEFAULT 'fr',
+                    context TEXT,
+                    tags TEXT,
+                    confidence REAL DEFAULT 1.0,
+                    source TEXT DEFAULT 'user',
+                    date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    usage_count INTEGER DEFAULT 0
+                )
+            ''')
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS categories (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT UNIQUE NOT NULL,
+                    description TEXT,
+                    icon TEXT,
+                    color TEXT
+                )
+            ''')
+            
+            # Insérer les catégories par défaut
+            default_categories = [
+                ('langue_locale', 'Langues locales et traductions', '🌍', '#3b82f6'),
+                ('medical', 'Connaissances médicales', '💊', '#10b981'),
+                ('personnel', 'Informations personnelles', '👤', '#8b5cf6'),
+                ('correction', 'Corrections et feedback', '✏️', '#f59e0b'),
+                ('preference', 'Préférences utilisateur', '⚙️', '#6b7280'),
+                ('culture', 'Culture et traditions', '🎭', '#ec4899'),
+                ('plante', 'Plantes médicinales', '🌿', '#22c55e'),
+                ('autre', 'Autres connaissances', '📚', '#64748b')
+            ]
+            
+            for cat in default_categories:
+                cursor.execute('''
+                    INSERT OR IGNORE INTO categories (name, description, icon, color)
+                    VALUES (?, ?, ?, ?)
+                ''', cat)
         
         conn.commit()
         conn.close()
+        print("✓ Base de connaissances initialisée")
+    
+    def _placeholder(self, index=None):
+        """Retourne le placeholder approprié selon la base de données"""
+        if self.use_postgres:
+            return f':{index}' if index else ':1'
+        else:
+            return '?'
     
     def add_knowledge(self, question, answer, category='autre', language='fr', 
                      context=None, tags=None, source='user'):
