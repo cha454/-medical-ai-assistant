@@ -110,9 +110,15 @@ class ImageGenerator:
         
         # Mots-clés de génération d'images
         keywords = [
-            'génère', 'génerer', 'genere', 'créer', 'creer', 'dessine',
-            'illustre', 'image de', 'photo de', 'dessin de',
-            'montre moi', 'fais moi', 'peux-tu créer', 'peux-tu générer'
+            'génère', 'génerer', 'genere', 'generer', 'générer',
+            'créer', 'creer', 'créé', 'cree',
+            'dessine', 'dessiner', 'dessiné',
+            'illustre', 'illustrer', 'illustré',
+            'image de', 'photo de', 'dessin de', 'illustration de',
+            'montre moi', 'montre-moi', 'fais moi', 'fais-moi',
+            'peux-tu créer', 'peux-tu générer', 'peux tu créer', 'peux tu générer',
+            'je veux une image', 'je veux un dessin', 'je veux une photo',
+            'crée moi', 'cree moi', 'génère moi', 'genere moi'
         ]
         
         # Vérifier si le message contient un mot-clé
@@ -128,10 +134,19 @@ class ImageGenerator:
                 # Enlever le mot-clé et ce qui vient avant
                 parts = message_lower.split(keyword, 1)
                 if len(parts) > 1:
-                    prompt = parts[1].strip()
-                    # Enlever les mots de liaison
-                    prompt = prompt.lstrip('une un le la les du de d\' ')
+                    prompt_part = parts[1].strip()
+                    # Enlever les mots de liaison courants
+                    linking_words = ['une', 'un', 'le', 'la', 'les', 'du', 'de', 'd\'', 'moi', 'me']
+                    words = prompt_part.split()
+                    # Enlever les mots de liaison au début
+                    while words and words[0] in linking_words:
+                        words.pop(0)
+                    prompt = ' '.join(words) if words else message
                 break
+        
+        # Si le prompt est vide ou trop court, utiliser le message original
+        if len(prompt.strip()) < 3:
+            prompt = message
         
         # Détecter la taille demandée
         size = "1024x1024"  # Par défaut
