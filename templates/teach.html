@@ -296,49 +296,6 @@
             align-items: center;
         }
 
-        .btn-voice {
-            background: rgba(102, 126, 234, 0.2);
-            border: 2px solid rgba(102, 126, 234, 0.3);
-            padding: 10px 16px;
-            border-radius: 10px;
-            color: #667eea;
-            font-size: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-voice:hover {
-            background: rgba(102, 126, 234, 0.3);
-            border-color: #667eea;
-            transform: scale(1.05);
-        }
-
-        .btn-voice.listening {
-            background: rgba(239, 68, 68, 0.2);
-            border-color: #ef4444;
-            color: #ef4444;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        .btn-voice.speaking {
-            background: rgba(34, 197, 94, 0.2);
-            border-color: #22c55e;
-            color: #22c55e;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
-            }
-
-            50% {
-                box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
-            }
-        }
-
         .btn-send {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
@@ -475,7 +432,6 @@
                 <textarea id="messageInput" placeholder="Enseigne-moi quelque chose..." rows="1"
                     onkeydown="handleKeyPress(event)" oninput="autoResize(this)"></textarea>
                 <div class="input-actions">
-                    <button class="btn-voice" onclick="toggleVoice()" id="voiceBtn" title="Parler">🎤</button>
                     <button class="btn-send" onclick="sendMessage()" id="sendBtn">Enseigner</button>
                 </div>
             </div>
@@ -485,166 +441,6 @@
     <script>
         const API_URL = window.location.origin;
         let conversationHistory = [];
-        let voiceRecognition = null;
-        let voiceSynthesis = window.speechSynthesis;
-        let isVoiceActive = false;
-        let isSpeaking = false;
-
-        function initVoiceRecognition() {
-            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                voiceRecognition = new SpeechRecognition();
-                voiceRecognition.lang = 'fr-FR';
-                voiceRecognition.continuous = false;
-                voiceRecognition.interimResults = false;
-
-                voiceRecognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    document.getElementById('messageInput').value = transcript;
-                    sendMessage();
-                };
-
-                voiceRecognition.onend = () => {
-                    if (isVoiceActive && !isSpeaking) {
-                        setTimeout(() => {
-                            if (isVoiceActive && !isSpeaking) {
-                                startListening();
-                            }
-                        }, 500);
-                    } else {
-                        updateVoiceButton('idle');
-                    }
-                };
-
-                voiceRecognition.onerror = (event) => {
-                    console.error('Erreur reconnaissance:', event.error);
-                    if (isVoiceActive && !isSpeaking) {
-                        setTimeout(() => {
-                            if (isVoiceActive && !isSpeaking) {
-                                startListening();
-                            }
-                        }, 1000);
-                    }
-                };
-            }
-        }
-
-        function startListening() {
-            if (!voiceRecognition) {
-                initVoiceRecognition();
-            }
-            if (voiceRecognition && !isSpeaking) {
-                try {
-                    voiceRecognition.start();
-                    updateVoiceButton('listening');
-                } catch (error) {
-                    console.error('Erreur démarrage:', error);
-                }
-            }
-        }
-
-        function stopListening() {
-            if (voiceRecognition) {
-                try {
-                    voiceRecognition.stop();
-                } catch (error) {
-                    console.error('Erreur arrêt:', error);
-                }
-            }
-            updateVoiceButton('idle');
-        }
-
-        function speakText(text) {
-            return new Promise((resolve) => {
-                voiceSynthesis.cancel();
-
-                const cleanText = text
-                    .replace(/\*\*(.+?)\*\*/g, '$1')
-                    .replace(/\*(.+?)\*/g, '$1')
-                    .replace(/[\u{1F600}-\u{1F64F}]/gu, '')
-                    .replace(/[\u{1F300}-\u{1F5FF}]/gu, '')
-                    .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')
-                    .replace(/[\u{2600}-\u{26FF}]/gu, '')
-                    .trim();
-
-                if (!cleanText) {
-                    resolve();
-                    return;
-                }
-
-                const utterance = new SpeechSynthesisUtterance(cleanText);
-                utterance.lang = 'fr-FR';
-                utterance.rate = 1.0;
-                utterance.pitch = 1.0;
-                utterance.volume = 1.0;
-
-                utterance.onstart = () => {
-                    isSpeaking = true;
-                    updateVoiceButton('speaking');
-                };
-
-                utterance.onend = () => {
-                    isSpeaking = false;
-                    if (isVoiceActive) {
-                        setTimeout(() => {
-                            if (isVoiceActive && !isSpeaking) {
-                                startListening();
-                            }
-                        }, 500);
-                    } else {
-                        updateVoiceButton('idle');
-                    }
-                    resolve();
-                };
-
-                utterance.onerror = (event) => {
-                    console.error('Erreur synthèse vocale:', event.error);
-                    isSpeaking = false;
-                    resolve();
-                };
-
-                voiceSynthesis.speak(utterance);
-            });
-        }
-
-        function updateVoiceButton(state) {
-            const voiceBtn = document.getElementById('voiceBtn');
-            if (!voiceBtn) return;
-
-            voiceBtn.classList.remove('listening', 'speaking');
-
-            switch (state) {
-                case 'listening':
-                    voiceBtn.classList.add('listening');
-                    voiceBtn.textContent = '🎤';
-                    break;
-                case 'speaking':
-                    voiceBtn.classList.add('speaking');
-                    voiceBtn.textContent = '🔊';
-                    break;
-                case 'idle':
-                default:
-                    voiceBtn.textContent = '🎤';
-                    break;
-            }
-        }
-
-        function toggleVoice() {
-            if (!voiceRecognition) {
-                initVoiceRecognition();
-            }
-
-            if (!isVoiceActive) {
-                isVoiceActive = true;
-                startListening();
-            } else {
-                isVoiceActive = false;
-                stopListening();
-                voiceSynthesis.cancel();
-                isSpeaking = false;
-                updateVoiceButton('idle');
-            }
-        }
 
         function autoResize(textarea) {
             textarea.style.height = 'auto';
@@ -798,7 +594,6 @@
         }
 
         window.addEventListener('load', () => {
-            initVoiceRecognition();
             loadStats();
             document.getElementById('messageInput').focus();
         });
