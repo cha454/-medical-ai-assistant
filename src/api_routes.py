@@ -5,6 +5,7 @@ Routes API supplémentaires pour l'intégration des services externes
 
 from flask import Blueprint, request, jsonify, session
 from api_integration import api_integration
+from src.image_generator import image_generator
 import uuid
 
 # Créer un Blueprint pour les routes API
@@ -402,3 +403,64 @@ def reload_services():
 
 # Export du Blueprint
 __all__ = ['api_bp']
+
+
+# === IMAGE GENERATION ENDPOINTS ===
+
+@api_bp.route('/image/generate', methods=['POST'])
+def generate_image():
+    """Génère une image avec DALL-E"""
+    try:
+        data = request.json
+        prompt = data.get('prompt', '')
+        size = data.get('size', '1024x1024')
+        quality = data.get('quality', 'standard')
+        
+        if not prompt:
+            return jsonify({
+                'success': False,
+                'error': 'Prompt requis'
+            }), 400
+        
+        # Générer l'image
+        result = image_generator.generate_image(
+            prompt=prompt,
+            size=size,
+            quality=quality
+        )
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@api_bp.route('/image/detect', methods=['POST'])
+def detect_image_request():
+    """Détecte si un message demande la génération d'une image"""
+    try:
+        data = request.json
+        message = data.get('message', '')
+        
+        if not message:
+            return jsonify({
+                'success': False,
+                'error': 'Message requis'
+            }), 400
+        
+        # Détecter la demande
+        result = image_generator.detect_image_request(message)
+        
+        return jsonify({
+            'success': True,
+            **result
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

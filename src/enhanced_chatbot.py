@@ -95,6 +95,19 @@ except ImportError:
     image_search = None
     print("⚠️ Module recherche d'images non disponible")
 
+# Import du module Génération d'Images
+try:
+    from image_generator import image_generator
+    IMAGE_GENERATION_AVAILABLE = image_generator.enabled
+    if IMAGE_GENERATION_AVAILABLE:
+        print("✓ Service génération d'images DALL-E activé")
+    else:
+        print("⚠️ Service génération d'images disponible mais pas configuré")
+except ImportError:
+    IMAGE_GENERATION_AVAILABLE = False
+    image_generator = None
+    print("⚠️ Module génération d'images non disponible")
+
 # Import du module Base de Connaissances
 try:
     from knowledge_base import KnowledgeBase
@@ -335,6 +348,72 @@ class EnhancedMedicalChatbot:
                 if image_results and image_results.get("images"):
                     image_response = image_search.format_image_results(image_results)
                     self._save_response(image_response)
+                    return image_response
+            except Exception as e:
+                print(f"Erreur recherche d'images: {e}")
+                # Continuer avec le mode normal si erreur
+        
+        # ============================================
+        # DÉTECTION DEMANDE DE GÉNÉRATION D'IMAGES
+        # ============================================
+        if IMAGE_GENERATION_AVAILABLE and image_generator:
+            detection = image_generator.detect_image_request(user_input)
+            if detection.get('is_request'):
+                try:
+                    prompt = detection.get('prompt', user_input)
+                    size = detection.get('size', '1024x1024')
+                    quality = detection.get('quality', 'standard')
+                    
+                    print(f"🎨 Génération d'image: {prompt}")
+                    
+                    # Générer l'image
+                    result = image_generator.generate_image(prompt, size, quality)
+                    
+                    if result.get('success'):
+                        images = result.get('images', [])
+                        if images:
+                            image_url = images[0].get('url')
+                            revised_prompt = images[0].get('revised_prompt', prompt)
+                            
+                            response = f"""🎨 **Image générée avec DALL-E** ✨
+
+**Votre demande :** {prompt}
+
+**Prompt optimisé :** {revised_prompt}
+
+![Image générée]({image_url})
+
+**Détails :**
+- Modèle : DALL-E 3
+- Taille : {size}
+- Qualité : {quality}
+
+💡 **Astuce :** Vous pouvez cliquer sur l'image pour l'agrandir ou la télécharger !
+
+---
+*L'image a été générée par intelligence artificielle et peut ne pas être parfaitement réaliste.*"""
+                            
+                            self._save_response(response)
+                            return response
+                    else:
+                        error_msg = result.get('error', 'Erreur inconnue')
+                        response = f"""⚠️ **Impossible de générer l'image**
+
+**Erreur :** {error_msg}
+
+💡 **Suggestions :**
+- Essayez de reformuler votre demande
+- Soyez plus précis dans la description
+- Vérifiez que votre demande respecte les conditions d'utilisation
+
+Voulez-vous réessayer avec une description différente ?"""
+                        
+                        self._save_response(response)
+                        return response
+                        
+                except Exception as e:
+                    print(f"Erreur génération d'image: {e}")
+                    # Continuer avec le mode normal si erreur
                     return image_response
                 else:
                     no_image_response = f"""❌ Désolé, je n'ai pas trouvé d'images pour "{search_query}".
