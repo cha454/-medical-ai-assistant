@@ -306,8 +306,16 @@ def enhanced_chat():
             from enhanced_chatbot import EnhancedMedicalChatbot
             chatbot = EnhancedMedicalChatbot()
             response = chatbot.process_message(message, language)
+            # Transformer les URLs YouTube en vidéos intégrées
+            response = chatbot._finalize_response(response)
             response_data['response'] = response
             response_data['source'] = 'chatbot'
+        
+        # Appliquer la transformation YouTube à toutes les réponses
+        if 'response' in response_data:
+            from enhanced_chatbot import EnhancedMedicalChatbot
+            temp_chatbot = EnhancedMedicalChatbot()
+            response_data['response'] = temp_chatbot._finalize_response(response_data['response'])
         
         # 3. Ajouter recherche web si demandé
         if use_web_search and api_integration.is_service_available('web_search'):

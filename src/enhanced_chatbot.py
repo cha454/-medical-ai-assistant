@@ -1164,6 +1164,41 @@ Souhaitez-vous des informations sur un aspect particulier?"""
         
         return elaborations.get(self.last_topic, "Que voulez-vous savoir de plus?")
     
+    def _embed_youtube_videos(self, text):
+        """Transforme les URLs YouTube en vidéos intégrées"""
+        # Pattern pour détecter les URLs YouTube
+        youtube_patterns = [
+            r'https?://(?:www\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]+)',
+            r'https?://(?:www\.)?youtube\.com/embed/([a-zA-Z0-9_-]+)',
+            r'https?://youtu\.be/([a-zA-Z0-9_-]+)',
+            r'https?://(?:www\.)?youtube\.com/playlist\?list=([a-zA-Z0-9_-]+)'
+        ]
+        
+        result = text
+        videos_found = []
+        
+        for pattern in youtube_patterns:
+            matches = re.finditer(pattern, text)
+            for match in matches:
+                full_url = match.group(0)
+                video_id = match.group(1)
+                
+                # Éviter les doublons
+                if video_id in videos_found:
+                    continue
+                videos_found.append(video_id)
+                
+                # Créer l'iframe YouTube
+                if 'playlist' in full_url:
+                    iframe = f'\n\n<iframe width="560" height="315" src="https://www.youtube.com/embed/videoseries?list={video_id}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>\n\n'
+                else:
+                    iframe = f'\n\n<iframe width="560" height="315" src="https://www.youtube.com/embed/{video_id}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>\n\n'
+                
+                # Remplacer l'URL par l'iframe + lien
+                result = result.replace(full_url, f'{iframe}🔗 [Voir sur YouTube]({full_url})')
+        
+        return result
+    
     def _save_response(self, response):
         """Sauvegarde la réponse dans l'historique"""
         self.conversation_history.append({
@@ -1171,6 +1206,10 @@ Souhaitez-vous des informations sur un aspect particulier?"""
             "content": response,
             "timestamp": datetime.now().isoformat()
         })
+    
+    def _finalize_response(self, response):
+        """Finalise la réponse en ajoutant les vidéos intégrées"""
+        return self._embed_youtube_videos(response)
     
     def _symptom_acknowledgment(self, symptoms, emotion):
         """Accuse réception des symptômes avec empathie"""
