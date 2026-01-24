@@ -9,7 +9,25 @@ from datetime import datetime
 from pathlib import Path
 
 class KnowledgeBase:
-    def __init__(self, db_path='knowledge.db'):
+    def __init__(self, db_path=None):
+        # Utiliser un chemin persistant sur Railway
+        if db_path is None:
+            # Essayer d'utiliser un dossier data persistant
+            import os
+            data_dir = os.environ.get('DATA_DIR', '/app/data')
+            
+            # Créer le dossier s'il n'existe pas
+            if not os.path.exists(data_dir):
+                try:
+                    os.makedirs(data_dir, exist_ok=True)
+                    print(f"✓ Dossier data créé: {data_dir}")
+                except Exception as e:
+                    print(f"⚠️ Impossible de créer {data_dir}, utilisation du dossier courant: {e}")
+                    data_dir = '.'
+            
+            db_path = os.path.join(data_dir, 'knowledge.db')
+            print(f"✓ Base de données: {db_path}")
+        
         self.db_path = db_path
         self.init_database()
     
