@@ -3,8 +3,7 @@
  * Ce fichier fait le pont entre voice-assistant-siri.js et chat.html
  */
 
-// Variables globales pour la compatibilité
-let isVoiceActive = false;
+// Variable globale pour le mode silencieux
 let isSilentMode = false;
 
 // Fonction appelée quand l'assistant Siri est prêt
@@ -67,10 +66,10 @@ function toggleVoiceConversation() {
 
     if (siriVoiceAssistant.isListening) {
         siriVoiceAssistant.stopListening();
-        isVoiceActive = false;
+        window.isVoiceActive = false;
     } else {
         siriVoiceAssistant.startListening();
-        isVoiceActive = true;
+        window.isVoiceActive = true;
     }
 }
 
