@@ -194,8 +194,15 @@ def teach_api():
         if not user_message:
             return jsonify({'error': 'Message vide'}), 400
         
+        # NOUVEAU: Chercher d'abord dans la base de connaissances
+        knowledge_context = kb.get_context_for_llm(user_message, limit=5)
+        
         # Construire le contexte de conversation
         context = TEACHING_SYSTEM_PROMPT + "\n\n"
+        
+        # Ajouter les connaissances apprises si disponibles
+        if knowledge_context:
+            context += knowledge_context + "\n\n"
         
         # Ajouter l'historique
         for h in history[-5:]:  # Garder les 5 derniers échanges
