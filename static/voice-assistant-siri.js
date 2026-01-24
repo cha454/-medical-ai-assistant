@@ -90,7 +90,11 @@ class SiriVoiceAssistant {
         // Vérifier la compatibilité
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
             console.error('❌ Reconnaissance vocale non supportée');
-            this.showNotification('Votre navigateur ne supporte pas la reconnaissance vocale', 'error');
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const message = isMobile
+                ? 'La reconnaissance vocale nécessite Chrome ou Safari sur mobile'
+                : 'Votre navigateur ne supporte pas la reconnaissance vocale';
+            this.showNotification(message, 'error');
             return;
         }
 
@@ -348,7 +352,13 @@ class SiriVoiceAssistant {
 
     // Arrêter la synthèse
     stopSpeaking() {
-        this.synthesis.cancel();
+        // Forcer l'arrêt complet de la synthèse
+        if (this.synthesis) {
+            this.synthesis.cancel();
+            // Double appel pour forcer l'arrêt sur certains navigateurs
+            setTimeout(() => this.synthesis.cancel(), 50);
+        }
+
         this.isSpeaking = false;
         this.currentUtterance = null;
         this.stopSpeakingVisualization();
@@ -618,6 +628,12 @@ let siriVoiceAssistant = null;
 
 // Fonction d'initialisation robuste
 function initSiriVoiceAssistant() {
+    // Arrêter toute synthèse vocale en cours (au cas où la page a été rafraîchie)
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        console.log('🛑 Arrêt de toute synthèse vocale en cours');
+    }
+
     if (siriVoiceAssistant) {
         console.log('✓ Assistant vocal déjà initialisé');
         return;
