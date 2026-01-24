@@ -582,6 +582,42 @@
             }
         }
 
+        /* Bouton STOP pour arrêter la synthèse vocale */
+        .btn-stop-speaking {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            animation: pulse-red-btn 1.5s ease-in-out infinite;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-stop-speaking:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+        }
+
+        .btn-stop-speaking:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes pulse-red-btn {
+
+            0%,
+            100% {
+                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 4px 20px rgba(239, 68, 68, 0.8);
+            }
+        }
+
         /* Menu Contextuel Vocal */
         .voice-context-menu {
             position: fixed;
@@ -1077,6 +1113,12 @@
                     <textarea id="messageInput" placeholder="Posez votre question médicale..." rows="1"
                         onkeydown="handleKeyPress(event)" oninput="autoResize(this)"></textarea>
                     <div class="input-actions">
+                        <!-- BOUTON STOP (visible pendant la synthèse) -->
+                        <button class="btn-stop-speaking" id="stopSpeakingBtn"
+                            onclick="if(window.siriVoiceAssistant) siriVoiceAssistant.stopSpeaking()"
+                            style="display: none;" title="Arrêter la lecture vocale">
+                            🛑 STOP
+                        </button>
                         <!-- UN SEUL BOUTON - CLIC = PARLER -->
                         <button class="btn-voice-siri-main" onclick="startVoiceConversation()" id="voiceBtn"
                             title="Cliquer pour parler avec l'IA">

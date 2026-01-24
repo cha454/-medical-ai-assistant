@@ -304,9 +304,9 @@ class SiriVoiceAssistant {
         // Nettoyer le texte
         let cleanText = this.cleanTextForSpeech(text);
 
-        // RÉSUMÉ AUTOMATIQUE pour les textes longs (>200 mots)
+        // RÉSUMÉ AUTOMATIQUE pour les textes longs (>50 mots au lieu de 200)
         const wordCount = cleanText.split(/\s+/).length;
-        if (wordCount > 200) {
+        if (wordCount > 50) {
             console.log(`📊 Texte long détecté (${wordCount} mots), création d'un résumé vocal`);
             cleanText = this.createVoiceSummary(cleanText);
         }
@@ -375,18 +375,37 @@ class SiriVoiceAssistant {
 
     // Arrêter la synthèse
     stopSpeaking() {
-        // Forcer l'arrêt complet de la synthèse
+        console.log('🛑 ARRÊT FORCÉ de la synthèse vocale');
+
+        // Forcer l'arrêt complet de la synthèse (méthode agressive)
         if (this.synthesis) {
+            // Méthode 1: Cancel immédiat
             this.synthesis.cancel();
-            // Double appel pour forcer l'arrêt sur certains navigateurs
-            setTimeout(() => this.synthesis.cancel(), 50);
+
+            // Méthode 2: Pause puis cancel
+            this.synthesis.pause();
+            this.synthesis.cancel();
+
+            // Méthode 3: Triple appel avec délais pour forcer l'arrêt sur tous les navigateurs
+            setTimeout(() => {
+                this.synthesis.cancel();
+                this.synthesis.pause();
+            }, 10);
+
+            setTimeout(() => {
+                this.synthesis.cancel();
+            }, 50);
+
+            setTimeout(() => {
+                this.synthesis.cancel();
+            }, 100);
         }
 
         this.isSpeaking = false;
         this.currentUtterance = null;
         this.stopSpeakingVisualization();
         this.updateUI('idle');
-        this.showNotification('Synthèse arrêtée', 'info');
+        this.showNotification('🛑 Synthèse arrêtée', 'success');
     }
 
     // Répéter la dernière réponse
@@ -458,15 +477,15 @@ class SiriVoiceAssistant {
 
     // Créer un résumé vocal pour les textes longs
     createVoiceSummary(text) {
-        // Prendre les 3 premières phrases
+        // Prendre seulement les 2 premières phrases (au lieu de 3)
         const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-        const firstSentences = sentences.slice(0, 3).join(' ');
+        const firstSentences = sentences.slice(0, 2).join(' ');
 
         // Compter le nombre de phrases restantes
-        const remainingSentences = sentences.length - 3;
+        const remainingSentences = sentences.length - 2;
 
         if (remainingSentences > 0) {
-            return `${firstSentences} Le texte complet contient ${remainingSentences} phrases supplémentaires affichées à l'écran. Dites "skip" pour passer.`;
+            return `${firstSentences} Le texte complet contient ${remainingSentences} phrases supplémentaires affichées à l'écran. Dites "stop" pour arrêter.`;
         } else {
             return firstSentences;
         }
@@ -475,19 +494,26 @@ class SiriVoiceAssistant {
     // Nettoyer le texte pour la synthèse
     cleanTextForSpeech(text) {
         return text
+            // Supprimer les URLs complètes (http://, https://, www.)
+            .replace(/https?:\/\/[^\s]+/g, '')
+            .replace(/www\.[^\s]+/g, '')
+            // Supprimer les liens Markdown [texte](url)
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+            // Supprimer le formatage Markdown
             .replace(/\*\*(.+?)\*\*/g, '$1')
             .replace(/\*(.+?)\*/g, '$1')
-            .replace(/\[(.+?)\]\(.+?\)/g, '$1')
             .replace(/`(.+?)`/g, '$1')
             .replace(/```[\s\S]*?```/g, '')
             .replace(/#{1,6}\s/g, '')
             .replace(/>\s/g, '')
             .replace(/[-*+]\s/g, '')
             .replace(/\d+\.\s/g, '')
+            // Supprimer les emojis
             .replace(/[\u{1F600}-\u{1F64F}]/gu, '')
             .replace(/[\u{1F300}-\u{1F5FF}]/gu, '')
             .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')
             .replace(/[\u{2600}-\u{26FF}]/gu, '')
+            // Nettoyer les espaces multiples
             .replace(/\s+/g, ' ')
             .trim();
     }
@@ -632,6 +658,17 @@ class SiriVoiceAssistant {
     // Mettre à jour l'interface
     updateUI(state) {
         const voiceBtn = document.getElementById('voice-btn');
+        const stopBtn = document.getElementById('stopSpeakingBtn');
+
+        // Gérer le bouton STOP
+        if (stopBtn) {
+            if (state === 'speaking') {
+                stopBtn.style.display = 'block';
+            } else {
+                stopBtn.style.display = 'none';
+            }
+        }
+
         if (!voiceBtn) return;
 
         switch (state) {
