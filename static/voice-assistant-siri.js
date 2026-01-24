@@ -151,15 +151,13 @@ class SiriVoiceAssistant {
             this.isListening = false;
             this.stopVisualization();
 
-            // Redémarrer en mode continu
-            if (this.continuousMode && !this.isSpeaking) {
+            // Redémarrer en mode continu (mais PAS en mode mains libres)
+            if (this.continuousMode && !this.isSpeaking && !this.handsFreeModeActive) {
                 setTimeout(() => this.startListening(), 300);
             }
 
-            // Redémarrer en mode mains libres
-            if (this.handsFreeModeActive) {
-                setTimeout(() => this.startListening(), 500);
-            }
+            // En mode mains libres, l'écoute redémarre APRÈS la synthèse vocale
+            // (voir utterance.onend dans la fonction speak())
 
             this.updateUI('idle');
         };
@@ -294,9 +292,13 @@ class SiriVoiceAssistant {
             this.stopSpeakingVisualization();
             this.updateUI('idle');
 
-            // Redémarrer l'écoute en mode mains libres
+            // Redémarrer l'écoute en mode mains libres (avec délai plus long)
             if (this.handsFreeModeActive) {
-                setTimeout(() => this.startListening(), 500);
+                setTimeout(() => {
+                    if (this.handsFreeModeActive && !this.isSpeaking) {
+                        this.startListening();
+                    }
+                }, 1000); // 1 seconde de délai
             }
         };
 
