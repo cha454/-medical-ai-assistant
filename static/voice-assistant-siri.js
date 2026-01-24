@@ -258,6 +258,12 @@ class SiriVoiceAssistant {
     speak(text, options = {}) {
         if (!text || this.silentMode) return;
 
+        // IMPORTANT: Arrêter l'écoute pour éviter de reconnaître sa propre voix
+        if (this.isListening) {
+            console.log('🛑 Arrêt de l\'écoute avant la synthèse');
+            this.stopListening();
+        }
+
         // Arrêter toute synthèse en cours
         this.synthesis.cancel();
 
