@@ -41,22 +41,29 @@ def extract_knowledge(user_message, ai_response):
     # ============================================
     # FILTRER LES NON-ENSEIGNEMENTS
     # ============================================
-    # Ne pas enregistrer les salutations simples
+    # Ne pas enregistrer les salutations simples (UN SEUL MOT)
     simple_greetings = ["bonjour", "salut", "hello", "bonsoir", "hey", "coucou", "hi", "bsr"]
     if message_lower.strip() in simple_greetings:
+        print(f"⚠️ Salutation simple ignorée: {user_message}")
         return None
     
-    # Ne pas enregistrer les questions sans information
+    # Ne pas enregistrer les questions sans information (SAUF si contient des mots-clés d'enseignement)
+    teaching_keywords = ["signifie", "veut dire", "se dit", "c'est", "=", "soigne", "traite", "guérit"]
+    has_teaching_keyword = any(kw in message_lower for kw in teaching_keywords)
+    
     question_keywords = ["comment", "pourquoi", "quoi", "quel", "quelle", "qui", "où", "quand", "?"]
-    if any(kw in message_lower for kw in question_keywords) and "=" not in user_message and "signifie" not in message_lower and "veut dire" not in message_lower and "se dit" not in message_lower:
+    if any(kw in message_lower for kw in question_keywords) and not has_teaching_keyword:
+        print(f"⚠️ Question sans enseignement ignorée: {user_message}")
         return None
     
     # Ne pas enregistrer les phrases trop courtes (< 10 caractères)
     if len(user_message.strip()) < 10:
+        print(f"⚠️ Message trop court ignoré: {user_message}")
         return None
     
     # Ne pas enregistrer les phrases qui commencent par "je veux" sans information
-    if message_lower.startswith("je veux") and "=" not in user_message and "signifie" not in message_lower:
+    if message_lower.startswith("je veux") and not has_teaching_keyword:
+        print(f"⚠️ 'Je veux' sans enseignement ignoré: {user_message}")
         return None
     
     # ============================================
@@ -203,9 +210,11 @@ def teach_api():
                 context=user_message,
                 source='teaching_mode'
             )
-            print(f"✓ Connaissance enregistrée: {question} → {answer}")
+            print(f"✅ Connaissance enregistrée: ID={knowledge_id}, Q='{question}', A='{answer}', Cat={category}, Lang={language}")
         else:
-            print(f"⚠️ Pas d'enseignement détecté dans: {user_message}")
+            print(f"⚠️ Pas d'enseignement détecté dans: '{user_message}'")
+            print(f"   Message contient {len(user_message)} caractères")
+            print(f"   Message lower: '{user_message.lower()}'")
         
         # Obtenir les statistiques
         stats = kb.get_statistics()
