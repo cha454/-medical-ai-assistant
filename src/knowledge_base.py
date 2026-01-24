@@ -70,7 +70,17 @@ class KnowledgeBase:
     def get_connection(self):
         """Retourne une connexion à la base de données"""
         if self.use_postgres:
-            return self.pg8000.connect(self.db_url)
+            # pg8000 nécessite de parser l'URL manuellement
+            # Format: postgresql://user:password@host:port/database
+            import urllib.parse
+            result = urllib.parse.urlparse(self.db_url)
+            return self.pg8000.connect(
+                user=result.username,
+                password=result.password,
+                host=result.hostname,
+                port=result.port or 5432,
+                database=result.path[1:]  # Enlever le / initial
+            )
         else:
             return self.sqlite3.connect(self.db_path)
     
