@@ -1,5 +1,15 @@
 # 📚 Index Complet de la Documentation
 
+## 🚨 URGENT - À LIRE EN PREMIER
+
+### ⚠️ Problème de Persistance (24 Jan 2026)
+- **[LIRE_MAINTENANT_URGENT.md](LIRE_MAINTENANT_URGENT.md)** - ⭐⭐⭐ LIRE EN PREMIER (5 min)
+- **[ETAPES_RAILWAY_POSTGRESQL.md](ETAPES_RAILWAY_POSTGRESQL.md)** - ⭐⭐ Guide visuel 3 étapes
+- **[CORRECTIONS_24_JAN_2026.md](CORRECTIONS_24_JAN_2026.md)** - ⭐ Résumé des corrections
+- **[SOLUTION_PERSISTANCE_POSTGRESQL.md](SOLUTION_PERSISTANCE_POSTGRESQL.md)** - Guide technique complet
+
+---
+
 ## 🎯 Documents Principaux
 
 ### 🚀 Démarrage Rapide
@@ -8,7 +18,8 @@
 - **[README.md](README.md)** - Documentation générale du projet
 
 ### 📋 Récapitulatifs de Session
-- **[SESSION_RECAP_24_JAN_2026.md](SESSION_RECAP_24_JAN_2026.md)** - ⭐ Session actuelle (24 janvier 2026)
+- **[SESSION_COMPLETE_24_JAN_2026.md](SESSION_COMPLETE_24_JAN_2026.md)** - ⭐ Session complète (24 janvier 2026)
+- **[SESSION_RECAP_24_JAN_2026.md](SESSION_RECAP_24_JAN_2026.md)** - Récapitulatif session actuelle
 - **[SESSION_RECAP_23_JAN_2026_FINAL.md](SESSION_RECAP_23_JAN_2026_FINAL.md)** - Session précédente (23 janvier)
 - **[SESSION_RECAP_23_JAN_2026.md](SESSION_RECAP_23_JAN_2026.md)** - Session du 23 janvier (version intermédiaire)
 
@@ -17,6 +28,26 @@
 - **[VERIFICATION_COMPLETE.md](VERIFICATION_COMPLETE.md)** - Vérification complète du système
 - **[VERIFICATION_CODE.md](VERIFICATION_CODE.md)** - Vérification du code
 - **[VALIDATION_TESTS_COMPLETS.md](VALIDATION_TESTS_COMPLETS.md)** - Tests complets de validation
+
+---
+
+## 💾 Base de Connaissances et Persistance
+
+### Documentation Persistance
+- **[LIRE_MAINTENANT_URGENT.md](LIRE_MAINTENANT_URGENT.md)** - ⭐⭐⭐ Guide ultra-rapide (URGENT)
+- **[ETAPES_RAILWAY_POSTGRESQL.md](ETAPES_RAILWAY_POSTGRESQL.md)** - Guide visuel 3 étapes
+- **[CORRECTIONS_24_JAN_2026.md](CORRECTIONS_24_JAN_2026.md)** - Corrections du 24 janvier
+- **[SOLUTION_PERSISTANCE_POSTGRESQL.md](SOLUTION_PERSISTANCE_POSTGRESQL.md)** - Solution technique complète
+- **[RAILWAY_VOLUME_SETUP.md](RAILWAY_VOLUME_SETUP.md)** - Configuration volume (ancienne méthode)
+
+### Gestion des Connaissances
+- **[GUIDE_GESTION_CONNAISSANCES.md](GUIDE_GESTION_CONNAISSANCES.md)** - Guide de gestion
+- **[NETTOYER_BASE_CONNAISSANCES.md](NETTOYER_BASE_CONNAISSANCES.md)** - Nettoyage de la base
+- **[TEST_BASE_CONNAISSANCES.md](TEST_BASE_CONNAISSANCES.md)** - Tests de la base
+
+### Corrections Mode Enseignement
+- **[FIX_ENREGISTREMENT_TEACH.md](FIX_ENREGISTREMENT_TEACH.md)** - Correction enregistrement
+- **[FIX_FORMAT_LANGUE.md](FIX_FORMAT_LANGUE.md)** - Support format langue inversé
 
 ---
 
