@@ -414,27 +414,6 @@ Voulez-vous réessayer avec une description différente ?"""
                 except Exception as e:
                     print(f"Erreur génération d'image: {e}")
                     # Continuer avec le mode normal si erreur
-                    return image_response
-                else:
-                    no_image_response = f"""❌ Désolé, je n'ai pas trouvé d'images pour "{search_query}".
-
-💡 **Suggestions:**
-- Essayez avec des termes plus généraux
-- Vérifiez l'orthographe
-- Utilisez des termes médicaux en français ou anglais
-
-⚠️ **Note:** Pour que la recherche d'images fonctionne, vous devez configurer au moins une clé API:
-- Google Custom Search API (GOOGLE_SEARCH_API_KEY + GOOGLE_SEARCH_CX)
-- Bing Search API (BING_SEARCH_API_KEY)
-- Unsplash API (UNSPLASH_ACCESS_KEY)
-- Pixabay API (PIXABAY_API_KEY)
-
-📚 Consultez le guide GUIDE_RECHERCHE_IMAGES.md pour plus d'informations."""
-                    self._save_response(no_image_response)
-                    return no_image_response
-            except Exception as e:
-                print(f"Erreur recherche d'images: {e}")
-                # Continuer avec le mode normal si erreur
         
         # ============================================
         # DÉTECTION DEMANDE D'EMAIL
