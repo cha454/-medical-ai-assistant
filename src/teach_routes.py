@@ -75,6 +75,8 @@ def extract_knowledge(user_message, ai_response):
             r'^([^\s=]+)\s*=\s*(.+)$',
             # Format: "Nlo signifie fièvre en Fang"
             r'(.+?)\s+(?:signifie|veut dire|se dit|c\'est)\s+(.+?)\s+en\s+(\w+)',
+            # Format: "bonjour en langue fang se dit MBOLO" (NOUVEAU)
+            r'(.+?)\s+en\s+(?:langue\s+)?(\w+)\s+(?:signifie|veut dire|se dit|c\'est)\s+(.+)',
             # Format: "en Fang, Nlo signifie fièvre"
             r'en\s+(\w+),?\s+(.+?)\s+(?:signifie|veut dire|se dit|c\'est)\s+(.+)',
             # Format: "bonjour en Fang = Mbolo"
@@ -114,28 +116,48 @@ def extract_knowledge(user_message, ai_response):
                         answer = f"{term} (en {language})"
                         return (question, answer, category, language)
                     
-                    # Format: "Nlo signifie fièvre en Fang"
+                    # Format: "Nlo signifie fièvre en Fang" OU "bonjour en langue fang se dit MBOLO"
                     elif len(groups) == 3:
-                        if 'en' in message_lower.split()[:5]:
+                        # Déterminer le format en fonction de la position de "en" dans la phrase
+                        words = message_lower.split()
+                        en_position = words.index('en') if 'en' in words else -1
+                        
+                        if en_position >= 0 and en_position < 3:
                             # Format: "en Fang, Nlo signifie fièvre"
                             language = groups[0].strip()
                             term = groups[1].strip()
                             meaning = groups[2].strip()
-                        else:
-                            # Format: "Nlo signifie fièvre en Fang" ou "bonjour en Fang = Mbolo"
-                            if '=' in user_message:
-                                # "bonjour en Fang = Mbolo"
+                        elif 'se dit' in message_lower or 'veut dire' in message_lower or 'signifie' in message_lower:
+                            # Vérifier si "se dit" vient APRÈS "en langue"
+                            se_dit_pos = message_lower.find('se dit')
+                            veut_dire_pos = message_lower.find('veut dire')
+                            signifie_pos = message_lower.find('signifie')
+                            keyword_pos = max(se_dit_pos, veut_dire_pos, signifie_pos)
+                            
+                            if en_position >= 0 and keyword_pos > en_position:
+                                # Format: "bonjour en langue fang se dit MBOLO"
                                 meaning = groups[0].strip()
                                 language = groups[1].strip()
                                 term = groups[2].strip()
                             else:
-                                # "Nlo signifie fièvre en Fang"
+                                # Format: "Nlo signifie fièvre en Fang"
                                 term = groups[0].strip()
                                 meaning = groups[1].strip()
                                 language = groups[2].strip()
+                        elif '=' in user_message:
+                            # Format: "bonjour en Fang = Mbolo"
+                            meaning = groups[0].strip()
+                            language = groups[1].strip()
+                            term = groups[2].strip()
+                        else:
+                            # Format par défaut: "Nlo signifie fièvre en Fang"
+                            term = groups[0].strip()
+                            meaning = groups[1].strip()
+                            language = groups[2].strip()
                         
                         question = f"Comment dit-on {meaning} en {language} ?"
                         answer = term
+                        print(f"✅ Pattern détecté: meaning='{meaning}', term='{term}', language='{language}'")
                         return (question, answer, category, language.lower())
                 
                 elif category == 'medical':
