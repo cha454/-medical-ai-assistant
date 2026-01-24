@@ -123,17 +123,33 @@ class KnowledgeBase:
         conn.close()
     
     def search_knowledge(self, query, category=None, language=None, limit=10):
-        """Recherche dans les connaissances"""
+        """Recherche dans les connaissances avec recherche intelligente"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
+        # Nettoyer et préparer la requête
+        query_lower = query.lower()
+        query_words = query_lower.split()
+        
+        # Construire une recherche flexible
         sql = '''
             SELECT id, category, question, answer, language, context, tags, 
                    confidence, date_created, usage_count
             FROM knowledge
-            WHERE (question LIKE ? OR answer LIKE ? OR context LIKE ?)
+            WHERE (
+                LOWER(question) LIKE ? OR 
+                LOWER(answer) LIKE ? OR 
+                LOWER(context) LIKE ?
         '''
-        params = [f'%{query}%', f'%{query}%', f'%{query}%']
+        params = [f'%{query_lower}%', f'%{query_lower}%', f'%{query_lower}%']
+        
+        # Ajouter une recherche par mots-clés individuels
+        for word in query_words:
+            if len(word) > 3:  # Ignorer les mots trop courts
+                sql += ' OR LOWER(question) LIKE ? OR LOWER(answer) LIKE ?'
+                params.extend([f'%{word}%', f'%{word}%'])
+        
+        sql += ')'
         
         if category:
             sql += ' AND category = ?'
@@ -287,16 +303,23 @@ class KnowledgeBase:
         if not knowledge:
             return ""
         
-        context = "📚 CONNAISSANCES PERSONNALISÉES APPRISES :\n\n"
+        context = "📚 **CONNAISSANCES PERSONNALISÉES APPRISES PAR L'UTILISATEUR** :\n\n"
+        context += "⚠️ IMPORTANT: Ces connaissances ont été enseignées par l'utilisateur. Utilise-les EN PRIORITÉ pour répondre.\n\n"
         
         for k in knowledge:
-            context += f"• {k['question']}\n"
-            context += f"  → {k['answer']}\n"
+            context += f"**Question/Contexte:** {k['question']}\n"
+            context += f"**Réponse apprise:** {k['answer']}\n"
+            context += f"**Catégorie:** {k['category']}\n"
             if k['language'] != 'fr':
-                context += f"  (Langue: {k['language']})\n"
+                context += f"**Langue:** {k['language']}\n"
+            if k.get('context'):
+                context += f"**Contexte additionnel:** {k['context']}\n"
             context += "\n"
         
-        context += "Utilise ces connaissances pour répondre de manière personnalisée.\n"
+        context += "---\n"
+        context += "💡 **INSTRUCTION:** Si la question de l'utilisateur correspond à une de ces connaissances, "
+        context += "réponds en utilisant EXACTEMENT les informations apprises ci-dessus. "
+        context += "L'utilisateur a pris le temps de t'enseigner ces informations, respecte-les !\n"
         context += "---\n\n"
         
         return context
