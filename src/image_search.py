@@ -116,9 +116,20 @@ class MedicalImageSearch:
             "cholestérol": "cholesterol",
             "cholesterol": "cholesterol"
         }
-        
+
         # Traduire la requête si c'est un mot français courant
         search_query = query.lower().strip()
+        # Animaux courants (FR -> EN)
+        animal_translations = {
+            "mouton": "sheep",
+            "brebis": "ewe",
+            "agneau": "lamb",
+            "chèvre": "goat",
+            "chevre": "goat",
+            "bouc": "goat"
+        }
+        # Fusionner
+        translations.update(animal_translations)
         if search_query in translations:
             search_query = translations[search_query]
             print(f"🌍 Traduction: '{query}' → '{search_query}'")
@@ -270,6 +281,11 @@ class MedicalImageSearch:
         """Recherche sur Pixabay API"""
         try:
             url = "https://pixabay.com/api/"
+            # Catégorie animaux si la requête correspond à un animal
+            animal_keywords = {
+                "sheep", "ewe", "lamb", "goat", "horse", "cow", "dog", "cat", "pig",
+                "chicken", "duck", "camel", "bird"
+            }
             params = {
                 "key": self.pixabay_api_key,
                 "q": query,
@@ -277,6 +293,8 @@ class MedicalImageSearch:
                 "safesearch": "true",
                 "image_type": "photo"
             }
+            if query.lower() in animal_keywords:
+                params["category"] = "animals"
             
             response = requests.get(url, params=params, timeout=10)
             if response.status_code == 200:
@@ -359,7 +377,9 @@ class MedicalImageSearch:
         # Patterns courants
         patterns = [
             "image de ", "image d'", "image du ", "image des ", "image d ", "image un ",
+            "images de ", "images d'", "images du ", "images des ", "images d ", "images un ",
             "photo de ", "photo d'", "photo du ", "photo des ", "photo d ", "photo un ",
+            "photos de ", "photos d'", "photos du ", "photos des ", "photos d ", "photos un ",
             "montre-moi ", "montre moi ", "montre-moi une image de ", "montre moi une image de ",
             "voir ", "affiche ", "afficher ",
             "à quoi ressemble ", "ressemble "
