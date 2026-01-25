@@ -119,6 +119,8 @@ class MedicalImageSearch:
 
         # Traduire la requête si c'est un mot français courant
         search_query = query.lower().strip()
+        print(f"🔍 Requête originale: '{query}' → '{search_query}'")
+        
         # Animaux courants (FR -> EN)
         animal_translations = {
             "mouton": "sheep",
@@ -130,8 +132,15 @@ class MedicalImageSearch:
         }
         # Fusionner
         translations.update(animal_translations)
-        if search_query in translations:
-            search_query = translations[search_query]
+        
+        # Vérifier si la requête contient un mot à traduire
+        translated = False
+        for fr_word, en_word in translations.items():
+            if fr_word in search_query:
+                search_query = search_query.replace(fr_word, en_word)
+                translated = True
+        
+        if translated:
             print(f"🌍 Traduction: '{query}' → '{search_query}'")
         
         # Essayer Google Images en priorité
@@ -284,7 +293,8 @@ class MedicalImageSearch:
             # Catégorie animaux si la requête correspond à un animal
             animal_keywords = {
                 "sheep", "ewe", "lamb", "goat", "horse", "cow", "dog", "cat", "pig",
-                "chicken", "duck", "camel", "bird"
+                "chicken", "duck", "camel", "bird", "mouton", "chèvre", "chevre",
+                "cheval", "vache", "chien", "chat", "porc", "poulet", "canard"
             }
             params = {
                 "key": self.pixabay_api_key,
@@ -301,19 +311,42 @@ class MedicalImageSearch:
                 data = response.json()
                 images = []
                 
-                for item in data.get("hits", []):
-                    images.append({
-                        "url": item.get("largeImageURL"),
-                        "thumbnail": item.get("previewURL"),
-                        "title": item.get("tags", ""),
-                        "source_url": item.get("pageURL", ""),
-                        "width": item.get("imageWidth"),
-                        "height": item.get("imageHeight"),
-                        "photographer": item.get("user", "")
-                    })
+                # Filtrer les résultats pour s'assurer qu'ils correspondent à la requête
+                query_words = set(query.lower().split())
                 
-                print(f"✓ Pixabay: {len(images)} images trouvées")
-                return images
+                for item in data.get("hits", []):
+                    # Vérifier que les tags contiennent au moins un mot de la requête
+                    tags = item.get("tags", "").lower()
+                    tags_words = set(tags.replace(",", " ").split())
+                    
+                    # Si la requête est un animal, vérifier que les tags correspondent
+                    if query.lower() in animal_keywords:
+                        # Pour les animaux, être plus strict sur la correspondance
+                        if query.lower() in tags or any(word in tags for word in query_words):
+                            images.append({
+                                "url": item.get("largeImageURL"),
+                                "thumbnail": item.get("previewURL"),
+                                "title": item.get("tags", ""),
+                                "source_url": item.get("pageURL", ""),
+                                "width": item.get("imageWidth"),
+                                "height": item.get("imageHeight"),
+                                "photographer": item.get("user", "")
+                            })
+                    else:
+                        # Pour les autres requêtes, accepter si au moins un mot correspond
+                        if query_words & tags_words:
+                            images.append({
+                                "url": item.get("largeImageURL"),
+                                "thumbnail": item.get("previewURL"),
+                                "title": item.get("tags", ""),
+                                "source_url": item.get("pageURL", ""),
+                                "width": item.get("imageWidth"),
+                                "height": item.get("imageHeight"),
+                                "photographer": item.get("user", "")
+                            })
+                
+                print(f"✓ Pixabay: {len(images)} images trouvées (filtrées de {len(data.get('hits', []))} résultats)")
+                return images[:max_results]  # Limiter au nombre demandé
             else:
                 print(f"Pixabay API Error: {response.status_code}")
         except Exception as e:
@@ -374,13 +407,18 @@ class MedicalImageSearch:
         """Extrait la requête de recherche d'image du texte"""
         text_lower = text.lower()
         
-        # Patterns courants
+        # Patterns courants (ordre important: plus spécifiques en premier)
         patterns = [
+            "je veux les images d'un ", "je veux les images d'une ", "je veux les images du ", "je veux les images de la ", "je veux les images de ",
+            "je veux une image d'un ", "je veux une image d'une ", "je veux une image du ", "je veux une image de la ", "je veux une image de ",
+            "je veux des images d'un ", "je veux des images d'une ", "je veux des images du ", "je veux des images de la ", "je veux des images de ",
+            "montre-moi une image de ", "montre moi une image de ", "montre-moi des images de ", "montre moi des images de ",
+            "montre-moi une image d'", "montre moi une image d'", "montre-moi des images d'", "montre moi des images d'",
+            "montre-moi ", "montre moi ",
             "image de ", "image d'", "image du ", "image des ", "image d ", "image un ",
             "images de ", "images d'", "images du ", "images des ", "images d ", "images un ",
             "photo de ", "photo d'", "photo du ", "photo des ", "photo d ", "photo un ",
             "photos de ", "photos d'", "photos du ", "photos des ", "photos d ", "photos un ",
-            "montre-moi ", "montre moi ", "montre-moi une image de ", "montre moi une image de ",
             "voir ", "affiche ", "afficher ",
             "à quoi ressemble ", "ressemble "
         ]
