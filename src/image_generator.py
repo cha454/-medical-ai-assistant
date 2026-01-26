@@ -127,17 +127,26 @@ class ImageGenerator:
         # Logs de debug
         print(f"🔍 Détection génération d'image pour: '{message[:50]}...'")
         
-        # Mots-clés de génération d'images
+        # Mots-clés de génération d'images (avec toutes les variantes d'orthographe)
         keywords = [
-            'génère', 'génerer', 'genere', 'generer', 'générer',
-            'créer', 'creer', 'créé', 'cree',
-            'dessine', 'dessiner', 'dessiné',
+            # Générer (toutes variantes)
+            'génère', 'génerer', 'générer', 'genere', 'generer', 'génere',
+            'génère moi', 'génère-moi', 'genere moi', 'genere-moi', 'génere moi', 'génere-moi',
+            # Créer (toutes variantes)
+            'créer', 'creer', 'créé', 'cree', 'crée',
+            'crée moi', 'crée-moi', 'cree moi', 'cree-moi',
+            'créer moi', 'créer-moi', 'creer moi', 'creer-moi',
+            # Dessiner (toutes variantes)
+            'dessine', 'dessiner', 'dessiné', 'dessine moi', 'dessine-moi',
+            # Illustrer
             'illustre', 'illustrer', 'illustré',
-            'image de', 'photo de', 'dessin de', 'illustration de',
-            'montre moi', 'montre-moi', 'fais moi', 'fais-moi',
+            # Faire
+            'fais moi', 'fais-moi', 'fait moi', 'fait-moi',
+            # Expressions complètes
             'peux-tu créer', 'peux-tu générer', 'peux tu créer', 'peux tu générer',
+            'peux-tu generer', 'peux tu generer',
             'je veux une image', 'je veux un dessin', 'je veux une photo',
-            'crée moi', 'cree moi', 'génère moi', 'genere moi'
+            'image de', 'photo de', 'dessin de', 'illustration de'
         ]
         
         # Vérifier si le message contient un mot-clé
