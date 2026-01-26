@@ -35,7 +35,7 @@
             padding: 16px 24px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
@@ -53,19 +53,6 @@
             font-size: 18px;
             font-weight: 600;
             color: #f3f4f6;
-        }
-
-        .header-buttons-left {
-            display: flex;
-            flex-direction: row;
-            gap: 8px;
-            margin-left: 8px;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
         }
 
         .btn-icon {
@@ -1019,21 +1006,6 @@
                 gap: 12px;
             }
 
-            /* Cacher les boutons du header sur mobile (ils sont dans le sidebar) */
-            .header-buttons-left {
-                display: none;
-            }
-
-            .header-right {
-                display: none;
-            }
-
-            /* Menu toggle visible sur mobile */
-            .menu-toggle {
-                order: -1;
-                /* Mettre le bouton menu en premier */
-            }
-
             .title {
                 font-size: 16px;
             }
@@ -1363,27 +1335,6 @@
             </button>
             <span class="logo">🏥</span>
             <span class="title">Assistant Médical IA</span>
-            <div class="header-buttons-left">
-                <button class="btn-icon"
-                    onclick="if(typeof chatHistory !== 'undefined') chatHistory.createNewConversation(); else location.reload();"
-                    title="Nouvelle conversation">
-                    ➕ Nouveau
-                </button>
-                <button class="btn-icon"
-                    onclick="if(typeof showHistoryModal !== 'undefined') showHistoryModal(); else alert('Historique non disponible');"
-                    title="Historique des conversations">
-                    📚 Historique
-                </button>
-                <button class="btn-icon" onclick="window.location.href='/teach'"
-                    title="Mode Enseignement - Apprends à l'IA">
-                    🎓 Enseigner
-                </button>
-            </div>
-        </div>
-        <div class="header-right">
-            <button class="btn-icon" onclick="window.location.href='/'" title="Retour">
-                🏠 Accueil
-            </button>
         </div>
     </div>
 
