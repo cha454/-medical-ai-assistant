@@ -1,107 +1,90 @@
-# 🖼️ Correction : Détection des demandes d'images avec "génère"
+# 🖼️ Correction : Séparation Recherche vs Génération d'Images
 
 ## Problème identifié
 
-Quand l'utilisateur demande "génère moi un chat rose", l'IA ne détectait pas que c'était une demande d'**images** et répondait avec du texte et des liens au lieu d'afficher directement les images.
+Les mots-clés "génère", "crée", "dessine" étaient ajoutés à la **recherche d'images**, ce qui causait une confusion entre :
+- **Recherche d'images** : Chercher des images existantes sur le web (Pixabay, Google)
+- **Génération d'images** : Créer une nouvelle image avec IA (DALL-E)
 
-## Cause du problème
+## Différence importante
 
-Le mot "génère" (et ses variantes) n'était pas dans la liste des mots-clés de détection d'images dans `image_search.py`.
+### 1. Recherche d'images (ce qui existe déjà)
+- "montre-moi un chat rose" → Cherche des images sur Pixabay/Google
+- "je veux les images d'un mouton" → Affiche des images existantes
+- **Module** : `image_search.py`
+
+### 2. Génération d'images (ce qui existe aussi)
+- "génère-moi un chat rose" → **CRÉER** une nouvelle image avec DALL-E
+- "dessine-moi un dragon" → L'IA dessine une image unique
+- **Module** : `image_generator.py`
 
 ## Solution appliquée
 
-### 1. Ajout de nouveaux mots-clés de détection
+### Correction dans `image_search.py`
 
-**Fichier**: `src/image_search.py` - fonction `__init__()`
+**Mots-clés RETIRÉS de la recherche :**
+- ❌ "génère", "genere", "génère-moi", "genere-moi"
+- ❌ "crée", "cree", "crée-moi", "cree-moi"
+- ❌ "dessine", "dessine-moi"
 
-Ajout des mots-clés manquants :
+**Mots-clés GARDÉS pour la recherche :**
+- ✅ "image", "photo", "picture", "illustration"
+- ✅ "montre-moi", "montre moi", "voir", "affiche"
+- ✅ "trouve", "trouve-moi", "cherche", "cherche-moi"
+- ✅ "à quoi ressemble", "ressemble"
+
+### Mots-clés dans `image_generator.py` (déjà corrects)
+
+**Mots-clés pour la GÉNÉRATION :**
+- ✅ "génère", "générer", "genere", "generer"
+- ✅ "créer", "creer", "créé", "cree"
+- ✅ "dessine", "dessiner", "dessiné"
+- ✅ "illustre", "illustrer"
+- ✅ "crée moi", "génère moi"
+
+## Ordre de détection dans le chatbot
+
 ```python
-self.image_keywords = [
-    "image", "photo", "picture", "img", "illustration",
-    "montre-moi", "montre moi", "voir", "affiche", "afficher",
-    "à quoi ressemble", "ressemble", "apparence", "aspect",
-    # NOUVEAUX mots-clés ajoutés :
-    "génère", "genere", "génère-moi", "genere-moi", "génère moi", "genere moi",
-    "crée", "cree", "crée-moi", "cree-moi", "crée moi", "cree moi",
-    "dessine", "dessine-moi", "dessine moi",
-    "trouve", "trouve-moi", "trouve moi",
-    "cherche", "cherche-moi", "cherche moi"
-]
+# 1. RECHERCHE d'images (image_search.py)
+if image_search.is_image_request(user_input):
+    # Cherche sur Pixabay/Google
+    
+# 2. GÉNÉRATION d'images (image_generator.py)
+if image_generator.detect_image_request(user_input):
+    # Génère avec DALL-E
 ```
 
-### 2. Amélioration de l'extraction de requête
+## Exemples corrects maintenant
 
-**Fichier**: `src/image_search.py` - fonction `extract_query_from_request()`
+### Recherche d'images (web)
+- ✅ "montre-moi un chat rose" → Cherche sur Pixabay
+- ✅ "je veux les images d'un mouton" → Cherche sur Google
+- ✅ "trouve-moi un arbre" → Cherche des images existantes
+- ✅ "à quoi ressemble un lion" → Cherche des photos
 
-Ajout de patterns pour extraire correctement la requête :
-```python
-patterns = [
-    # NOUVEAUX patterns en premier (plus spécifiques)
-    "génère-moi un ", "genere-moi un ", "génère moi un ", "genere moi un ",
-    "génère-moi une ", "genere-moi une ", "génère moi une ", "genere moi une ",
-    "génère un ", "genere un ", "génère une ", "genere une ",
-    "crée-moi un ", "cree-moi un ", "crée moi un ", "cree moi un ",
-    "crée-moi une ", "cree-moi une ", "crée moi une ", "cree moi une ",
-    "dessine-moi un ", "dessine moi un ", "dessine-moi une ", "dessine moi une ",
-    "trouve-moi un ", "trouve moi un ", "trouve-moi une ", "trouve moi une ",
-    "cherche-moi un ", "cherche moi un ", "cherche-moi une ", "cherche moi une ",
-    # ... patterns existants
-]
-```
+### Génération d'images (IA)
+- ✅ "génère-moi un chat rose" → Crée avec DALL-E
+- ✅ "crée-moi un dragon" → Génère une nouvelle image
+- ✅ "dessine-moi une maison" → Dessine avec IA
+- ✅ "peux-tu créer un paysage" → Génère avec DALL-E
 
-## Exemples de requêtes qui fonctionnent maintenant
+## Configuration requise
 
-### Avant (ne fonctionnait pas)
-- ❌ "génère moi un chat rose" → Réponse texte avec liens
-- ❌ "crée moi un chien" → Réponse texte avec liens
-- ❌ "dessine moi une maison" → Réponse texte avec liens
+Pour que la génération d'images fonctionne, il faut :
+1. Clé API OpenAI dans `.env` : `CLE_API_OPENAI=sk-...`
+2. Module `openai` installé : `pip install openai`
 
-### Après (fonctionne correctement)
-- ✅ "génère moi un chat rose" → Affiche 6 images de chats roses
-- ✅ "crée moi un chien" → Affiche 6 images de chiens
-- ✅ "dessine moi une maison" → Affiche 6 images de maisons
-- ✅ "trouve moi un arbre" → Affiche 6 images d'arbres
-- ✅ "cherche moi un mouton" → Affiche 6 images de moutons
-
-## Test
-
-Pour tester la correction :
-
-1. Démarrer l'application : `python app.py`
-2. Dans le chat, taper : "génère moi un chat rose"
-3. Vérifier que 6 images de chats roses s'affichent directement
-
-### Autres exemples à tester
-
-- "génère-moi un cheval blanc"
-- "crée moi une fleur rouge"
-- "dessine-moi un paysage"
-- "trouve moi un lion"
-- "cherche moi un éléphant"
-
-## Résultat attendu
-
-Maintenant, quand vous demandez "génère moi un chat rose" :
-1. Le système détecte que c'est une demande d'image (grâce à "génère")
-2. Il extrait "chat rose" de la phrase
-3. Il traduit "chat" en "cat" et cherche "cat rose" (ou "pink cat")
-4. Il affiche 6 images directement dans le chat
-5. Pas de réponse texte avec des liens
-
-## Avantages
-
-- ✅ Détection plus naturelle des demandes d'images
-- ✅ Support de multiples verbes d'action (génère, crée, dessine, trouve, cherche)
-- ✅ Avec ou sans tiret (génère-moi / génère moi)
-- ✅ Avec ou sans accent (génère / genere)
-- ✅ Expérience utilisateur améliorée
+Si la clé n'est pas configurée, seule la recherche d'images fonctionnera.
 
 ## Fichiers modifiés
 
-- ✅ `src/image_search.py` - Ajout mots-clés et patterns
+- ✅ `src/image_search.py` - Retrait des mots-clés de génération
+- ✅ `src/image_generator.py` - Déjà correct (pas de modification)
 
-## Notes
+## Résultat
 
-- Les mots-clés sont en minuscules car le texte est converti en lowercase avant la détection
-- Les patterns sont ordonnés du plus spécifique au plus général
-- La traduction français → anglais fonctionne toujours (chat → cat, etc.)
+Maintenant, les deux fonctionnalités sont bien séparées :
+- **"montre-moi"** → Recherche sur le web
+- **"génère-moi"** → Création avec IA
+
+Plus de confusion ! 🎉

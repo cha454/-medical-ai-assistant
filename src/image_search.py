@@ -17,14 +17,11 @@ class MedicalImageSearch:
         self.unsplash_api_key = os.environ.get('UNSPLASH_ACCESS_KEY')
         self.pixabay_api_key = os.environ.get('PIXABAY_API_KEY')
         
-        # Mots-clés pour détecter une demande d'image
+        # Mots-clés pour détecter une demande d'image (RECHERCHE uniquement)
         self.image_keywords = [
             "image", "photo", "picture", "img", "illustration",
             "montre-moi", "montre moi", "voir", "affiche", "afficher",
             "à quoi ressemble", "ressemble", "apparence", "aspect",
-            "génère", "genere", "génère-moi", "genere-moi", "génère moi", "genere moi",
-            "crée", "cree", "crée-moi", "cree-moi", "crée moi", "cree moi",
-            "dessine", "dessine-moi", "dessine moi",
             "trouve", "trouve-moi", "trouve moi",
             "cherche", "cherche-moi", "cherche moi"
         ]
@@ -412,16 +409,8 @@ class MedicalImageSearch:
         """Extrait la requête de recherche d'image du texte"""
         text_lower = text.lower()
         
-        # Patterns courants (ordre important: plus spécifiques en premier)
+        # Patterns courants pour RECHERCHE d'images (ordre important: plus spécifiques en premier)
         patterns = [
-            "génère-moi un ", "genere-moi un ", "génère moi un ", "genere moi un ",
-            "génère-moi une ", "genere-moi une ", "génère moi une ", "genere moi une ",
-            "génère un ", "genere un ", "génère une ", "genere une ",
-            "crée-moi un ", "cree-moi un ", "crée moi un ", "cree moi un ",
-            "crée-moi une ", "cree-moi une ", "crée moi une ", "cree moi une ",
-            "crée un ", "cree un ", "crée une ", "cree une ",
-            "dessine-moi un ", "dessine moi un ", "dessine-moi une ", "dessine moi une ",
-            "dessine un ", "dessine une ",
             "trouve-moi un ", "trouve moi un ", "trouve-moi une ", "trouve moi une ",
             "trouve un ", "trouve une ",
             "cherche-moi un ", "cherche moi un ", "cherche-moi une ", "cherche moi une ",
