@@ -21,7 +21,12 @@ class MedicalImageSearch:
         self.image_keywords = [
             "image", "photo", "picture", "img", "illustration",
             "montre-moi", "montre moi", "voir", "affiche", "afficher",
-            "à quoi ressemble", "ressemble", "apparence", "aspect"
+            "à quoi ressemble", "ressemble", "apparence", "aspect",
+            "génère", "genere", "génère-moi", "genere-moi", "génère moi", "genere moi",
+            "crée", "cree", "crée-moi", "cree-moi", "crée moi", "cree moi",
+            "dessine", "dessine-moi", "dessine moi",
+            "trouve", "trouve-moi", "trouve moi",
+            "cherche", "cherche-moi", "cherche moi"
         ]
     
     def is_image_request(self, text: str) -> bool:
@@ -409,6 +414,18 @@ class MedicalImageSearch:
         
         # Patterns courants (ordre important: plus spécifiques en premier)
         patterns = [
+            "génère-moi un ", "genere-moi un ", "génère moi un ", "genere moi un ",
+            "génère-moi une ", "genere-moi une ", "génère moi une ", "genere moi une ",
+            "génère un ", "genere un ", "génère une ", "genere une ",
+            "crée-moi un ", "cree-moi un ", "crée moi un ", "cree moi un ",
+            "crée-moi une ", "cree-moi une ", "crée moi une ", "cree moi une ",
+            "crée un ", "cree un ", "crée une ", "cree une ",
+            "dessine-moi un ", "dessine moi un ", "dessine-moi une ", "dessine moi une ",
+            "dessine un ", "dessine une ",
+            "trouve-moi un ", "trouve moi un ", "trouve-moi une ", "trouve moi une ",
+            "trouve un ", "trouve une ",
+            "cherche-moi un ", "cherche moi un ", "cherche-moi une ", "cherche moi une ",
+            "cherche un ", "cherche une ",
             "je veux les images d'un ", "je veux les images d'une ", "je veux les images du ", "je veux les images de la ", "je veux les images de ",
             "je veux une image d'un ", "je veux une image d'une ", "je veux une image du ", "je veux une image de la ", "je veux une image de ",
             "je veux des images d'un ", "je veux des images d'une ", "je veux des images du ", "je veux des images de la ", "je veux des images de ",
