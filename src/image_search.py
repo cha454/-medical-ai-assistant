@@ -132,12 +132,62 @@ class MedicalImageSearch:
             "chevre": "goat",
             "bouc": "goat"
         }
-        # Fusionner
+        
+        # Véhicules et objets courants (FR -> EN)
+        vehicle_translations = {
+            "avion": "airplane",
+            "avion de guerre": "fighter jet",
+            "avion de chasse": "fighter jet",
+            "hélicoptère": "helicopter",
+            "helicoptere": "helicopter",
+            "voiture": "car",
+            "camion": "truck",
+            "bateau": "boat",
+            "navire": "ship",
+            "train": "train",
+            "vélo": "bicycle",
+            "velo": "bicycle",
+            "moto": "motorcycle",
+            "bus": "bus"
+        }
+        
+        # Objets et concepts généraux (FR -> EN)
+        general_translations = {
+            "maison": "house",
+            "arbre": "tree",
+            "fleur": "flower",
+            "montagne": "mountain",
+            "mer": "sea",
+            "océan": "ocean",
+            "ocean": "ocean",
+            "rivière": "river",
+            "riviere": "river",
+            "forêt": "forest",
+            "foret": "forest",
+            "ville": "city",
+            "route": "road",
+            "pont": "bridge",
+            "ciel": "sky",
+            "nuage": "cloud",
+            "soleil": "sun",
+            "lune": "moon",
+            "étoile": "star",
+            "etoile": "star",
+            "guerre": "war",
+            "militaire": "military",
+            "soldat": "soldier",
+            "arme": "weapon"
+        }
+        
+        # Fusionner toutes les traductions
         translations.update(animal_translations)
+        translations.update(vehicle_translations)
+        translations.update(general_translations)
         
         # Vérifier si la requête contient un mot à traduire
+        # Trier par longueur décroissante pour traduire les expressions composées en premier
         translated = False
-        for fr_word, en_word in translations.items():
+        for fr_word, en_word in sorted(translations.items(), key=lambda x: len(x[0]), reverse=True):
             if fr_word in search_query:
                 search_query = search_query.replace(fr_word, en_word)
                 translated = True
