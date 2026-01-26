@@ -8,6 +8,14 @@ import os
 from urllib.parse import quote
 from typing import List, Dict, Any
 
+# Import du LLM pour traduction automatique
+try:
+    from llm_provider import llm_provider
+    LLM_AVAILABLE = llm_provider.is_available()
+except ImportError:
+    LLM_AVAILABLE = False
+    llm_provider = None
+
 class MedicalImageSearch:
     def __init__(self):
         # Clés API
@@ -16,6 +24,9 @@ class MedicalImageSearch:
         self.bing_api_key = os.environ.get('BING_SEARCH_API_KEY')
         self.unsplash_api_key = os.environ.get('UNSPLASH_ACCESS_KEY')
         self.pixabay_api_key = os.environ.get('PIXABAY_API_KEY')
+        
+        # LLM pour traduction automatique
+        self.llm_available = LLM_AVAILABLE
         
         # Mots-clés pour détecter une demande d'image (RECHERCHE uniquement)
         self.image_keywords = [
@@ -26,174 +37,63 @@ class MedicalImageSearch:
             "cherche", "cherche-moi", "cherche moi"
         ]
     
+    def translate_to_english(self, text: str) -> str:
+        """Traduit automatiquement le texte en anglais avec l'IA"""
+        if not self.llm_available or not llm_provider:
+            print("⚠️ LLM non disponible pour traduction, utilisation du texte original")
+            return text
+        
+        try:
+            prompt = f"""Traduis cette requête de recherche d'image en anglais. 
+Réponds UNIQUEMENT avec la traduction, sans explication.
+Si c'est déjà en anglais, répète-le tel quel.
+
+Requête: {text}
+Traduction:"""
+            
+            response = llm_provider.generate_response(prompt, language="en")
+            translation = response.strip()
+            
+            # Nettoyer la réponse (enlever guillemets, points, etc.)
+            translation = translation.strip('"\'.,;!? ')
+            
+            print(f"🌍 Traduction IA: '{text}' → '{translation}'")
+            return translation
+        except Exception as e:
+            print(f"⚠️ Erreur traduction IA: {e}")
+            return text
+    
     def is_image_request(self, text: str) -> bool:
         """Détecte si l'utilisateur demande une image"""
         text_lower = text.lower()
         return any(keyword in text_lower for keyword in self.image_keywords)
     
     def search_images(self, query: str, max_results: int = 6) -> Dict[str, Any]:
-        """Recherche des images médicales"""
+        """Recherche des images"""
         results = {
             "query": query,
             "images": [],
             "source": None
         }
         
-        # Traduction simple français -> anglais pour mots courants
-        translations = {
-            "chat": "cat",
-            "chien": "dog",
-            "cœur": "heart",
-            "coeur": "heart",
-            "poumons": "lungs",
-            "poumon": "lung",
-            "cerveau": "brain",
-            "foie": "liver",
-            "rein": "kidney",
-            "reins": "kidneys",
-            "estomac": "stomach",
-            "intestin": "intestine",
-            "os": "bone",
-            "muscle": "muscle",
-            "sang": "blood",
-            "peau": "skin",
-            "œil": "eye",
-            "oeil": "eye",
-            "yeux": "eyes",
-            "oreille": "ear",
-            "nez": "nose",
-            "bouche": "mouth",
-            "dent": "tooth",
-            "dents": "teeth",
-            "main": "hand",
-            "pied": "foot",
-            "jambe": "leg",
-            "bras": "arm",
-            "tête": "head",
-            "tete": "head",
-            "corps": "body",
-            "cellule": "cell",
-            "cellules": "cells",
-            "virus": "virus",
-            "bactérie": "bacteria",
-            "bacterie": "bacteria",
-            "maladie": "disease",
-            "symptôme": "symptom",
-            "symptome": "symptom",
-            "traitement": "treatment",
-            "médicament": "medicine",
-            "medicament": "medicine",
-            "hôpital": "hospital",
-            "hopital": "hospital",
-            "médecin": "doctor",
-            "medecin": "doctor",
-            "infirmière": "nurse",
-            "infirmiere": "nurse",
-            "patient": "patient",
-            "chirurgie": "surgery",
-            "opération": "operation",
-            "operation": "operation",
-            "radiographie": "x-ray",
-            "scanner": "ct scan",
-            "irm": "mri",
-            "échographie": "ultrasound",
-            "echographie": "ultrasound",
-            "fracture": "fracture",
-            "blessure": "injury",
-            "douleur": "pain",
-            "fièvre": "fever",
-            "fievre": "fever",
-            "toux": "cough",
-            "rhume": "cold",
-            "grippe": "flu",
-            "diabète": "diabetes",
-            "diabete": "diabetes",
-            "cancer": "cancer",
-            "tumeur": "tumor",
-            "infection": "infection",
-            "inflammation": "inflammation",
-            "allergie": "allergy",
-            "asthme": "asthma",
-            "hypertension": "hypertension",
-            "cholestérol": "cholesterol",
-            "cholesterol": "cholesterol"
-        }
-
-        # Traduire la requête si c'est un mot français courant
+        # Traduire la requête en anglais avec l'IA
         search_query = query.lower().strip()
-        print(f"🔍 Requête originale: '{query}' → '{search_query}'")
+        print(f"🔍 Requête originale: '{query}'")
         
-        # Animaux courants (FR -> EN)
-        animal_translations = {
-            "mouton": "sheep",
-            "brebis": "ewe",
-            "agneau": "lamb",
-            "chèvre": "goat",
-            "chevre": "goat",
-            "bouc": "goat"
-        }
-        
-        # Véhicules et objets courants (FR -> EN)
-        vehicle_translations = {
-            "avion": "airplane",
-            "avion de guerre": "fighter jet",
-            "avion de chasse": "fighter jet",
-            "hélicoptère": "helicopter",
-            "helicoptere": "helicopter",
-            "voiture": "car",
-            "camion": "truck",
-            "bateau": "boat",
-            "navire": "ship",
-            "train": "train",
-            "vélo": "bicycle",
-            "velo": "bicycle",
-            "moto": "motorcycle",
-            "bus": "bus"
-        }
-        
-        # Objets et concepts généraux (FR -> EN)
-        general_translations = {
-            "maison": "house",
-            "arbre": "tree",
-            "fleur": "flower",
-            "montagne": "mountain",
-            "mer": "sea",
-            "océan": "ocean",
-            "ocean": "ocean",
-            "rivière": "river",
-            "riviere": "river",
-            "forêt": "forest",
-            "foret": "forest",
-            "ville": "city",
-            "route": "road",
-            "pont": "bridge",
-            "ciel": "sky",
-            "nuage": "cloud",
-            "soleil": "sun",
-            "lune": "moon",
-            "étoile": "star",
-            "etoile": "star",
-            "guerre": "war",
-            "militaire": "military",
-            "soldat": "soldier",
-            "arme": "weapon"
-        }
-        
-        # Fusionner toutes les traductions
-        translations.update(animal_translations)
-        translations.update(vehicle_translations)
-        translations.update(general_translations)
-        
-        # Vérifier si la requête contient un mot à traduire
-        # Trier par longueur décroissante pour traduire les expressions composées en premier
-        translated = False
-        for fr_word, en_word in sorted(translations.items(), key=lambda x: len(x[0]), reverse=True):
-            if fr_word in search_query:
-                search_query = search_query.replace(fr_word, en_word)
-                translated = True
-        
-        if translated:
-            print(f"🌍 Traduction: '{query}' → '{search_query}'")
+        # Utiliser la traduction IA si disponible
+        if self.llm_available:
+            search_query = self.translate_to_english(search_query)
+        else:
+            # Fallback: traduction par dictionnaire (ancien système)
+            print("⚠️ Utilisation du dictionnaire de traduction (fallback)")
+            translations = self._get_translation_dict()
+            
+            # Trier par longueur décroissante pour traduire les expressions composées en premier
+            for fr_word, en_word in sorted(translations.items(), key=lambda x: len(x[0]), reverse=True):
+                if fr_word in search_query:
+                    search_query = search_query.replace(fr_word, en_word)
+            
+            print(f"🌍 Traduction dictionnaire: '{query}' → '{search_query}'")
         
         # Essayer Google Images en priorité
         if self.google_api_key and self.google_cx:
@@ -228,6 +128,17 @@ class MedicalImageSearch:
                 return results
         
         return results
+    
+    def _get_translation_dict(self) -> dict:
+        """Retourne le dictionnaire de traduction (fallback si LLM indisponible)"""
+        translations = {
+            "chat": "cat", "chien": "dog", "mouton": "sheep",
+            "avion": "airplane", "avion de guerre": "fighter jet",
+            "maison": "house", "arbre": "tree", "fleur": "flower",
+            "montagne": "mountain", "mer": "sea", "guerre": "war",
+            # Ajoutez d'autres traductions courantes si nécessaire
+        }
+        return translations
     
     def _search_google_images(self, query: str, max_results: int) -> List[Dict[str, Any]]:
         """Recherche sur Google Images API"""
