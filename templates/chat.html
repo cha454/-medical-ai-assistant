@@ -608,64 +608,191 @@
             cursor: not-allowed;
         }
 
-        /* Bouton Vocal Principal Style Siri */
+        /* Bouton Vocal Principal - Design Moderne et Professionnel */
         .btn-voice-siri-main {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
-            padding: 14px;
+            padding: 0;
             border-radius: 50%;
-            width: 56px;
-            height: 56px;
+            width: 64px;
+            height: 64px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            overflow: visible;
+            box-shadow:
+                0 8px 24px rgba(102, 126, 234, 0.4),
+                0 4px 12px rgba(102, 126, 234, 0.3),
+                inset 0 -2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Effet de glow autour du bouton */
+        .btn-voice-siri-main::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: -1;
+            filter: blur(12px);
+        }
+
+        .btn-voice-siri-main:hover::before {
+            opacity: 0.6;
+        }
+
+        /* Cercle d'onde au hover */
+        .btn-voice-siri-main::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid rgba(102, 126, 234, 0.5);
+            opacity: 0;
+            transition: all 0.4s ease;
         }
 
         .btn-voice-siri-main:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            transform: scale(1.08);
+            box-shadow:
+                0 12px 32px rgba(102, 126, 234, 0.5),
+                0 6px 16px rgba(102, 126, 234, 0.4),
+                inset 0 -2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-voice-siri-main:hover::after {
+            opacity: 1;
+            width: 120%;
+            height: 120%;
         }
 
         .btn-voice-siri-main:active {
-            transform: scale(0.95);
+            transform: scale(0.96);
         }
 
         .btn-voice-siri-main .voice-icon {
-            font-size: 24px;
+            font-size: 28px;
             z-index: 2;
             transition: all 0.3s ease;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
         }
 
+        /* État Listening (Enregistrement) - Rouge avec animation */
         .btn-voice-siri-main.listening {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            animation: pulse-red 1.5s ease-in-out infinite;
+            animation: pulse-listening 1.5s ease-in-out infinite;
+            box-shadow:
+                0 8px 24px rgba(239, 68, 68, 0.5),
+                0 4px 12px rgba(239, 68, 68, 0.4),
+                0 0 0 0 rgba(239, 68, 68, 0.7);
         }
 
+        .btn-voice-siri-main.listening::before {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            opacity: 0.8;
+        }
+
+        /* État Speaking (Parle) - Vert avec animation */
         .btn-voice-siri-main.speaking {
             background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            animation: pulse-green 1.5s ease-in-out infinite;
+            animation: pulse-speaking 1.2s ease-in-out infinite;
+            box-shadow:
+                0 8px 24px rgba(34, 197, 94, 0.5),
+                0 4px 12px rgba(34, 197, 94, 0.4);
         }
 
+        .btn-voice-siri-main.speaking::before {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            opacity: 0.8;
+        }
+
+        /* État Hands-free (Mode continu) - Bleu avec glow */
         .btn-voice-siri-main.hands-free {
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+            box-shadow:
+                0 8px 24px rgba(59, 130, 246, 0.5),
+                0 4px 12px rgba(59, 130, 246, 0.4),
+                0 0 0 4px rgba(59, 130, 246, 0.3);
+            animation: pulse-hands-free 2s ease-in-out infinite;
         }
 
-        /* Visualiseur Audio Inline */
+        /* Animations améliorées */
+        @keyframes pulse-listening {
+
+            0%,
+            100% {
+                box-shadow:
+                    0 8px 24px rgba(239, 68, 68, 0.5),
+                    0 4px 12px rgba(239, 68, 68, 0.4),
+                    0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            50% {
+                box-shadow:
+                    0 8px 24px rgba(239, 68, 68, 0.6),
+                    0 4px 12px rgba(239, 68, 68, 0.5),
+                    0 0 0 12px rgba(239, 68, 68, 0);
+            }
+        }
+
+        @keyframes pulse-speaking {
+
+            0%,
+            100% {
+                box-shadow:
+                    0 8px 24px rgba(34, 197, 94, 0.5),
+                    0 4px 12px rgba(34, 197, 94, 0.4);
+                transform: scale(1);
+            }
+
+            50% {
+                box-shadow:
+                    0 12px 32px rgba(34, 197, 94, 0.6),
+                    0 6px 16px rgba(34, 197, 94, 0.5);
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes pulse-hands-free {
+
+            0%,
+            100% {
+                box-shadow:
+                    0 8px 24px rgba(59, 130, 246, 0.5),
+                    0 4px 12px rgba(59, 130, 246, 0.4),
+                    0 0 0 4px rgba(59, 130, 246, 0.3);
+            }
+
+            50% {
+                box-shadow:
+                    0 8px 24px rgba(59, 130, 246, 0.6),
+                    0 4px 12px rgba(59, 130, 246, 0.5),
+                    0 0 0 8px rgba(59, 130, 246, 0.2);
+            }
+        }
+
+        /* Visualiseur Audio Inline - Amélioré */
         .audio-visualizer-inline {
             position: absolute;
-            bottom: 4px;
+            bottom: 6px;
             left: 50%;
             transform: translateX(-50%);
             display: none;
-            gap: 2px;
+            gap: 3px;
             align-items: flex-end;
-            height: 12px;
+            height: 14px;
             z-index: 1;
         }
 
@@ -675,9 +802,11 @@
         }
 
         .audio-visualizer-inline .audio-bar {
-            width: 2px;
-            background: white;
-            border-radius: 1px;
+            width: 3px;
+            background: linear-gradient(to top, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 1));
+            border-radius: 2px;
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+
             animation: audioWave 0.8s ease-in-out infinite;
         }
 
@@ -717,28 +846,73 @@
             }
         }
 
-        /* Bouton STOP pour arrêter la synthèse vocale */
+        /* Bouton STOP pour arrêter la synthèse vocale - Design amélioré */
         .btn-stop-speaking {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             border: none;
-            padding: 10px 16px;
-            border-radius: 10px;
+            padding: 12px 20px;
+            border-radius: 12px;
             color: white;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 14px;
-            animation: pulse-red-btn 1.5s ease-in-out infinite;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+            animation: pulse-stop-btn 1.5s ease-in-out infinite;
+            box-shadow:
+                0 6px 16px rgba(239, 68, 68, 0.4),
+                0 3px 8px rgba(239, 68, 68, 0.3),
+                inset 0 -2px 6px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-stop-speaking::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+            filter: blur(8px);
         }
 
         .btn-stop-speaking:hover {
             transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+            box-shadow:
+                0 8px 24px rgba(239, 68, 68, 0.5),
+                0 4px 12px rgba(239, 68, 68, 0.4),
+                inset 0 -2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-stop-speaking:hover::before {
+            opacity: 0.6;
         }
 
         .btn-stop-speaking:active {
-            transform: scale(0.95);
+            transform: scale(0.96);
+        }
+
+        @keyframes pulse-stop-btn {
+
+            0%,
+            100% {
+                box-shadow:
+                    0 6px 16px rgba(239, 68, 68, 0.4),
+                    0 3px 8px rgba(239, 68, 68, 0.3),
+                    inset 0 -2px 6px rgba(0, 0, 0, 0.2);
+            }
+
+            50% {
+                box-shadow:
+                    0 8px 24px rgba(239, 68, 68, 0.5),
+                    0 4px 12px rgba(239, 68, 68, 0.4),
+                    inset 0 -2px 6px rgba(0, 0, 0, 0.2);
+            }
         }
 
         @keyframes pulse-red-btn {
@@ -1074,6 +1248,21 @@
                 /* Taille minimale recommandée pour touch */
             }
 
+            /* Bouton vocal adapté mobile */
+            .btn-voice-siri-main {
+                width: 60px;
+                height: 60px;
+            }
+
+            .btn-voice-siri-main .voice-icon {
+                font-size: 26px;
+            }
+
+            .btn-stop-speaking {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+
             /* Menu contextuel adapté mobile */
             .context-menu {
                 min-width: 180px;
@@ -1102,6 +1291,16 @@
 
             .title {
                 font-size: 14px;
+            }
+
+            /* Bouton vocal plus petit sur très petits écrans */
+            .btn-voice-siri-main {
+                width: 56px;
+                height: 56px;
+            }
+
+            .btn-voice-siri-main .voice-icon {
+                font-size: 24px;
             }
 
             .messages {
