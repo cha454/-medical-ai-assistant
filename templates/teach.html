@@ -99,6 +99,154 @@
             color: #c7d2fe;
         }
 
+        /* Menu Hamburger Button */
+        .menu-toggle {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 44px;
+            min-height: 44px;
+        }
+
+        .menu-toggle:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .menu-toggle:active {
+            transform: scale(0.95);
+        }
+
+        /* Sidebar Menu */
+        .sidebar-menu {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(102, 126, 234, 0.2);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+            transition: left 0.3s ease;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-menu.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f3f4f6;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-close {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+            color: #ef4444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-close:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            padding: 16px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            color: #f3f4f6;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .sidebar-item:active {
+            transform: translateX(5px) scale(0.98);
+        }
+
+        .sidebar-item-icon {
+            font-size: 24px;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .sidebar-item-text {
+            font-weight: 500;
+        }
+
+        /* Overlay pour fermer le menu */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 9998;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
         .chat-container {
             flex: 1;
             display: flex;
@@ -381,8 +529,22 @@
                 padding: 12px 16px;
             }
 
+            .header-left {
+                gap: 12px;
+            }
+
             .title {
                 font-size: 16px;
+            }
+
+            /* Sidebar pleine largeur sur mobile */
+            .sidebar-menu {
+                width: 85%;
+                left: -85%;
+            }
+
+            .sidebar-menu.open {
+                left: 0;
             }
 
             .messages {
@@ -467,14 +629,27 @@
 
             .btn,
             .send-button,
-            .suggestion-card {
+            .suggestion-card,
+            .sidebar-item {
                 -webkit-tap-highlight-color: rgba(102, 126, 234, 0.2);
             }
 
             .btn:active,
-            .suggestion-card:active {
+            .suggestion-card:active,
+            .sidebar-item:active {
                 transform: scale(0.98);
             }
+        }
+
+        .send-button,
+        .suggestion-card {
+            -webkit-tap-highlight-color: rgba(102, 126, 234, 0.2);
+        }
+
+        .btn:active,
+        .suggestion-card:active {
+            transform: scale(0.98);
+        }
         }
     </style>
 </head>
@@ -482,6 +657,9 @@
 <body>
     <div class="header">
         <div class="header-left">
+            <button class="menu-toggle" onclick="toggleSidebar()" title="Menu">
+                ☰
+            </button>
             <span class="logo">🎓</span>
             <div class="title-section">
                 <div class="title">Mode Enseignement</div>
@@ -494,9 +672,33 @@
                 </div>
             </div>
         </div>
-        <div class="header-right">
-            <a href="/knowledge" class="btn-header">📚 Voir les connaissances</a>
-            <a href="/chat" class="btn-header">🏠 Retour au chat</a>
+    </div>
+
+    <!-- Sidebar Menu -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar-menu" id="sidebarMenu">
+        <div class="sidebar-header">
+            <div class="sidebar-title">
+                <span>🎓</span>
+                <span>Menu</span>
+            </div>
+            <button class="sidebar-close" onclick="toggleSidebar()" title="Fermer">
+                ✕
+            </button>
+        </div>
+        <div class="sidebar-content">
+            <a href="/knowledge" class="sidebar-item">
+                <span class="sidebar-item-icon">📚</span>
+                <span class="sidebar-item-text">Voir les connaissances</span>
+            </a>
+            <a href="/chat" class="sidebar-item">
+                <span class="sidebar-item-icon">💬</span>
+                <span class="sidebar-item-text">Retour au chat</span>
+            </a>
+            <a href="/" class="sidebar-item">
+                <span class="sidebar-item-icon">🏠</span>
+                <span class="sidebar-item-text">Accueil</span>
+            </a>
         </div>
     </div>
 
@@ -698,6 +900,30 @@
         window.addEventListener('load', () => {
             loadStats();
             document.getElementById('messageInput').focus();
+        });
+    </script>
+
+    <!-- Sidebar Menu Script -->
+    <script>
+        // Toggle Sidebar Menu
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebarMenu');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        // Fermer le sidebar avec la touche Escape
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                const sidebar = document.getElementById('sidebarMenu');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (sidebar.classList.contains('open')) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                }
+            }
         });
     </script>
 </body>
