@@ -348,7 +348,7 @@ class NewsServiceV2:
         return self.get_news_hybrid(query=query, category=category)
     
     def format_response(self, news_result: Dict[str, Any], original_query: str) -> str:
-        """Formate la réponse pour l'utilisateur"""
+        """Formate la réponse pour l'utilisateur en Markdown"""
         if not news_result["success"]:
             return f"""📰 **Actualités**
 
@@ -372,16 +372,15 @@ Reformule ta question et je t'aiderai ! 😊"""
         articles = news_result["articles"]
         sources = news_result.get("sources", [])
         
-        # En-tête
-        response = '<div class="news-container">\n'
-        response += '<h3>📰 Dernières Actualités</h3>\n\n'
+        # En-tête en Markdown
+        response = '# 📰 Dernières Actualités\n\n'
         
         if sources:
-            response += f'<p class="news-sources"><strong>Sources :</strong> {", ".join(sources)}</p>\n\n'
+            response += f'**Sources :** {", ".join(sources)}\n\n'
         
-        # Grille d'articles (2 par ligne)
-        response += '<div class="news-grid">\n'
+        response += '---\n\n'
         
+        # Articles en Markdown avec images
         for i, article in enumerate(articles, 1):
             title = article.get("title", "Sans titre")
             description = article.get("description", "")
@@ -394,7 +393,6 @@ Reformule ta question et je t'aiderai ! 😊"""
             date_str = ""
             if published_at:
                 try:
-                    # Essayer différents formats de date
                     for fmt in ["%Y-%m-%dT%H:%M:%SZ", "%a, %d %b %Y %H:%M:%S %z", "%Y-%m-%d %H:%M:%S"]:
                         try:
                             date_obj = datetime.strptime(published_at[:19], fmt[:19])
@@ -405,43 +403,31 @@ Reformule ta question et je t'aiderai ! 😊"""
                 except:
                     date_str = published_at[:10] if len(published_at) >= 10 else ""
             
-            # Carte d'article
-            response += '<div class="news-card">\n'
-            
-            # Image ou placeholder
+            # Image (si disponible)
             if image_url:
-                response += f'  <div class="news-image" style="background-image: url(\'{image_url}\')"></div>\n'
-            else:
-                response += '  <div class="news-image news-placeholder">📰</div>\n'
+                response += f'![{title}]({image_url})\n\n'
             
-            # Contenu
-            response += '  <div class="news-content">\n'
-            response += f'    <h4 class="news-title">{title}</h4>\n'
+            # Titre et contenu
+            response += f'### {i}. {title}\n\n'
             
             if description:
-                desc_short = description[:150] + '...' if len(description) > 150 else description
-                response += f'    <p class="news-description">{desc_short}</p>\n'
+                desc_short = description[:200] + '...' if len(description) > 200 else description
+                response += f'{desc_short}\n\n'
             
-            response += '    <div class="news-meta">\n'
-            response += f'      <span class="news-source">📰 {source}</span>\n'
+            # Métadonnées
+            response += f'📰 **{source}**'
             if date_str:
-                response += f'      <span class="news-date">📅 {date_str}</span>\n'
-            response += '    </div>\n'
+                response += f' • 📅 {date_str}'
+            response += '\n\n'
             
             if url:
-                response += f'    <a href="{url}" target="_blank" class="news-link">🔗 Lire l\'article</a>\n'
+                response += f'🔗 [Lire l\'article complet]({url})\n\n'
             
-            response += '  </div>\n'
-            response += '</div>\n'
-        
-        response += '</div>\n'  # Fin de la grille
+            response += '---\n\n'
         
         # Footer
-        response += '<div class="news-footer">\n'
-        response += '<p>💡 <strong>Autres catégories :</strong> Santé • Sport • Tech • Science • Business</p>\n'
-        response += '<p>Veux-tu des actualités sur un sujet spécifique ?</p>\n'
-        response += '</div>\n'
-        response += '</div>\n'  # Fin du container
+        response += '💡 **Autres catégories :** Santé • Sport • Tech • Science • Business\n\n'
+        response += 'Veux-tu des actualités sur un sujet spécifique ?'
         
         return response
 
