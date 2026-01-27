@@ -941,10 +941,10 @@ Exemple: "Quelle est la météo à Paris, FR ?" """
         else:
             health_tip = "Conditions agréables ! Profitez-en pour une activité en extérieur. 🚶"
         
-        response = f"""<div class="weather-card" style="background: linear-gradient(135deg, {gradient_color}, rgba(15, 23, 42, 0.8)); border: 2px solid rgba(59, 130, 246, 0.3); border-radius: 16px; padding: 24px; margin: 20px 0; max-width: 600px;">
+        response = f"""<div class="weather-card" style="background: linear-gradient(135deg, {gradient_color}, rgba(15, 23, 42, 0.8)); border: 2px solid rgba(59, 130, 246, 0.3); border-radius: 16px; padding: 24px; margin: 20px auto; max-width: 600px; width: 100%;">
 <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
-<div style="font-size: 64px;">{weather_emoji}</div>
-<div style="flex: 1;">
+<div style="font-size: 64px; flex-shrink: 0;">{weather_emoji}</div>
+<div style="flex: 1; min-width: 0;">
 <h3 style="margin: 0; font-size: 24px; color: #f3f4f6;">📍 {location['city']}, {location['country']}</h3>
 <p style="margin: 5px 0 0 0; color: #9ca3af; font-size: 14px;">☁️ {current['description']}</p>
 </div>
@@ -973,7 +973,7 @@ Exemple: "Quelle est la météo à Paris, FR ?" """
 <div style="color: #f3f4f6; font-size: 18px; font-weight: 600;">{current['temp_max']}{current['temp_unit']}</div>
 </div>
 </div>
-<div style="display: flex; justify-content: space-between; padding: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; margin-top: 16px;">
+<div style="display: flex; justify-content: space-between; padding: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; margin-top: 16px; flex-wrap: wrap; gap: 8px;">
 <div>
 <span style="color: #9ca3af; font-size: 12px;">🌄 Lever:</span>
 <span style="color: #f3f4f6; font-size: 14px; margin-left: 8px;">{weather_data['sunrise']}</span>
@@ -992,6 +992,45 @@ Exemple: "Quelle est la météo à Paris, FR ?" """
 </div>
 </div>
 
+<style>
+@media (max-width: 768px) {{
+.weather-card {{
+padding: 16px !important;
+margin: 16px auto !important;
+}}
+.weather-card > div:first-child {{
+gap: 12px !important;
+}}
+.weather-card > div:first-child > div:first-child {{
+font-size: 48px !important;
+}}
+.weather-card > div:first-child h3 {{
+font-size: 20px !important;
+}}
+.weather-card > div:nth-child(2) > div > div:first-child {{
+font-size: 42px !important;
+}}
+.weather-card > div:nth-child(3) {{
+gap: 12px !important;
+}}
+.weather-card > div:nth-child(3) > div {{
+padding: 10px !important;
+}}
+}}
+@media (max-width: 480px) {{
+.weather-card {{
+padding: 12px !important;
+}}
+.weather-card > div:first-child {{
+flex-direction: column;
+text-align: center;
+}}
+.weather-card > div:nth-child(3) {{
+grid-template-columns: 1fr !important;
+gap: 8px !important;
+}}
+}}
+</style>
 """
         
         return response
