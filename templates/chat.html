@@ -1686,8 +1686,8 @@
         </div>
     </div>
 
-    <!-- Inclure le CSS du modal -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='history-modal.css') }}">
+    <!-- Inclure le CSS du modal with cache busting -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='history-modal.css') }}?v=20260127">
 
     <!-- Visualiseur Audio -->
     <div id="audio-visualizer" class="audio-visualizer" style="display: none;">
@@ -1702,11 +1702,11 @@
     <!-- Notification Vocale -->
     <div id="voice-notification" class="voice-notification" style="display: none;"></div>
 
-    <!-- Scripts -->
-    <script src="{{ url_for('static', filename='chat-history.js') }}"></script>
-    <script src="{{ url_for('static', filename='chat-functions.js') }}"></script>
-    <script src="{{ url_for('static', filename='voice-assistant-siri.js') }}"></script>
-    <script src="{{ url_for('static', filename='voice-integration.js') }}"></script>
+    <!-- Scripts with cache busting -->
+    <script src="{{ url_for('static', filename='chat-history.js') }}?v=20260127"></script>
+    <script src="{{ url_for('static', filename='chat-functions.js') }}?v=20260127"></script>
+    <script src="{{ url_for('static', filename='voice-assistant-siri.js') }}?v=20260127"></script>
+    <script src="{{ url_for('static', filename='voice-integration.js') }}?v=20260127"></script>
 
     <!-- Sidebar Menu Script -->
     <script>
