@@ -252,11 +252,11 @@ class EnhancedMedicalChatbot:
         
         # Questions fréquentes
         self.faq = {
-            "comment ça va": "Je suis un assistant IA, je n'ai pas d'état de santé, mais merci de demander! Comment puis-je vous aider aujourd'hui?",
-            "qui es-tu": "Je suis un assistant médical IA conçu pour fournir des informations de santé générales. Je ne remplace pas un médecin.",
-            "que peux-tu faire": "Je peux vous informer sur les maladies, symptômes, médicaments, prévention, nutrition et premiers secours. Posez-moi vos questions!",
-            "es-tu un vrai médecin": "Non, je suis une intelligence artificielle. Pour un diagnostic ou traitement, consultez toujours un médecin qualifié.",
-            "puis-je te faire confiance": "Je fournis des informations basées sur des sources médicales fiables, mais vous devez toujours consulter un professionnel de santé pour votre situation personnelle."
+            "comment ça va": "Je vais bien, merci ! Et toi, comment vas-tu ? 😊",
+            "qui es-tu": "Je suis Nmap IA, ton assistant intelligent. Je peux t'aider avec plein de choses !",
+            "que peux-tu faire": "Je peux répondre à tes questions, chercher des informations, générer des images, et bien plus encore !",
+            "es-tu un vrai médecin": "Non, je suis une intelligence artificielle. Pour des questions médicales, consulte toujours un professionnel.",
+            "puis-je te faire confiance": "Je fais de mon mieux pour fournir des informations fiables, mais vérifie toujours les informations importantes avec des sources officielles."
         }
     
     def process_message(self, user_input, language="fr"):
@@ -683,9 +683,9 @@ Réponds maintenant à la question de l'utilisateur."""
             "merci beaucoup": "Avec plaisir ! 😊 C'est un plaisir de t'aider. Si tu as d'autres questions, je suis là !",
             "ok": "D'accord ! 👍 Y a-t-il autre chose que je peux faire pour toi ?",
             "d'accord": "Parfait ! 👍 N'hésite pas si tu as d'autres questions.",
-            "qui es-tu": "Je suis un assistant médical IA 🏥 conçu pour t'aider avec des informations sur la santé. Je peux répondre à tes questions sur les maladies, symptômes, médicaments et bien plus encore !",
-            "c'est quoi ton nom": "Je suis l'Assistant Médical IA 🏥 ! Je suis là pour t'aider avec tes questions de santé.",
-            "tu t'appelles comment": "Je m'appelle Assistant Médical IA 🏥 ! Comment puis-je t'aider aujourd'hui ?"
+            "qui es-tu": "Je suis Nmap IA 🤖, ton assistant intelligent ! Je peux t'aider avec plein de choses : recherche d'infos, images, actualités, et bien plus !",
+            "c'est quoi ton nom": "Je m'appelle Nmap IA 🤖 ! Je suis là pour t'aider.",
+            "tu t'appelles comment": "Je m'appelle Nmap IA 🤖 ! Comment puis-je t'aider aujourd'hui ?"
         }
         
         # Vérifier si c'est une question conversationnelle
@@ -1546,19 +1546,7 @@ Exemple: "Quels sont les symptômes du diabète?" ou "Comment traiter une brûlu
     
     def _greeting_response(self):
         """Réponse de salutation enrichie"""
-        return """Bonjour! 👋 Je suis votre assistant médical IA.
-
-⚠️ **IMPORTANT:** Je ne remplace pas un médecin. En cas d'urgence, appelez le 15 (SAMU).
-
-💡 **Je peux vous aider avec:**
-• Informations sur les maladies et symptômes
-• Conseils de prévention et hygiène
-• Informations sur les médicaments
-• Premiers secours
-• Nutrition et bien-être
-• Santé mentale
-
-**Comment puis-je vous aider aujourd'hui?**"""
+        return """Bonjour! 👋 Comment puis-je vous aider aujourd'hui?"""
     
     def _help_response(self):
         """Réponse d'aide enrichie"""

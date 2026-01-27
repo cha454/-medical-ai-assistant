@@ -42,16 +42,7 @@ class MedicalChatbot:
     
     def _greeting_response(self):
         """Réponse de salutation"""
-        return """Bonjour! Je suis votre assistant médical IA.
-
-⚠️ IMPORTANT: Je ne remplace pas un médecin. En cas d'urgence, appelez le 15 (SAMU).
-
-Comment puis-je vous aider aujourd'hui?
-- Décrivez vos symptômes
-- Posez des questions sur une maladie
-- Vérifiez des interactions médicamenteuses
-
-Tapez 'aide' pour plus d'informations."""
+        return """Bonjour! 👋 Comment puis-je vous aider aujourd'hui?"""
     
     def _help_response(self):
         """Réponse d'aide"""
