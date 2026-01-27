@@ -1849,23 +1849,111 @@
             margin: 20px auto;
             max-width: 600px;
             width: 100%;
+            animation: weatherFadeIn 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animation d'apparition de la carte */
+        @keyframes weatherFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Effet de brillance qui traverse la carte */
+        .weather-card-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg,
+                    transparent 30%,
+                    rgba(255, 255, 255, 0.1) 50%,
+                    transparent 70%);
+            animation: weatherShine 3s ease-in-out infinite;
+        }
+
+        @keyframes weatherShine {
+            0% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
+
+            100% {
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+            }
+        }
+
+        .weather-card-container:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
+            transform: translateY(-4px);
+            transition: all 0.3s ease;
         }
 
         .weather-main-temp {
             text-align: center;
             margin: 20px 0;
+            animation: weatherTempPulse 2s ease-in-out infinite;
+        }
+
+        /* Animation de pulsation douce pour la température */
+        @keyframes weatherTempPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.02);
+            }
         }
 
         .weather-temp-big {
             font-size: 56px;
             font-weight: 700;
             color: #f3f4f6;
+            text-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+            animation: weatherNumberGlow 3s ease-in-out infinite;
+        }
+
+        /* Animation de lueur pour la température */
+        @keyframes weatherNumberGlow {
+
+            0%,
+            100% {
+                text-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+            }
+
+            50% {
+                text-shadow: 0 2px 16px rgba(59, 130, 246, 0.6);
+            }
         }
 
         .weather-feels-like {
             color: #9ca3af;
             font-size: 14px;
             margin-top: 8px;
+            animation: weatherFadeInDelay 0.8s ease-out;
+        }
+
+        @keyframes weatherFadeInDelay {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .weather-details-grid {
@@ -1879,6 +1967,43 @@
             background: rgba(0, 0, 0, 0.3);
             padding: 12px;
             border-radius: 8px;
+            animation: weatherSlideIn 0.5s ease-out backwards;
+            transition: all 0.3s ease;
+        }
+
+        /* Animation d'apparition en cascade pour chaque détail */
+        .weather-detail-item:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .weather-detail-item:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .weather-detail-item:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .weather-detail-item:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes weatherSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .weather-detail-item:hover {
+            background: rgba(59, 130, 246, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
         }
 
         .weather-detail-label {
@@ -1904,6 +2029,19 @@
             gap: 8px;
             color: #f3f4f6;
             font-size: 14px;
+            animation: weatherFadeInUp 0.6s ease-out 0.5s backwards;
+        }
+
+        @keyframes weatherFadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .weather-sun-times span {
@@ -1916,6 +2054,19 @@
             background: rgba(59, 130, 246, 0.1);
             border-left: 3px solid #3b82f6;
             border-radius: 4px;
+            animation: weatherTipSlide 0.6s ease-out 0.6s backwards;
+        }
+
+        @keyframes weatherTipSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         .weather-tip-title {
@@ -1935,6 +2086,7 @@
             margin-top: 12px;
             color: #6b7280;
             font-size: 11px;
+            animation: weatherFadeInUp 0.6s ease-out 0.7s backwards;
         }
 
         /* Responsive Météo - Tablette */
