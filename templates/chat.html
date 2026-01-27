@@ -414,6 +414,45 @@
             color: #f3f4f6;
         }
 
+        /* Images responsive dans les messages */
+        .message-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin: 16px 0;
+            display: block;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .message-content img:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+            transform: scale(1.02);
+        }
+
+        /* Images générées (DALL-E) - Style spécial */
+        .message-content img[alt*="générée"],
+        .message-content img[alt*="Image générée"] {
+            max-width: 600px;
+            margin: 20px auto;
+            cursor: pointer;
+        }
+
+        /* Responsive pour les images sur mobile */
+        @media (max-width: 768px) {
+            .message-content img {
+                max-width: 100%;
+                margin: 12px 0;
+            }
+
+            .message-content img[alt*="générée"],
+            .message-content img[alt*="Image générée"] {
+                max-width: 100%;
+            }
+        }
+
         .message-actions {
             margin-left: 44px;
             margin-top: 8px;
