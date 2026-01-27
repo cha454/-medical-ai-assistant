@@ -128,8 +128,8 @@ class NewsServiceV2:
             if more_rss:
                 articles.extend(more_rss)
         
-        # Dédupliquer et limiter à 10 articles
-        articles = self._deduplicate_articles(articles)[:10]
+        # Dédupliquer et limiter à 20 articles
+        articles = self._deduplicate_articles(articles)[:20]
         
         if not articles:
             return {
@@ -141,7 +141,7 @@ class NewsServiceV2:
         
         return {
             "success": True,
-            "articles": articles[:8],  # Limiter à 8 pour l'affichage (2 lignes de 4)
+            "articles": articles[:15],  # Limiter à 15 pour l'affichage (presque 4 lignes de 4)
             "total": len(articles),
             "sources": sources_used,
             "query": query
