@@ -941,96 +941,56 @@ Exemple: "Quelle est la météo à Paris, FR ?" """
         else:
             health_tip = "Conditions agréables ! Profitez-en pour une activité en extérieur. 🚶"
         
-        response = f"""<div class="weather-card" style="background: linear-gradient(135deg, {gradient_color}, rgba(15, 23, 42, 0.8)); border: 2px solid rgba(59, 130, 246, 0.3); border-radius: 16px; padding: 24px; margin: 20px auto; max-width: 600px; width: 100%;">
-<div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
-<div style="font-size: 64px; flex-shrink: 0;">{weather_emoji}</div>
-<div style="flex: 1; min-width: 0;">
-<h3 style="margin: 0; font-size: 24px; color: #f3f4f6;">📍 {location['city']}, {location['country']}</h3>
-<p style="margin: 5px 0 0 0; color: #9ca3af; font-size: 14px;">☁️ {current['description']}</p>
+        # Formater la réponse en Markdown + HTML simple (comme les actualités)
+        response = f"""# ☁️ Météo
+
+**📍 {location['city']}, {location['country']}**
+
+**☁️ {current['description']}**
+
+---
+
+<div class="weather-card-container">
+
+<div class="weather-main-temp">
+<div class="weather-temp-big">{current['temperature']}{current['temp_unit']}</div>
+<div class="weather-feels-like">Ressenti {current['feels_like']}{current['temp_unit']}</div>
 </div>
+
+<div class="weather-details-grid">
+<div class="weather-detail-item">
+<div class="weather-detail-label">💧 Humidité</div>
+<div class="weather-detail-value">{current['humidity']}%</div>
 </div>
-<div style="display: flex; align-items: center; justify-content: center; margin: 20px 0;">
-<div style="text-align: center;">
-<div style="font-size: 56px; font-weight: 700; color: #f3f4f6;">{current['temperature']}{current['temp_unit']}</div>
-<div style="color: #9ca3af; font-size: 14px;">Ressenti {current['feels_like']}{current['temp_unit']}</div>
+<div class="weather-detail-item">
+<div class="weather-detail-label">💨 Vent</div>
+<div class="weather-detail-value">{wind['speed']} {wind['speed_unit']}</div>
 </div>
+<div class="weather-detail-item">
+<div class="weather-detail-label">🔻 Min</div>
+<div class="weather-detail-value">{current['temp_min']}{current['temp_unit']}</div>
 </div>
-<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 20px 0;">
-<div style="background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 8px;">
-<div style="color: #9ca3af; font-size: 12px; margin-bottom: 4px;">💧 Humidité</div>
-<div style="color: #f3f4f6; font-size: 18px; font-weight: 600;">{current['humidity']}%</div>
-</div>
-<div style="background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 8px;">
-<div style="color: #9ca3af; font-size: 12px; margin-bottom: 4px;">💨 Vent</div>
-<div style="color: #f3f4f6; font-size: 18px; font-weight: 600;">{wind['speed']} {wind['speed_unit']}</div>
-</div>
-<div style="background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 8px;">
-<div style="color: #9ca3af; font-size: 12px; margin-bottom: 4px;">🔻 Min</div>
-<div style="color: #f3f4f6; font-size: 18px; font-weight: 600;">{current['temp_min']}{current['temp_unit']}</div>
-</div>
-<div style="background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 8px;">
-<div style="color: #9ca3af; font-size: 12px; margin-bottom: 4px;">🔺 Max</div>
-<div style="color: #f3f4f6; font-size: 18px; font-weight: 600;">{current['temp_max']}{current['temp_unit']}</div>
-</div>
-</div>
-<div style="display: flex; justify-content: space-between; padding: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; margin-top: 16px; flex-wrap: wrap; gap: 8px;">
-<div>
-<span style="color: #9ca3af; font-size: 12px;">🌄 Lever:</span>
-<span style="color: #f3f4f6; font-size: 14px; margin-left: 8px;">{weather_data['sunrise']}</span>
-</div>
-<div>
-<span style="color: #9ca3af; font-size: 12px;">🌇 Coucher:</span>
-<span style="color: #f3f4f6; font-size: 14px; margin-left: 8px;">{weather_data['sunset']}</span>
-</div>
-</div>
-<div style="margin-top: 16px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 4px;">
-<div style="color: #60a5fa; font-size: 13px; font-weight: 600; margin-bottom: 4px;">💡 Conseil santé</div>
-<div style="color: #d1d5db; font-size: 14px;">{health_tip}</div>
-</div>
-<div style="text-align: center; margin-top: 12px; color: #6b7280; font-size: 11px;">
-📅 Mis à jour: {weather_data['timestamp']}
+<div class="weather-detail-item">
+<div class="weather-detail-label">🔺 Max</div>
+<div class="weather-detail-value">{current['temp_max']}{current['temp_unit']}</div>
 </div>
 </div>
 
-<style>
-@media (max-width: 768px) {{
-.weather-card {{
-padding: 16px !important;
-margin: 16px auto !important;
-}}
-.weather-card > div:first-child {{
-gap: 12px !important;
-}}
-.weather-card > div:first-child > div:first-child {{
-font-size: 48px !important;
-}}
-.weather-card > div:first-child h3 {{
-font-size: 20px !important;
-}}
-.weather-card > div:nth-child(2) > div > div:first-child {{
-font-size: 42px !important;
-}}
-.weather-card > div:nth-child(3) {{
-gap: 12px !important;
-}}
-.weather-card > div:nth-child(3) > div {{
-padding: 10px !important;
-}}
-}}
-@media (max-width: 480px) {{
-.weather-card {{
-padding: 12px !important;
-}}
-.weather-card > div:first-child {{
-flex-direction: column;
-text-align: center;
-}}
-.weather-card > div:nth-child(3) {{
-grid-template-columns: 1fr !important;
-gap: 8px !important;
-}}
-}}
-</style>
+<div class="weather-sun-times">
+<span>🌄 Lever: {weather_data['sunrise']}</span>
+<span>🌇 Coucher: {weather_data['sunset']}</span>
+</div>
+
+<div class="weather-health-tip">
+<div class="weather-tip-title">💡 Conseil santé</div>
+<div class="weather-tip-text">{health_tip}</div>
+</div>
+
+<div class="weather-timestamp">
+📅 Mis à jour: {weather_data['timestamp']}
+</div>
+
+</div>
 """
         
         return response

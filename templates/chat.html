@@ -1837,6 +1837,146 @@
                 font-size: 12px;
             }
         }
+
+        /* ============================================ */
+        /* CARTE MÉTÉO - Style moderne et responsive */
+        /* ============================================ */
+        .weather-card-container {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 20px auto;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .weather-main-temp {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .weather-temp-big {
+            font-size: 56px;
+            font-weight: 700;
+            color: #f3f4f6;
+        }
+
+        .weather-feels-like {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .weather-details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .weather-detail-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .weather-detail-label {
+            color: #9ca3af;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .weather-detail-value {
+            color: #f3f4f6;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .weather-sun-times {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
+            color: #f3f4f6;
+            font-size: 14px;
+        }
+
+        .weather-sun-times span {
+            color: #9ca3af;
+        }
+
+        .weather-health-tip {
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid #3b82f6;
+            border-radius: 4px;
+        }
+
+        .weather-tip-title {
+            color: #60a5fa;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .weather-tip-text {
+            color: #d1d5db;
+            font-size: 14px;
+        }
+
+        .weather-timestamp {
+            text-align: center;
+            margin-top: 12px;
+            color: #6b7280;
+            font-size: 11px;
+        }
+
+        /* Responsive Météo - Tablette */
+        @media (max-width: 768px) {
+            .weather-card-container {
+                padding: 16px;
+                margin: 16px auto;
+            }
+
+            .weather-temp-big {
+                font-size: 42px;
+            }
+
+            .weather-details-grid {
+                gap: 12px;
+            }
+
+            .weather-detail-item {
+                padding: 10px;
+            }
+        }
+
+        /* Responsive Météo - Mobile */
+        @media (max-width: 480px) {
+            .weather-card-container {
+                padding: 12px;
+            }
+
+            .weather-temp-big {
+                font-size: 36px;
+            }
+
+            .weather-details-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .weather-sun-times {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 
