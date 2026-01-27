@@ -141,7 +141,7 @@ class NewsServiceV2:
         
         return {
             "success": True,
-            "articles": articles[:5],  # Limiter à 5 pour l'affichage
+            "articles": articles[:8],  # Limiter à 8 pour l'affichage (2 lignes de 4)
             "total": len(articles),
             "sources": sources_used,
             "query": query
