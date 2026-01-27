@@ -348,7 +348,7 @@ class NewsServiceV2:
         return self.get_news_hybrid(query=query, category=category)
     
     def format_response(self, news_result: Dict[str, Any], original_query: str) -> str:
-        """Formate la réponse pour l'utilisateur en Markdown"""
+        """Formate la réponse pour l'utilisateur avec grille HTML"""
         if not news_result["success"]:
             return f"""📰 **Actualités**
 
@@ -380,7 +380,10 @@ Reformule ta question et je t'aiderai ! 😊"""
         
         response += '---\n\n'
         
-        # Articles en Markdown avec images
+        # Grille HTML (Marked.js laisse passer le HTML)
+        response += '<div class="news-grid">\n\n'
+        
+        # Articles en HTML pour la grille
         for i, article in enumerate(articles, 1):
             title = article.get("title", "Sans titre")
             description = article.get("description", "")
@@ -403,29 +406,39 @@ Reformule ta question et je t'aiderai ! 😊"""
                 except:
                     date_str = published_at[:10] if len(published_at) >= 10 else ""
             
-            # Image (si disponible)
-            if image_url:
-                response += f'![{title}]({image_url})\n\n'
+            # Carte d'article en HTML
+            response += '<div class="news-card">\n'
             
-            # Titre et contenu
-            response += f'### {i}. {title}\n\n'
+            # Image ou placeholder
+            if image_url:
+                response += f'  <div class="news-image" style="background-image: url(\'{image_url}\')"></div>\n'
+            else:
+                response += '  <div class="news-image news-placeholder">📰</div>\n'
+            
+            # Contenu
+            response += '  <div class="news-content">\n'
+            response += f'    <h4 class="news-title">{title}</h4>\n'
             
             if description:
-                desc_short = description[:200] + '...' if len(description) > 200 else description
-                response += f'{desc_short}\n\n'
+                desc_short = description[:150] + '...' if len(description) > 150 else description
+                response += f'    <p class="news-description">{desc_short}</p>\n'
             
-            # Métadonnées
-            response += f'📰 **{source}**'
+            response += '    <div class="news-meta">\n'
+            response += f'      <span class="news-source">📰 {source}</span>\n'
             if date_str:
-                response += f' • 📅 {date_str}'
-            response += '\n\n'
+                response += f'      <span class="news-date">📅 {date_str}</span>\n'
+            response += '    </div>\n'
             
             if url:
-                response += f'🔗 [Lire l\'article complet]({url})\n\n'
+                response += f'    <a href="{url}" target="_blank" class="news-link">🔗 Lire l\'article</a>\n'
             
-            response += '---\n\n'
+            response += '  </div>\n'
+            response += '</div>\n\n'
         
-        # Footer
+        response += '</div>\n\n'  # Fin de la grille
+        
+        # Footer en Markdown
+        response += '---\n\n'
         response += '💡 **Autres catégories :** Santé • Sport • Tech • Science • Business\n\n'
         response += 'Veux-tu des actualités sur un sujet spécifique ?'
         
