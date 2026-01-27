@@ -27,7 +27,7 @@ class ChatHistory {
     createNewConversation() {
         this.currentConversationId = 'conv_' + Date.now();
         localStorage.setItem('current_conversation_id', this.currentConversationId);
-        
+
         const conversations = this.getAllConversations();
         conversations[this.currentConversationId] = {
             id: this.currentConversationId,
@@ -37,10 +37,10 @@ class ChatHistory {
             updatedAt: new Date().toISOString()
         };
         this.saveAllConversations(conversations);
-        
+
         // Vider l'affichage
         this.clearDisplay();
-        
+
         return this.currentConversationId;
     }
 
@@ -48,7 +48,7 @@ class ChatHistory {
     saveMessage(userMessage, assistantResponse) {
         const conversations = this.getAllConversations();
         const conversation = conversations[this.currentConversationId];
-        
+
         if (!conversation) {
             console.error('Conversation not found');
             return;
@@ -73,7 +73,7 @@ class ChatHistory {
         }
 
         conversation.updatedAt = new Date().toISOString();
-        
+
         this.saveAllConversations(conversations);
     }
 
@@ -81,7 +81,7 @@ class ChatHistory {
     loadConversation(conversationId) {
         const conversations = this.getAllConversations();
         const conversation = conversations[conversationId];
-        
+
         if (!conversation) {
             console.error('Conversation not found');
             return;
@@ -89,10 +89,10 @@ class ChatHistory {
 
         this.currentConversationId = conversationId;
         localStorage.setItem('current_conversation_id', conversationId);
-        
+
         // Vider l'affichage
         this.clearDisplay();
-        
+
         // Afficher tous les messages
         conversation.messages.forEach(msg => {
             if (typeof addMessage === 'function') {
@@ -140,26 +140,7 @@ class ChatHistory {
                 <div class="empty-state" id="emptyState">
                     <div class="empty-icon">💬</div>
                     <div class="empty-title">Comment puis-je vous aider ?</div>
-                    <div class="empty-subtitle">Posez-moi vos questions médicales</div>
-                    
-                    <div class="suggestions">
-                        <div class="suggestion" onclick="sendSuggestion('Quels sont les symptômes du diabète ?')">
-                            <div class="suggestion-icon">🩺</div>
-                            <div class="suggestion-text">Symptômes du diabète</div>
-                        </div>
-                        <div class="suggestion" onclick="sendSuggestion('Comment traiter une migraine ?')">
-                            <div class="suggestion-icon">💊</div>
-                            <div class="suggestion-text">Traiter une migraine</div>
-                        </div>
-                        <div class="suggestion" onclick="sendSuggestion('Puis-je prendre ibuprofène et aspirine ensemble ?')">
-                            <div class="suggestion-icon">⚠️</div>
-                            <div class="suggestion-text">Interactions médicamenteuses</div>
-                        </div>
-                        <div class="suggestion" onclick="sendSuggestion('Quelle est la météo à Paris ?')">
-                            <div class="suggestion-icon">🌤️</div>
-                            <div class="suggestion-text">Météo et santé</div>
-                        </div>
-                    </div>
+                    <div class="empty-subtitle">Posez-moi vos questions</div>
                 </div>
             `;
         }
@@ -168,7 +149,7 @@ class ChatHistory {
     // Exporter en PDF
     async exportToPDF() {
         const conversation = this.getAllConversations()[this.currentConversationId];
-        
+
         if (!conversation || conversation.messages.length === 0) {
             alert('Aucune conversation à exporter');
             return;
@@ -177,7 +158,7 @@ class ChatHistory {
         try {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            
+
             // Configuration
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
@@ -226,7 +207,7 @@ class ChatHistory {
                     .replace(/\*\*/g, '')
                     .replace(/\*/g, '')
                     .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
-                
+
                 const lines = doc.splitTextToSize(cleanContent, maxWidth);
                 lines.forEach(line => {
                     if (yPosition > pageHeight - 20) {
@@ -288,7 +269,7 @@ class ChatHistory {
     // Obtenir la liste des conversations (triées par date)
     getConversationList() {
         const conversations = this.getAllConversations();
-        return Object.values(conversations).sort((a, b) => 
+        return Object.values(conversations).sort((a, b) =>
             new Date(b.updatedAt) - new Date(a.updatedAt)
         );
     }

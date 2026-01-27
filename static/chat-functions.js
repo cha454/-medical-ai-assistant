@@ -293,26 +293,7 @@ function clearChat() {
         <div class="empty-state" id="emptyState">
             <div class="empty-icon">💬</div>
             <div class="empty-title">Comment puis-je vous aider ?</div>
-            <div class="empty-subtitle">Posez-moi vos questions médicales</div>
-            
-            <div class="suggestions">
-                <div class="suggestion" onclick="sendSuggestion('Quels sont les symptômes du diabète ?')">
-                    <div class="suggestion-icon">🩺</div>
-                    <div class="suggestion-text">Symptômes du diabète</div>
-                </div>
-                <div class="suggestion" onclick="sendSuggestion('Comment traiter une migraine ?')">
-                    <div class="suggestion-icon">💊</div>
-                    <div class="suggestion-text">Traiter une migraine</div>
-                </div>
-                <div class="suggestion" onclick="sendSuggestion('Puis-je prendre ibuprofène et aspirine ensemble ?')">
-                    <div class="suggestion-icon">⚠️</div>
-                    <div class="suggestion-text">Interactions médicamenteuses</div>
-                </div>
-                <div class="suggestion" onclick="sendSuggestion('Que faire en cas de fièvre ?')">
-                    <div class="suggestion-icon">🌡️</div>
-                    <div class="suggestion-text">Fièvre - Que faire ?</div>
-                </div>
-            </div>
+            <div class="empty-subtitle">Posez-moi vos questions</div>
         </div>
     `;
     conversationHistory = [];
