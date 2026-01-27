@@ -231,13 +231,16 @@ class NewsServiceV2:
                     # Extraire la date
                     published = entry.get("published", "") or entry.get("updated", "")
                     
+                    # Extraire l'image (plusieurs méthodes)
+                    image_url = self._extract_image_from_entry(entry)
+                    
                     articles.append({
                         "title": title,
                         "description": description[:300] if description else "",
                         "url": entry.get("link", ""),
                         "source": {"name": feed.feed.get("title", "RSS Feed")},
                         "publishedAt": published,
-                        "image": entry.get("media_content", [{}])[0].get("url") if entry.get("media_content") else None
+                        "image": image_url
                     })
                 
             except Exception as e:
@@ -246,6 +249,54 @@ class NewsServiceV2:
         
         print(f"   ✓ {len(articles)} articles RSS trouvés")
         return articles
+    
+    def _extract_image_from_entry(self, entry) -> Optional[str]:
+        """Extrait l'image d'une entrée RSS (plusieurs méthodes)"""
+        import re
+        
+        # Méthode 1: media_content (standard)
+        if entry.get("media_content"):
+            for media in entry.get("media_content", []):
+                if media.get("url"):
+                    return media.get("url")
+        
+        # Méthode 2: media_thumbnail
+        if entry.get("media_thumbnail"):
+            for thumb in entry.get("media_thumbnail", []):
+                if thumb.get("url"):
+                    return thumb.get("url")
+        
+        # Méthode 3: enclosures (pièces jointes)
+        if entry.get("enclosures"):
+            for enclosure in entry.get("enclosures", []):
+                if enclosure.get("type", "").startswith("image/"):
+                    return enclosure.get("href") or enclosure.get("url")
+        
+        # Méthode 4: Chercher dans le contenu HTML
+        content = entry.get("content", [{}])[0].get("value", "") or entry.get("description", "") or entry.get("summary", "")
+        if content:
+            # Chercher les balises <img>
+            img_matches = re.findall(r'<img[^>]+src=["\']([^"\']+)["\']', content, re.IGNORECASE)
+            if img_matches:
+                # Filtrer les images trop petites (probablement des icônes)
+                for img_url in img_matches:
+                    if not any(x in img_url.lower() for x in ['icon', 'logo', 'avatar', 'pixel', '1x1']):
+                        return img_url
+        
+        # Méthode 5: Champ image direct
+        if entry.get("image"):
+            if isinstance(entry.get("image"), dict):
+                return entry.get("image", {}).get("href") or entry.get("image", {}).get("url")
+            elif isinstance(entry.get("image"), str):
+                return entry.get("image")
+        
+        # Méthode 6: og:image dans les liens
+        if entry.get("links"):
+            for link in entry.get("links", []):
+                if link.get("type", "").startswith("image/"):
+                    return link.get("href")
+        
+        return None
     
     def _deduplicate_articles(self, articles: List[Dict]) -> List[Dict]:
         """Supprime les articles en double (même titre)"""
