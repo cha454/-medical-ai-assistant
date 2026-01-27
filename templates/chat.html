@@ -1547,7 +1547,7 @@
 
         .news-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             margin: 20px 0;
         }
@@ -1658,7 +1658,15 @@
             color: #f3f4f6;
         }
 
-        /* Responsive pour mobile */
+        /* Responsive Tablette (2 colonnes) */
+        @media (max-width: 1024px) {
+            .news-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 18px;
+            }
+        }
+
+        /* Responsive Mobile (1 colonne) */
         @media (max-width: 768px) {
             .news-grid {
                 grid-template-columns: 1fr;
