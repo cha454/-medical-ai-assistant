@@ -1,0 +1,550 @@
+{% extends "base_layout.html" %}
+{% set active_page = 'image_analysis' %}
+
+{% block title %}Analyse d'Image - Nmap IA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analysis-container {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .analysis-header {
+        margin-bottom: 3rem;
+        text-align: center;
+    }
+
+    .analysis-header h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+    }
+
+    .analysis-header p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.2rem;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .main-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        align-items: start;
+    }
+
+    /* Upload Area */
+    .upload-panel {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 2.5rem;
+        text-align: center;
+    }
+
+    .drop-zone {
+        border: 2px dashed rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.02);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .drop-zone:hover, .drop-zone.drag-over {
+        border-color: var(--primary);
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .drop-zone i {
+        font-size: 4rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1.5rem;
+    }
+
+    .drop-zone h3 {
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    .drop-zone p {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.9rem;
+    }
+
+    #image-preview {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 12px;
+        margin-top: 1.5rem;
+        display: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .upload-actions {
+        margin-top: 2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    /* Results Area */
+    .results-panel {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 2.5rem;
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .results-empty {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        opacity: 0.5;
+        text-align: center;
+    }
+
+    .results-empty i {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .result-card {
+        animation: slideInRight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .result-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .confidence-meter {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .confidence-fill {
+        height: 100%;
+        background: var(--primary-gradient);
+        border-radius: 4px;
+        transition: width 1s ease-out;
+    }
+
+    .result-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .result-section h4 {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.75rem;
+    }
+
+    .result-text {
+        color: white;
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    .recommendation-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .recommendation-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: white;
+    }
+
+    .recommendation-item i {
+        color: var(--primary);
+    }
+
+    /* Info Section */
+    .info-section {
+        margin-top: 4rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .info-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 2rem;
+    }
+
+    .info-card h3 {
+        color: white;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .abcde-list {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .abcde-item {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .abcde-letter {
+        width: 30px;
+        height: 30px;
+        background: var(--primary-gradient);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .abcde-content h5 {
+        color: white;
+        margin-bottom: 0.25rem;
+    }
+
+    .abcde-content p {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+    }
+
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        z-index: 10;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-left-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 992px) {
+        .main-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analysis-container">
+    <header class="analysis-header">
+        <h1>Analyse Dermatologique</h1>
+        <p>Utilisez notre IA de pointe pour analyser vos grains de beauté et lésions cutanées. Cet outil est à but éducatif et ne remplace pas un diagnostic médical professionnel.</p>
+    </header>
+
+    <div class="main-grid">
+        <!-- Upload Panel -->
+        <div class="upload-panel">
+            <div class="drop-zone" id="drop-zone">
+                <div class="loading-overlay" id="loading-overlay">
+                    <div class="spinner"></div>
+                    <p>Analyse en cours...</p>
+                </div>
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>Cliquez ou glissez une image</h3>
+                <p>Formats supportés: JPG, PNG (Max 5Mo)</p>
+                <input type="file" id="file-input" hidden accept="image/*">
+                <img id="image-preview">
+            </div>
+            
+            <div class="upload-actions">
+                <button class="glass-btn secondary" id="reset-btn" style="display: none;">
+                    <i class="fas fa-undo"></i> Réinitialiser
+                </button>
+                <button class="glass-btn primary" id="analyze-btn" disabled>
+                    <i class="fas fa-microscope"></i> Lancer l'Analyse
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="results-panel" id="results-panel">
+            <div class="results-empty" id="results-empty">
+                <i class="fas fa-notes-medical"></i>
+                <h3>Prêt pour l'analyse</h3>
+                <p>Importez une image pour voir les résultats ici.</p>
+            </div>
+            
+            <div id="results-content" style="display: none;">
+                <!-- Dynamically filled -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Information Section -->
+    <div class="info-section">
+        <div class="info-grid">
+            <div class="info-card">
+                <h3><i class="fas fa-info-circle"></i> À propos de cet outil</h3>
+                <p style="color: rgba(255, 255, 255, 0.7); line-height: 1.6;">
+                    Notre modèle utilise des réseaux de neurones profonds entraînés sur des milliers d'images dermatologiques. 
+                    Il est capable de détecter les signes précoces de mélanome et d'autres types de cancers cutanés.
+                    <br><br>
+                    <strong>Note importante :</strong> En cas de doute, consultez toujours un dermatologue.
+                </p>
+            </div>
+
+            <div class="info-card">
+                <h3><i class="fas fa-check-double"></i> Règle ABCDE</h3>
+                <div class="abcde-list">
+                    <div class="abcde-item">
+                        <div class="abcde-letter">A</div>
+                        <div class="abcde-content">
+                            <h5>Asymétrie</h5>
+                            <p>Forme irrégulière, les deux moitiés ne se ressemblent pas.</p>
+                        </div>
+                    </div>
+                    <div class="abcde-item">
+                        <div class="abcde-letter">B</div>
+                        <div class="abcde-content">
+                            <h5>Bords</h5>
+                            <p>Contours irréguliers, dentelés ou flous.</p>
+                        </div>
+                    </div>
+                    <div class="abcde-item">
+                        <div class="abcde-letter">C</div>
+                        <div class="abcde-content">
+                            <h5>Couleur</h5>
+                            <p>Plusieurs couleurs (brun, noir, rouge, bleu ou blanc).</p>
+                        </div>
+                    </div>
+                    <div class="abcde-item">
+                        <div class="abcde-letter">D</div>
+                        <div class="abcde-content">
+                            <h5>Diamètre</h5>
+                            <p>Supérieur à 6 mm (environ la taille d'une gomme de crayon).</p>
+                        </div>
+                    </div>
+                    <div class="abcde-item">
+                        <div class="abcde-letter">E</div>
+                        <div class="abcde-content">
+                            <h5>Évolution</h5>
+                            <p>Changement de taille, forme, couleur ou apparition de symptômes.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const imagePreview = document.getElementById('image-preview');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const resultsEmpty = document.getElementById('results-empty');
+    const resultsContent = document.getElementById('results-content');
+
+    // Drag and drop handlers
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            handleFile(file);
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleFile(file);
+    });
+
+    function handleFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imagePreview.src = e.target.result;
+            imagePreview.style.display = 'block';
+            dropZone.querySelector('i').style.display = 'none';
+            dropZone.querySelector('h3').style.display = 'none';
+            dropZone.querySelector('p').style.display = 'none';
+            analyzeBtn.disabled = false;
+            resetBtn.style.display = 'flex';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    resetBtn.addEventListener('click', () => {
+        fileInput.value = '';
+        imagePreview.style.display = 'none';
+        dropZone.querySelector('i').style.display = 'block';
+        dropZone.querySelector('h3').style.display = 'block';
+        dropZone.querySelector('p').style.display = 'block';
+        analyzeBtn.disabled = true;
+        resetBtn.style.display = 'none';
+        resultsEmpty.style.display = 'flex';
+        resultsContent.style.display = 'none';
+    });
+
+    analyzeBtn.addEventListener('click', async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        loadingOverlay.style.display = 'flex';
+        analyzeBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/image/analyze', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                displayResults(data);
+            } else {
+                alert('Erreur: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert('Une erreur est survenue lors de l\'analyse.');
+        } finally {
+            loadingOverlay.style.display = 'none';
+            analyzeBtn.disabled = false;
+        }
+    });
+
+    function displayResults(data) {
+        resultsEmpty.style.display = 'none';
+        resultsContent.style.display = 'block';
+
+        const top = data.top_prediction;
+        const info = data.class_info[top.condition];
+        
+        resultsContent.innerHTML = `
+            <div class="result-card">
+                <div class="result-title">
+                    <i class="fas fa-search-location"></i>
+                    ${top.condition}
+                </div>
+                
+                <div class="result-section">
+                    <h4>Indice de confiance</h4>
+                    <div class="confidence-meter">
+                        <div class="confidence-fill" style="width: 0%"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; color: rgba(255,255,255,0.6); font-size: 0.9rem;">
+                        <span>Probabilité</span>
+                        <span>${(top.confidence * 100).toFixed(1)}%</span>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <h4>Description</h4>
+                    <p class="result-text">${info.description}</p>
+                </div>
+
+                <div class="result-section">
+                    <h4>Recommandations</h4>
+                    <div class="recommendation-list">
+                        ${info.recommendations.map(rec => `
+                            <div class="recommendation-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>${rec}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; padding: 1rem; border-radius: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; font-size: 0.85rem;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Attention: Ce résultat est généré par une IA. Consultez un professionnel de santé pour un diagnostic définitif.
+                </div>
+            </div>
+        `;
+
+        // Animate confidence bar
+        setTimeout(() => {
+            const fill = resultsContent.querySelector('.confidence-fill');
+            if (fill) fill.style.width = `${top.confidence * 100}%`;
+        }, 100);
+    }
+</script>
+{% endblock %}

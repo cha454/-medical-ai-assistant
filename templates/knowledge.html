@@ -1,396 +1,287 @@
-<!DOCTYPE html>
-<html lang="fr">
+{% extends "base_layout.html" %}
+{% set active_page = 'knowledge' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Base de Connaissances - Nmap IA</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% block title %}Base de Savoir - Nmap IA{% endblock %}
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #000000;
-            color: #f3f4f6;
-            min-height: 100vh;
-        }
+{% block head %}
+<style>
+    .knowledge-wrapper {
+        padding: 32px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
 
-        .header {
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
-            padding: 16px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+    /* Stats Section */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 24px;
+        margin-bottom: 40px;
+    }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
+    .stat-card {
+        background: var(--bg-card);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        transition: transform 0.3s ease, border-color 0.3s ease;
+    }
 
-        .logo {
-            font-size: 24px;
-        }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary);
+    }
 
-        .title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #f3f4f6;
-        }
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-size: 24px;
+        margin-bottom: 16px;
+    }
 
-        .subtitle {
-            font-size: 13px;
-            color: #9ca3af;
-            margin-top: 2px;
-        }
+    .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
 
-        .btn-header {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            color: #60a5fa;
-            transition: all 0.2s;
-            text-decoration: none;
-        }
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
 
-        .btn-header:hover {
-            background: rgba(59, 130, 246, 0.2);
-            border-color: #3b82f6;
-        }
+    /* Knowledge List */
+    .knowledge-container {
+        background: var(--bg-card);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 24px;
-        }
+    .list-header {
+        padding: 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
-        }
+    .list-header h2 {
+        font-size: 20px;
+        font-weight: 600;
+    }
 
-        .stat-card {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 12px;
-            padding: 20px;
-        }
+    .knowledge-item {
+        padding: 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 24px;
+        transition: background 0.2s ease;
+    }
 
-        .stat-value {
-            font-size: 32px;
-            font-weight: 600;
-            color: #3b82f6;
-            margin-bottom: 8px;
-        }
+    .knowledge-item:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
 
-        .stat-label {
-            font-size: 14px;
-            color: #9ca3af;
-        }
+    .knowledge-item:last-child {
+        border-bottom: none;
+    }
 
-        .knowledge-list {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 12px;
-            overflow: hidden;
-        }
+    .item-main {
+        flex: 1;
+    }
 
-        .knowledge-header {
-            padding: 20px;
-            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
-        }
+    .item-question {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
 
-        .knowledge-header h2 {
-            font-size: 18px;
-            color: #f3f4f6;
-        }
+    .item-answer {
+        font-size: 15px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
 
-        .knowledge-item {
-            padding: 16px 20px;
-            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            transition: background 0.2s;
-        }
+    .item-meta {
+        display: flex;
+        gap: 16px;
+        margin-top: 12px;
+        font-size: 13px;
+        color: var(--text-muted);
+    }
 
-        .knowledge-item:hover {
-            background: rgba(59, 130, 246, 0.05);
-        }
+    .meta-tag {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
 
-        .knowledge-item:last-child {
-            border-bottom: none;
-        }
+    .btn-delete {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: var(--danger);
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
 
-        .knowledge-content {
-            flex: 1;
-        }
+    .btn-delete:hover {
+        background: var(--danger);
+        color: white;
+        border-color: var(--danger);
+    }
 
-        .knowledge-question {
-            font-weight: 600;
-            color: #f3f4f6;
-            margin-bottom: 8px;
-        }
+    .empty-state {
+        padding: 80px 24px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: var(--text-secondary);
+    }
 
-        .knowledge-answer {
-            color: #9ca3af;
-            font-size: 14px;
-            line-height: 1.5;
-        }
+    .empty-icon {
+        font-size: 64px;
+        margin-bottom: 24px;
+        opacity: 0.3;
+    }
+</style>
+{% endblock %}
 
-        .knowledge-meta {
-            display: flex;
-            gap: 12px;
-            margin-top: 8px;
-            font-size: 12px;
-            color: #6b7280;
-        }
+{% block header_title %}
+<h1 style="font-size: 18px; font-weight: 600;">Base de Connaissances</h1>
+{% endblock %}
 
-        .knowledge-actions {
-            display: flex;
-            gap: 8px;
-        }
+{% block header_actions %}
+<a href="/teach" class="glass-btn primary">
+    <i class="fas fa-graduation-cap"></i>
+    <span>Mode Enseignement</span>
+</a>
+{% endblock %}
 
-        .btn-delete {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            color: #ef4444;
-            transition: all 0.2s;
-        }
-
-        .btn-delete:hover {
-            background: rgba(239, 68, 68, 0.2);
-            border-color: #ef4444;
-        }
-
-        .empty-state {
-            padding: 60px 20px;
-            text-align: center;
-            color: #9ca3af;
-        }
-
-        .empty-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header {
-                padding: 12px 16px;
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            .header-left {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .title {
-                font-size: 16px;
-            }
-
-            .container {
-                padding: 16px;
-            }
-
-            .knowledge-form {
-                padding: 20px;
-            }
-
-            .form-group label {
-                font-size: 13px;
-            }
-
-            .form-group input,
-            .form-group textarea {
-                font-size: 16px;
-                padding: 10px;
-            }
-
-            .btn {
-                padding: 10px 16px;
-                font-size: 14px;
-                min-height: 44px;
-            }
-
-            .knowledge-list {
-                gap: 12px;
-            }
-
-            .knowledge-item {
-                padding: 16px;
-            }
-
-            .knowledge-title {
-                font-size: 15px;
-            }
-
-            .knowledge-content {
-                font-size: 13px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .header {
-                padding: 10px 12px;
-            }
-
-            .logo {
-                font-size: 20px;
-            }
-
-            .title {
-                font-size: 14px;
-            }
-
-            .container {
-                padding: 12px;
-            }
-
-            .knowledge-form {
-                padding: 16px;
-            }
-
-            .knowledge-item {
-                padding: 12px;
-            }
-
-            .btn {
-                padding: 8px 12px;
-                font-size: 13px;
-            }
-        }
-
-        /* Support tactile */
-        @media (hover: none) and (pointer: coarse) {
-
-            .btn,
-            .knowledge-item {
-                -webkit-tap-highlight-color: rgba(59, 130, 246, 0.2);
-            }
-
-            .btn:active {
-                transform: scale(0.98);
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="header">
-        <div class="header-left">
-            <span class="logo">📚</span>
-            <div>
-                <div class="title">Base de Connaissances</div>
-                <div class="subtitle">Gérez les connaissances apprises</div>
-            </div>
+{% block content %}
+<div class="knowledge-wrapper">
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-database"></i></div>
+            <div class="stat-value">{{ stats.total }}</div>
+            <div class="stat-label">Connaissances totales</div>
         </div>
-        <div>
-            <a href="/teach" class="btn-header">🎓 Retour à l'enseignement</a>
-            <a href="/chat" class="btn-header">💬 Chat</a>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-tags"></i></div>
+            <div class="stat-value">{{ stats.categories }}</div>
+            <div class="stat-label">Catégories</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-value">{{ stats.recent }}</div>
+            <div class="stat-label">Ajoutées récemment</div>
         </div>
     </div>
 
-    <div class="container">
-        <div class="stats">
-            <div class="stat-card">
-                <div class="stat-value">{{ stats.total }}</div>
-                <div class="stat-label">Connaissances totales</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">{{ stats.categories }}</div>
-                <div class="stat-label">Catégories</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">{{ stats.recent }}</div>
-                <div class="stat-label">Ajoutées récemment</div>
+    <!-- Knowledge List -->
+    <div class="knowledge-container">
+        <div class="list-header">
+            <h2>Toutes les connaissances</h2>
+            <div class="search-box" style="display: none;">
+                <!-- Search implemented later if needed -->
             </div>
         </div>
 
-        <div class="knowledge-list">
-            <div class="knowledge-header">
-                <h2>Toutes les connaissances</h2>
-            </div>
-
+        <div id="knowledgeList">
             {% if knowledge %}
-            {% for item in knowledge %}
-            <div class="knowledge-item" id="knowledge-{{ item.id }}">
-                <div class="knowledge-content">
-                    <div class="knowledge-question">{{ item.question }}</div>
-                    <div class="knowledge-answer">{{ item.answer }}</div>
-                    <div class="knowledge-meta">
-                        <span>📁 {{ item.category or 'Non catégorisé' }}</span>
-                        <span>📅 {{ item.created_at }}</span>
+                {% for item in knowledge %}
+                <div class="knowledge-item" id="knowledge-{{ item.id }}">
+                    <div class="item-main">
+                        <div class="item-question">{{ item.question }}</div>
+                        <div class="item-answer">{{ item.answer }}</div>
+                        <div class="item-meta">
+                            <div class="meta-tag">
+                                <i class="fas fa-folder"></i>
+                                <span>{{ item.category or 'Non catégorisé' }}</span>
+                            </div>
+                            <div class="meta-tag">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>{{ item.created_at }}</span>
+                            </div>
+                        </div>
                     </div>
+                    <button class="btn-delete" onclick="deleteKnowledge({{ item.id }})" title="Supprimer">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </div>
-                <div class="knowledge-actions">
-                    <button class="btn-delete" onclick="deleteKnowledge({{ item.id }})">🗑️ Supprimer</button>
-                </div>
-            </div>
-            {% endfor %}
+                {% endfor %}
             {% else %}
-            <div class="empty-state">
-                <div class="empty-icon">📭</div>
-                <div>Aucune connaissance enregistrée</div>
-                <div style="margin-top: 8px; font-size: 14px;">
-                    Utilisez le mode enseignement pour ajouter des connaissances
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+                    <h3>Aucune connaissance enregistrée</h3>
+                    <p style="margin-top: 8px;">Utilisez le mode enseignement pour m'apprendre de nouvelles choses.</p>
+                    <a href="/teach" class="glass-btn" style="margin-top: 24px;">
+                        Commencer à enseigner
+                    </a>
                 </div>
-            </div>
             {% endif %}
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <script>
-        async function deleteKnowledge(id) {
-            if (!confirm('Êtes-vous sûr de vouloir supprimer cette connaissance ?')) {
-                return;
-            }
+{% block scripts %}
+<script>
+    async function deleteKnowledge(id) {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer cette connaissance ?')) {
+            return;
+        }
 
-            try {
-                const response = await fetch(`/api/knowledge/${id}`, {
-                    method: 'DELETE'
-                });
+        try {
+            const response = await fetch(`/api/knowledge/${id}`, {
+                method: 'DELETE'
+            });
 
-                if (response.ok) {
-                    // Supprimer l'élément du DOM
-                    const element = document.getElementById(`knowledge-${id}`);
-                    if (element) {
+            if (response.ok) {
+                const element = document.getElementById(`knowledge-${id}`);
+                if (element) {
+                    element.style.opacity = '0';
+                    element.style.transform = 'translateX(20px)';
+                    setTimeout(() => {
                         element.remove();
-                    }
-
-                    // Recharger la page si c'était le dernier élément
-                    const remaining = document.querySelectorAll('.knowledge-item').length;
-                    if (remaining === 0) {
-                        location.reload();
-                    }
-                } else {
-                    alert('Erreur lors de la suppression');
+                        // Reload stats if needed or check if list empty
+                        const remaining = document.querySelectorAll('.knowledge-item').length;
+                        if (remaining === 0) {
+                            location.reload();
+                        }
+                    }, 300);
                 }
-            } catch (error) {
-                console.error('Erreur:', error);
+            } else {
                 alert('Erreur lors de la suppression');
             }
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la suppression');
         }
-    </script>
-</body>
-
-</html>
+    }
+</script>
+{% endblock %}

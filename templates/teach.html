@@ -1,931 +1,471 @@
-<!DOCTYPE html>
-<html lang="fr">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mode Enseignement - Nmap IA</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #000000;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .header {
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(102, 126, 234, 0.3);
-            padding: 16px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .logo {
-            font-size: 32px;
-        }
-
-        .title-section {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #f3f4f6;
-        }
-
-        .subtitle {
-            font-size: 13px;
-            color: #9ca3af;
-            margin-top: 2px;
-        }
-
-        .stats {
-            display: flex;
-            gap: 16px;
-            font-size: 13px;
-            color: #d1d5db;
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .header-right {
-            display: flex;
-            gap: 12px;
-        }
-
-        .btn-header {
-            background: rgba(102, 126, 234, 0.2);
-            border: 1px solid rgba(102, 126, 234, 0.4);
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            color: #a5b4fc;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-header:hover {
-            background: rgba(102, 126, 234, 0.3);
-            border-color: #667eea;
-            color: #c7d2fe;
-        }
-
-        /* Menu Hamburger Button */
-        .menu-toggle {
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            padding: 10px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 20px;
-            transition: all 0.2s;
-            color: #667eea;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 44px;
-            min-height: 44px;
-        }
-
-        .menu-toggle:hover {
-            background: rgba(102, 126, 234, 0.2);
-            border-color: #667eea;
-            transform: scale(1.05);
-        }
-
-        .menu-toggle:active {
-            transform: scale(0.95);
-        }
-
-        /* Sidebar Menu */
-        .sidebar-menu {
-            position: fixed;
-            top: 0;
-            left: -280px;
-            width: 280px;
-            height: 100vh;
-            background: rgba(15, 23, 42, 0.98);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(102, 126, 234, 0.2);
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
-            transition: left 0.3s ease;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-menu.open {
-            left: 0;
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .sidebar-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #f3f4f6;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .sidebar-close {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 18px;
-            transition: all 0.2s;
-            color: #ef4444;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .sidebar-close:hover {
-            background: rgba(239, 68, 68, 0.2);
-            border-color: #ef4444;
-        }
-
-        .sidebar-content {
-            flex: 1;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            overflow-y: auto;
-        }
-
-        .sidebar-item {
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            padding: 16px 20px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.2s;
-            color: #f3f4f6;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-        }
-
-        .sidebar-item:hover {
-            background: rgba(102, 126, 234, 0.2);
-            border-color: #667eea;
-            transform: translateX(5px);
-        }
-
-        .sidebar-item:active {
-            transform: translateX(5px) scale(0.98);
-        }
-
-        .sidebar-item-icon {
-            font-size: 24px;
-            min-width: 30px;
-            text-align: center;
-        }
-
-        .sidebar-item-text {
-            font-weight: 500;
-        }
-
-        /* Overlay pour fermer le menu */
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(2px);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            z-index: 9998;
-        }
-
-        .sidebar-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .chat-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            max-width: 900px;
-            width: 100%;
-            margin: 0 auto;
-            overflow: hidden;
-            background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-            border-radius: 16px 16px 0 0;
-            margin-top: 16px;
-        }
-
-        .messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px;
-            scroll-behavior: smooth;
-        }
-
-        .message {
-            margin-bottom: 24px;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .message-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 8px;
-        }
-
-        .avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-
-        .avatar-user {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .avatar-bot {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-
-        .message-author {
-            font-weight: 600;
-            font-size: 14px;
-            color: #f3f4f6;
-        }
-
-        .message-content {
-            margin-left: 44px;
-            line-height: 1.6;
-            color: #e5e7eb;
-            font-size: 15px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 12px 16px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .message-actions {
-            margin-left: 44px;
-            margin-top: 8px;
-            display: flex;
-            gap: 8px;
-        }
-
-        .action-btn {
-            background: rgba(102, 126, 234, 0.2);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            color: #a5b4fc;
-            transition: all 0.2s;
-        }
-
-        .action-btn:hover {
-            background: rgba(102, 126, 234, 0.3);
-            border-color: #667eea;
-        }
-
-        .welcome-message {
-            text-align: center;
-            padding: 48px 24px;
-            color: #f3f4f6;
-        }
-
-        .welcome-icon {
-            font-size: 64px;
-            margin-bottom: 24px;
-        }
-
-        .welcome-title {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-
-        .welcome-subtitle {
-            font-size: 16px;
-            color: #d1d5db;
-            margin-bottom: 32px;
-        }
-
-        .welcome-tips {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            max-width: 700px;
-            margin: 0 auto;
-        }
-
-        .tip {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 16px;
-            border-radius: 12px;
-            text-align: left;
-        }
-
-        .tip-icon {
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-
-        .tip-text {
-            font-size: 14px;
-            color: #d1d5db;
-        }
-
-        .input-area {
-            padding: 16px 24px 24px;
-            background: rgba(15, 23, 42, 0.95);
-            border-top: 1px solid rgba(102, 126, 234, 0.3);
-        }
-
-        .input-wrapper {
-            display: flex;
-            align-items: flex-end;
-            gap: 12px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 2px solid rgba(102, 126, 234, 0.3);
-            border-radius: 16px;
-            padding: 12px 16px;
-            transition: all 0.2s;
-        }
-
-        .input-wrapper:focus-within {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-        }
-
-        #messageInput {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-size: 15px;
-            font-family: inherit;
-            resize: none;
-            max-height: 200px;
-            line-height: 1.5;
-            background: transparent;
-            color: #f3f4f6;
-        }
-
-        #messageInput::placeholder {
-            color: #9ca3af;
-        }
-
-        .input-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .btn-send {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 14px;
-        }
-
-        .btn-send:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
-        }
-
-        .btn-send:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .typing-indicator {
-            display: flex;
-            gap: 4px;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            width: fit-content;
-            margin-left: 44px;
-        }
-
-        .typing-dot {
-            width: 8px;
-            height: 8px;
-            background: #667eea;
-            border-radius: 50%;
-            animation: typing 1.4s ease-in-out infinite;
-        }
-
-        .typing-dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes typing {
-
-            0%,
-            60%,
-            100% {
-                transform: translateY(0);
-            }
-
-            30% {
-                transform: translateY(-10px);
-            }
-        }
-
-        .messages::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .messages::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .messages::-webkit-scrollbar-thumb {
-            background: rgba(102, 126, 234, 0.3);
-            border-radius: 3px;
-        }
-
-        .messages::-webkit-scrollbar-thumb:hover {
-            background: rgba(102, 126, 234, 0.5);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header {
-                padding: 12px 16px;
-            }
-
-            .header-left {
-                gap: 12px;
-            }
-
-            .title {
-                font-size: 16px;
-            }
-
-            /* Sidebar pleine largeur sur mobile */
-            .sidebar-menu {
-                width: 85%;
-                left: -85%;
-            }
-
-            .sidebar-menu.open {
-                left: 0;
-            }
-
-            .messages {
-                padding: 12px;
-            }
-
-            .message {
-                padding: 12px;
-                font-size: 14px;
-            }
-
-            .input-area {
-                padding: 12px;
-            }
-
-            #user-input {
-                font-size: 16px;
-                padding: 12px 50px 12px 16px;
-            }
-
-            .send-button {
-                width: 40px;
-                height: 40px;
-            }
-
-            .suggestions {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-
-            .suggestion-card {
-                padding: 12px;
-                font-size: 13px;
-            }
-
-            .btn {
-                padding: 10px 16px;
-                font-size: 14px;
-                min-height: 44px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .header {
-                padding: 10px 12px;
-            }
-
-            .logo {
-                font-size: 20px;
-            }
-
-            .title {
-                font-size: 14px;
-            }
-
-            .messages {
-                padding: 8px;
-            }
-
-            .message {
-                padding: 10px;
-                font-size: 13px;
-            }
-
-            .input-area {
-                padding: 10px 8px;
-            }
-
-            #user-input {
-                font-size: 16px;
-                padding: 10px 45px 10px 12px;
-            }
-
-            .send-button {
-                width: 36px;
-                height: 36px;
-            }
-        }
-
-        /* Support tactile */
-        @media (hover: none) and (pointer: coarse) {
-
-            .btn,
-            .send-button,
-            .suggestion-card,
-            .sidebar-item {
-                -webkit-tap-highlight-color: rgba(102, 126, 234, 0.2);
-            }
-
-            .btn:active,
-            .suggestion-card:active,
-            .sidebar-item:active {
-                transform: scale(0.98);
-            }
-        }
-
-        .send-button,
-        .suggestion-card {
-            -webkit-tap-highlight-color: rgba(102, 126, 234, 0.2);
-        }
-
-        .btn:active,
-        .suggestion-card:active {
-            transform: scale(0.98);
-        }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="header">
-        <div class="header-left">
-            <button class="menu-toggle" onclick="toggleSidebar()" title="Menu">
-                ☰
-            </button>
-            <span class="logo">🎓</span>
-            <div class="title-section">
-                <div class="title">Mode Enseignement</div>
-                <div class="subtitle">Apprends-moi ce que tu veux !</div>
+{% extends "base_layout.html" %}
+{% set active_page = 'teach' %}
+
+{% block title %}Enseignement - Nmap IA{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+    /* Chat Container Styles */
+    .teach-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 24px;
+    }
+
+    .messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 12px;
+        margin-bottom: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* Message Bubbles */
+    .message {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 85%;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .message.user {
+        align-self: flex-end;
+    }
+
+    .message.assistant {
+        align-self: flex-start;
+    }
+
+    .message-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 4px;
+    }
+
+    .message.user .message-header {
+        flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--bg-surface);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+    }
+
+    .message-bubble {
+        padding: 14px 18px;
+        border-radius: var(--radius-lg);
+        position: relative;
+        font-size: 15px;
+        line-height: 1.6;
+        color: var(--text-primary);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .message.user .message-bubble {
+        background: var(--primary);
+        border-bottom-right-radius: 4px;
+        color: white;
+    }
+
+    .message.assistant .message-bubble {
+        background: var(--bg-card);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border);
+        border-bottom-left-radius: 4px;
+    }
+
+    /* Welcome/Empty State */
+    .teach-welcome {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 40px 20px;
+        height: 100%;
+    }
+
+    .welcome-icon {
+        font-size: 64px;
+        margin-bottom: 24px;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: glowPulse 2s infinite;
+    }
+
+    .welcome-title {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: var(--text-primary);
+    }
+
+    .welcome-subtitle {
+        color: var(--text-secondary);
+        max-width: 500px;
+        margin-bottom: 32px;
+    }
+
+    .tips-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        width: 100%;
+        max-width: 700px;
+    }
+
+    .tip-card {
+        background: var(--bg-card);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border);
+        padding: 20px;
+        border-radius: var(--radius-md);
+        text-align: left;
+        transition: transform 0.2s;
+    }
+
+    .tip-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary);
+    }
+
+    .tip-icon {
+        font-size: 24px;
+        margin-bottom: 12px;
+    }
+
+    .tip-text {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    /* Input Area */
+    .input-area {
+        background: var(--bg-card);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 12px 16px;
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+    }
+
+    #messageInput {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 15px;
+        padding: 8px 0;
+        max-height: 200px;
+        resize: none;
+        outline: none;
+    }
+
+    .input-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-md);
+        background: var(--primary);
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .input-btn:hover:not(:disabled) {
+        transform: scale(1.05);
+        box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .input-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Typing Indicator */
+    .typing-indicator {
+        display: flex;
+        gap: 4px;
+        padding: 12px 16px;
+        background: var(--bg-card);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        width: fit-content;
+        margin-bottom: 20px;
+    }
+
+    .dot {
+        width: 6px;
+        height: 6px;
+        background: var(--primary);
+        border-radius: 50%;
+        animation: typing 1.4s infinite;
+    }
+
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-6px); }
+    }
+
+    /* Knowledge Count Header */
+    .stat-badge {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid var(--border);
+        color: var(--primary);
+        padding: 4px 12px;
+        border-radius: var(--radius-full);
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+</style>
+{% endblock %}
+
+{% block header_title %}
+<div style="display: flex; align-items: center; gap: 12px;">
+    <h1 style="font-size: 18px; font-weight: 600;">Mode Enseignement</h1>
+    <div class="stat-badge">
+        <i class="fas fa-database"></i>
+        <span id="knowledgeCount">0 connaissances</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block header_actions %}
+<a href="/knowledge" class="glass-btn">
+    <i class="fas fa-list"></i>
+    <span>Voir les connaissances</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="teach-wrapper">
+    <div class="messages-container" id="messages">
+        <div class="teach-welcome" id="welcomeMessage">
+            <div class="welcome-icon">
+                <i class="fas fa-graduation-cap"></i>
             </div>
-            <div class="stats">
-                <div class="stat-item">
-                    <span>💾</span>
-                    <span id="knowledgeCount">0 connaissances</span>
+            <h2 class="welcome-title">Bienvenue dans le Mode Enseignement !</h2>
+            <p class="welcome-subtitle">
+                Enseigne-moi tout ce que tu veux : langues locales, termes médicaux, préférences personnelles... 
+                Je m'adapterai pour mieux t'aider.
+            </p>
+            <div class="tips-grid">
+                <div class="tip-card">
+                    <div class="tip-icon">🌍</div>
+                    <div class="tip-text">Langues locales (Fang, Ewondo, Lingala...)</div>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-icon">💊</div>
+                    <div class="tip-text">Termes médicaux spécifiques</div>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-icon">🌿</div>
+                    <div class="tip-text">Plantes médicinales traditionnelles</div>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-icon">👤</div>
+                    <div class="tip-text">Informations personnelles</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Sidebar Menu -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-    <div class="sidebar-menu" id="sidebarMenu">
-        <div class="sidebar-header">
-            <div class="sidebar-title">
-                <span>🎓</span>
-                <span>Menu</span>
-            </div>
-            <button class="sidebar-close" onclick="toggleSidebar()" title="Fermer">
-                ✕
-            </button>
-        </div>
-        <div class="sidebar-content">
-            <a href="/knowledge" class="sidebar-item">
-                <span class="sidebar-item-icon">📚</span>
-                <span class="sidebar-item-text">Voir les connaissances</span>
-            </a>
-            <a href="/chat" class="sidebar-item">
-                <span class="sidebar-item-icon">💬</span>
-                <span class="sidebar-item-text">Retour au chat</span>
-            </a>
-            <a href="/" class="sidebar-item">
-                <span class="sidebar-item-icon">🏠</span>
-                <span class="sidebar-item-text">Accueil</span>
-            </a>
-        </div>
+    <div class="input-area">
+        <textarea id="messageInput" placeholder="Enseigne-moi quelque chose..." rows="1"
+            onkeydown="handleKeyPress(event)" oninput="autoResize(this)"></textarea>
+        <button class="input-btn" onclick="sendMessage()" id="sendBtn" title="Enseigner">
+            <i class="fas fa-paper-plane"></i>
+        </button>
     </div>
+</div>
+{% endblock %}
 
-    <div class="chat-container">
-        <div class="messages" id="messages">
-            <div class="welcome-message" id="welcomeMessage">
-                <div class="welcome-icon">🎓</div>
-                <div class="welcome-title">Bienvenue dans le Mode Enseignement !</div>
-                <div class="welcome-subtitle">
-                    Enseigne-moi tout ce que tu veux : langues locales, termes médicaux, préférences personnelles...
-                </div>
-                <div class="welcome-tips">
-                    <div class="tip">
-                        <div class="tip-icon">🌍</div>
-                        <div class="tip-text">Langues locales (Fang, Ewondo, Lingala...)</div>
-                    </div>
-                    <div class="tip">
-                        <div class="tip-icon">💊</div>
-                        <div class="tip-text">Termes médicaux spécifiques</div>
-                    </div>
-                    <div class="tip">
-                        <div class="tip-icon">🌿</div>
-                        <div class="tip-text">Plantes médicinales traditionnelles</div>
-                    </div>
-                    <div class="tip">
-                        <div class="tip-icon">👤</div>
-                        <div class="tip-text">Informations personnelles</div>
-                    </div>
-                </div>
+{% block scripts %}
+<script>
+    const API_URL = window.location.origin;
+    let conversationHistory = [];
+
+    function autoResize(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    }
+
+    function hideWelcome() {
+        const welcome = document.getElementById('welcomeMessage');
+        if (welcome) {
+            welcome.style.display = 'none';
+        }
+    }
+
+    function addMessage(content, isUser) {
+        hideWelcome();
+
+        const messagesDiv = document.getElementById('messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+
+        const avatar = isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-graduation-cap"></i>';
+        const author = isUser ? 'Vous' : 'Assistant Enseignant';
+
+        const formattedContent = isUser ? content.replace(/\n/g, '<br>') : marked.parse(content);
+
+        messageDiv.innerHTML = `
+            <div class="message-header">
+                <div class="message-avatar">${avatar}</div>
+                <span>${author}</span>
             </div>
-        </div>
-
-        <div class="input-area">
-            <div class="input-wrapper">
-                <textarea id="messageInput" placeholder="Enseigne-moi quelque chose..." rows="1"
-                    onkeydown="handleKeyPress(event)" oninput="autoResize(this)"></textarea>
-                <div class="input-actions">
-                    <button class="btn-send" onclick="sendMessage()" id="sendBtn">Enseigner</button>
-                </div>
+            <div class="message-bubble">
+                ${formattedContent}
             </div>
-        </div>
-    </div>
-
-    <script>
-        const API_URL = window.location.origin;
-        let conversationHistory = [];
-
-        function autoResize(textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.height = textarea.scrollHeight + 'px';
-        }
-
-        function handleKeyPress(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
-        }
-
-        function hideWelcome() {
-            const welcome = document.getElementById('welcomeMessage');
-            if (welcome) {
-                welcome.style.display = 'none';
-            }
-        }
-
-        function addMessage(content, isUser) {
-            hideWelcome();
-
-            const messagesDiv = document.getElementById('messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
-
-            const avatar = isUser ? '👤' : '🎓';
-            const author = isUser ? 'Vous' : 'Assistant';
-            const avatarClass = isUser ? 'avatar-user' : 'avatar-bot';
-
-            const formattedContent = isUser ? content.replace(/\n/g, '<br>') : marked.parse(content);
-
-            messageDiv.innerHTML = `
-                <div class="message-header">
-                    <div class="avatar ${avatarClass}">${avatar}</div>
-                    <div class="message-author">${author}</div>
+            ${!isUser ? `
+                <div style="margin-top: 8px; display: flex; gap: 8px;">
+                    <button class="glass-btn" style="padding: 4px 10px; font-size: 12px;" onclick="copyMessage(this)">
+                        <i class="fas fa-copy"></i> Copier
+                    </button>
                 </div>
-                <div class="message-content">${formattedContent}</div>
-                ${!isUser ? `
-                    <div class="message-actions">
-                        <button class="action-btn" onclick="copyMessage(this)">📋 Copier</button>
-                    </div>
-                ` : ''}
-            `;
+            ` : ''}
+        `;
 
-            messagesDiv.appendChild(messageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
 
-        function showTyping() {
-            hideWelcome();
-            const messagesDiv = document.getElementById('messages');
-            const typingDiv = document.createElement('div');
-            typingDiv.id = 'typing';
-            typingDiv.className = 'message';
-            typingDiv.innerHTML = `
-                <div class="message-header">
-                    <div class="avatar avatar-bot">🎓</div>
-                    <div class="message-author">Assistant</div>
-                </div>
-                <div class="typing-indicator">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                </div>
-            `;
-            messagesDiv.appendChild(typingDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
+    function showTyping() {
+        const messagesDiv = document.getElementById('messages');
+        const typingDiv = document.createElement('div');
+        typingDiv.id = 'typing';
+        typingDiv.innerHTML = `
+            <div class="typing-indicator">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        `;
+        messagesDiv.appendChild(typingDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
 
-        function hideTyping() {
-            const typing = document.getElementById('typing');
-            if (typing) typing.remove();
-        }
+    function hideTyping() {
+        const typing = document.getElementById('typing');
+        if (typing) typing.remove();
+    }
 
-        async function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const message = input.value.trim();
+    async function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const message = input.value.trim();
 
-            if (!message) return;
+        if (!message) return;
 
-            addMessage(message, true);
-            input.value = '';
-            input.style.height = 'auto';
+        addMessage(message, true);
+        input.value = '';
+        input.style.height = 'auto';
 
-            const sendBtn = document.getElementById('sendBtn');
-            sendBtn.disabled = true;
+        const sendBtn = document.getElementById('sendBtn');
+        sendBtn.disabled = true;
 
-            showTyping();
+        showTyping();
 
-            try {
-                const response = await fetch(`${API_URL}/api/teach`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: message,
-                        history: conversationHistory
-                    })
+        try {
+            const response = await fetch(`${API_URL}/api/teach`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: message,
+                    history: conversationHistory
+                })
+            });
+
+            const data = await response.json();
+
+            hideTyping();
+
+            if (data.response) {
+                addMessage(data.response, false);
+                conversationHistory.push({
+                    user: message,
+                    assistant: data.response
                 });
 
-                const data = await response.json();
-
-                hideTyping();
-
-                if (data.response) {
-                    addMessage(data.response, false);
-                    conversationHistory.push({
-                        user: message,
-                        assistant: data.response
-                    });
-
-                    if (data.knowledge_count !== undefined) {
-                        document.getElementById('knowledgeCount').textContent =
-                            `${data.knowledge_count} connaissance${data.knowledge_count > 1 ? 's' : ''}`;
-                    }
-                } else {
-                    addMessage('Désolé, une erreur est survenue.', false);
-                }
-
-            } catch (error) {
-                hideTyping();
-                addMessage('Erreur de connexion. Veuillez réessayer.', false);
-            } finally {
-                sendBtn.disabled = false;
-                input.focus();
-            }
-        }
-
-        function copyMessage(btn) {
-            const messageContent = btn.closest('.message').querySelector('.message-content').innerText;
-            navigator.clipboard.writeText(messageContent).then(() => {
-                btn.textContent = '✅ Copié';
-                setTimeout(() => {
-                    btn.textContent = '📋 Copier';
-                }, 2000);
-            });
-        }
-
-        async function loadStats() {
-            try {
-                const response = await fetch(`${API_URL}/api/knowledge/stats`);
-                const data = await response.json();
-                if (data.total !== undefined) {
+                if (data.knowledge_count !== undefined) {
                     document.getElementById('knowledgeCount').textContent =
-                        `${data.total} connaissance${data.total > 1 ? 's' : ''}`;
+                        `${data.knowledge_count} connaissance${data.knowledge_count > 1 ? 's' : ''}`;
                 }
-            } catch (error) {
-                console.error('Erreur chargement stats:', error);
+            } else {
+                addMessage('Désolé, une erreur est survenue.', false);
             }
-        }
 
-        window.addEventListener('load', () => {
-            loadStats();
-            document.getElementById('messageInput').focus();
+        } catch (error) {
+            hideTyping();
+            addMessage('Erreur de connexion. Veuillez réessayer.', false);
+        } finally {
+            sendBtn.disabled = false;
+            input.focus();
+        }
+    }
+
+    function copyMessage(btn) {
+        const messageContent = btn.closest('.message').querySelector('.message-bubble').innerText;
+        navigator.clipboard.writeText(messageContent).then(() => {
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copié';
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+            }, 2000);
         });
-    </script>
+    }
 
-    <!-- Sidebar Menu Script -->
-    <script>
-        // Toggle Sidebar Menu
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebarMenu');
-            const overlay = document.getElementById('sidebarOverlay');
-
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('active');
-        }
-
-        // Fermer le sidebar avec la touche Escape
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                const sidebar = document.getElementById('sidebarMenu');
-                const overlay = document.getElementById('sidebarOverlay');
-                if (sidebar.classList.contains('open')) {
-                    sidebar.classList.remove('open');
-                    overlay.classList.remove('active');
-                }
+    async function loadStats() {
+        try {
+            const response = await fetch(`${API_URL}/api/knowledge/stats`);
+            const data = await response.json();
+            if (data.total !== undefined) {
+                document.getElementById('knowledgeCount').textContent =
+                    `${data.total} connaissance${data.total > 1 ? 's' : ''}`;
             }
-        });
-    </script>
-</body>
+        } catch (error) {
+            console.error('Erreur chargement stats:', error);
+        }
+    }
 
-</html>
+    window.addEventListener('load', () => {
+        loadStats();
+        document.getElementById('messageInput').focus();
+    });
+</script>
+{% endblock %}

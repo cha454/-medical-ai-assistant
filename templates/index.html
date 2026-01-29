@@ -1,827 +1,222 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nmap IA - Votre Assistant Intelligent</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <title>Nmap IA - L'Intelligence Médicale à votre portée</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='modern-theme.css') }}">
+    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            overflow-x: hidden;
-            background: #000000;
-            color: white;
-        }
-
-        /* Fond noir avec grille animée subtile */
-        .animated-background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            background:
-                linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
-                linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: gridMove 20s linear infinite;
-        }
-
-        @keyframes gridMove {
-            0% {
-                background-position: 0 0;
-            }
-
-            100% {
-                background-position: 50px 50px;
-            }
-        }
-
-        /* Gradient radial subtil */
-        .animated-background::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 20% 50%,
-                    rgba(59, 130, 246, 0.15) 0%,
-                    transparent 50%),
-                radial-gradient(circle at 80% 80%,
-                    rgba(139, 92, 246, 0.15) 0%,
-                    transparent 50%),
-                radial-gradient(circle at 40% 20%,
-                    rgba(236, 72, 153, 0.1) 0%,
-                    transparent 50%);
-            animation: gradientPulse 15s ease-in-out infinite;
-        }
-
-        @keyframes gradientPulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.6;
-            }
-        }
-
-        /* Lignes lumineuses animées */
-        .glow-lines {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-            overflow: hidden;
-        }
-
-        .glow-line {
-            position: absolute;
-            width: 2px;
-            height: 100px;
-            background: linear-gradient(to bottom,
-                    transparent,
-                    rgba(59, 130, 246, 0.8),
-                    transparent);
-            animation: lineMove linear infinite;
-        }
-
-        @keyframes lineMove {
-            0% {
-                transform: translateY(-100px);
-                opacity: 0;
-            }
-
-            10% {
-                opacity: 1;
-            }
-
-            90% {
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateY(100vh);
-                opacity: 0;
-            }
-        }
-
-        /* Points lumineux flottants */
-        .particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .particle {
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            background: rgba(59, 130, 246, 0.6);
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
-            animation: float-particle linear infinite;
-        }
-
-        @keyframes float-particle {
-            0% {
-                transform: translateY(100vh) translateX(0);
-                opacity: 0;
-            }
-
-            10% {
-                opacity: 1;
-            }
-
-            90% {
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateY(-100px) translateX(50px);
-                opacity: 0;
-            }
-        }
-
-        /* Contenu principal */
-        .content {
-            position: relative;
-            z-index: 3;
+        .landing-wrapper {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            position: relative;
+            z-index: 1;
         }
 
-        /* Header */
-        .header {
-            padding: 24px 48px;
+        /* Navbar Landing */
+        .navbar {
+            height: 80px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            padding: 0 5%;
             backdrop-filter: blur(10px);
-            background: rgba(0, 0, 0, 0.5);
-            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            background: rgba(2, 6, 23, 0.3);
+            border-bottom: 1px solid var(--border);
+            position: fixed;
+            top: 0; width: 100%; z-index: 100;
         }
 
         .logo {
             display: flex;
             align-items: center;
             gap: 12px;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
-        }
-
-        .logo-icon {
-            font-size: 32px;
-            animation: pulse-icon 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse-icon {
-
-            0%,
-            100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.1);
-            }
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 32px;
-            align-items: center;
-        }
-
-        .nav-link {
-            color: rgba(255, 255, 255, 0.9);
+            color: var(--text-primary);
             text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s;
-            position: relative;
         }
 
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-            transition: width 0.3s;
+        .logo i {
+            color: var(--primary);
+            filter: drop-shadow(0 0 8px var(--primary-glow));
         }
 
-        .nav-link:hover::after {
-            width: 100%;
-        }
-
-        /* Hero Section */
+        /* Hero Section SaaS */
         .hero {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 80px 48px;
+            padding: 160px 5% 80px;
             text-align: center;
-        }
-
-        .hero-content {
-            max-width: 900px;
-            animation: fadeInUp 1s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .hero-badge {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             background: rgba(59, 130, 246, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 32px;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            animation: fadeInUp 1s ease-out 0.2s both;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+            border: 1px solid var(--border-bright);
+            padding: 6px 16px;
+            border-radius: var(--radius-full);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--primary);
+            margin-bottom: 24px;
         }
 
-        .hero-title {
-            font-size: 72px;
+        .hero h1 {
+            font-size: clamp(40px, 8vw, 72px);
             font-weight: 800;
             line-height: 1.1;
             margin-bottom: 24px;
-            background: linear-gradient(135deg, #ffffff 0%, #3b82f6 50%, #8b5cf6 100%);
+            background: linear-gradient(135deg, #fff 0%, var(--primary) 50%, var(--secondary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: fadeInUp 1s ease-out 0.4s both;
-            text-shadow: 0 0 40px rgba(59, 130, 246, 0.3);
         }
 
-        .hero-subtitle {
-            font-size: 24px;
+        .hero p {
+            font-size: clamp(16px, 4vw, 20px);
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto 40px;
             line-height: 1.6;
-            color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 48px;
-            font-weight: 400;
-            animation: fadeInUp 1s ease-out 0.6s both;
         }
 
-        .hero-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-            animation: fadeInUp 1s ease-out 0.8s both;
-        }
-
-        .btn {
-            padding: 18px 40px;
-            border-radius: 16px;
-            font-size: 18px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-            color: white;
-            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.4);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 15px 50px rgba(59, 130, 246, 0.6);
-        }
-
-        .btn-secondary {
-            background: rgba(59, 130, 246, 0.1);
-            color: white;
-            border: 2px solid rgba(59, 130, 246, 0.5);
-            backdrop-filter: blur(10px);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(59, 130, 246, 0.2);
-            border-color: rgba(59, 130, 246, 0.8);
-            transform: translateY(-4px);
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
-        }
-
-        /* Features Section */
+        /* Feature Cards Pro */
         .features {
-            padding: 80px 48px;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(59, 130, 246, 0.1);
-        }
-
-        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            padding: 80px 5%;
             max-width: 1200px;
             margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 32px;
         }
 
-        .feature-card {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(10px);
-            padding: 40px;
-            border-radius: 24px;
-            border: 1px solid rgba(59, 130, 246, 0.2);
+        .card {
+            padding: 32px;
             transition: all 0.3s ease;
-            animation: fadeInUp 1s ease-out both;
         }
 
-        .feature-card:nth-child(1) {
-            animation-delay: 0.2s;
-        }
-
-        .feature-card:nth-child(2) {
-            animation-delay: 0.4s;
-        }
-
-        .feature-card:nth-child(3) {
-            animation-delay: 0.6s;
-        }
-
-        .feature-card:nth-child(4) {
-            animation-delay: 0.8s;
-        }
-
-        .feature-card:hover {
+        .card:hover {
+            border-color: var(--primary);
             transform: translateY(-8px);
-            background: rgba(15, 23, 42, 0.8);
-            border-color: rgba(59, 130, 246, 0.5);
-            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
         }
 
-        .feature-card:hover {
-            transform: translateY(-8px);
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .feature-icon {
-            font-size: 48px;
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--primary);
             margin-bottom: 20px;
-            display: block;
         }
 
-        .feature-title {
-            font-size: 22px;
-            font-weight: 700;
+        .card h3 {
             margin-bottom: 12px;
+            font-size: 20px;
         }
 
-        .feature-description {
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.6;
-            font-size: 16px;
+        .card p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.5;
         }
 
-        /* Stats Section */
-        .stats {
-            padding: 60px 48px;
-            text-align: center;
+        /* Background Visuals */
+        .bg-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            background: radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
         }
 
-        .stats-grid {
-            max-width: 1000px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 48px;
-        }
-
-        .stat-item {
-            animation: fadeInUp 1s ease-out both;
-        }
-
-        .stat-number {
-            font-size: 48px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 8px;
-        }
-
-        .stat-label {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        /* Footer */
-        .footer {
-            padding: 32px 48px;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(59, 130, 246, 0.2);
-        }
-
-        .footer-text {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header {
-                padding: 16px 20px;
-                flex-direction: column;
-                gap: 16px;
-            }
-
-            .nav-links {
-                gap: 16px;
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .hero {
-                padding: 60px 20px;
-                min-height: auto;
-            }
-
-            .hero-title {
-                font-size: 36px;
-                line-height: 1.2;
-            }
-
-            .hero-subtitle {
-                font-size: 16px;
-            }
-
-            .hero-buttons {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .btn {
-                width: 100%;
-                justify-content: center;
-                min-height: 48px;
-                font-size: 16px;
-            }
-
-            .features {
-                padding: 50px 20px;
-            }
-
-            .section-title {
-                font-size: 28px;
-            }
-
-            .section-subtitle {
-                font-size: 15px;
-            }
-
-            .features-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .feature-card {
-                padding: 24px;
-            }
-
-            .stats {
-                padding: 40px 20px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .footer {
-                padding: 24px 20px;
-                text-align: center;
-            }
-
-            .footer-content {
-                flex-direction: column;
-                gap: 16px;
-            }
-        }
-
-        /* Très petits écrans */
-        @media (max-width: 480px) {
-            .header {
-                padding: 12px 16px;
-            }
-
-            .logo {
-                font-size: 20px;
-            }
-
-            .hero {
-                padding: 40px 16px;
-            }
-
-            .hero-title {
-                font-size: 28px;
-            }
-
-            .hero-subtitle {
-                font-size: 14px;
-            }
-
-            .features {
-                padding: 40px 16px;
-            }
-
-            .section-title {
-                font-size: 24px;
-            }
-
-            .feature-card {
-                padding: 20px;
-            }
-
-            .stats {
-                padding: 30px 16px;
-            }
-        }
-
-        /* Tablettes */
-        @media (min-width: 769px) and (max-width: 1024px) {
-            .features-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        /* Support tactile */
-        @media (hover: none) and (pointer: coarse) {
-
-            .btn,
-            .feature-card {
-                -webkit-tap-highlight-color: rgba(59, 130, 246, 0.2);
-            }
-
-            .btn:active {
-                transform: scale(0.98);
-            }
-
-            .feature-card:hover {
-                transform: none;
-            }
+        .grid-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            background-image: linear-gradient(var(--border) 1px, transparent 1px),
+                              linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(circle at center, black, transparent 80%);
+            opacity: 0.3;
         }
     </style>
 </head>
-
 <body>
-    <!-- Fond animé -->
-    <div class="animated-background"></div>
+    <div class="bg-canvas"></div>
+    <div class="grid-overlay"></div>
 
-    <!-- Lignes lumineuses -->
-    <div class="glow-lines" id="glowLines"></div>
-
-    <!-- Particules -->
-    <div class="particles" id="particles"></div>
-
-    <!-- Contenu -->
-    <div class="content">
-        <!-- Header -->
-        <header class="header">
-            <div class="logo">
-                <span class="logo-icon">🏥</span>
+    <div class="landing-wrapper">
+        <nav class="navbar">
+            <a href="/" class="logo">
+                <i class="fas fa-heart-pulse"></i>
                 <span>Nmap IA</span>
+            </a>
+            <div class="nav-actions">
+                <a href="/chat" class="glass-btn primary">
+                    <span>Lancer le Chat</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
-            <nav class="nav-links">
-                <a href="#features" class="nav-link">Fonctionnalités</a>
-                <a href="/chat" class="nav-link">Commencer</a>
-            </nav>
-        </header>
+        </nav>
 
-        <!-- Hero Section -->
         <section class="hero">
-            <div class="hero-content">
-                <h1 class="hero-title">
-                    Votre Assistant IA,<br>Toujours à l'Écoute
-                </h1>
-                <p class="hero-subtitle">
-                    Posez vos questions en langage naturel et obtenez des réponses instantanées sur tous les sujets :
-                    actualités, recherche, images, et bien plus encore.
-                </p>
-                <div class="hero-buttons">
-                    <a href="/chat" class="btn btn-primary">
-                        <span>💬</span>
-                        <span>Commencer la conversation</span>
-                    </a>
-                    <a href="#features" class="btn btn-secondary">
-                        <span>🔍</span>
-                        <span>Découvrir les fonctionnalités</span>
-                    </a>
-                </div>
+            <div class="hero-badge">
+                <i class="fas fa-sparkles"></i>
+                <span>Nouvelle version 2.0 disponible</span>
             </div>
-        </section>
-
-        <!-- Stats Section -->
-        <section class="stats">
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-number">55+</div>
-                    <div class="stat-label">Maladies référencées</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">60+</div>
-                    <div class="stat-label">Médicaments</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">24/7</div>
-                    <div class="stat-label">Disponible</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">100%</div>
-                    <div class="stat-label">Gratuit</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Features Section -->
-        <section class="features" id="features">
-            <div class="features-grid">
-                <div class="feature-card">
-                    <span class="feature-icon">🤖</span>
-                    <h3 class="feature-title">IA Avancée</h3>
-                    <p class="feature-description">
-                        Propulsé par OpenAI GPT-4, Google Gemini et Groq pour des réponses précises et rapides.
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">📰</span>
-                    <h3 class="feature-title">Actualités en Direct</h3>
-                    <p class="feature-description">
-                        Consultez les dernières actualités mondiales avec images, affichées en grille interactive.
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">🖼️</span>
-                    <h3 class="feature-title">Recherche d'Images</h3>
-                    <p class="feature-description">
-                        Trouvez des images sur n'importe quel sujet avec traduction automatique et filtrage intelligent.
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">🎨</span>
-                    <h3 class="feature-title">Génération d'Images</h3>
-                    <p class="feature-description">
-                        Créez des images uniques avec DALL-E 3 à partir de vos descriptions en français.
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">🔍</span>
-                    <h3 class="feature-title">Recherche Web</h3>
-                    <p class="feature-description">
-                        Recherches approfondies sur le web avec sources vérifiées et résultats pertinents.
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">🎤</span>
-                    <h3 class="feature-title">Assistant Vocal</h3>
-                    <p class="feature-description">
-                        Parlez naturellement avec l'IA grâce à la reconnaissance vocale et synthèse vocale.
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">🧮</span>
-                    <h3 class="feature-title">Outils Pratiques</h3>
-                    <p class="feature-description">
-                        Calculatrice, conversion de devises, météo en temps réel et bien plus encore.
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">🎓</span>
-                    <h3 class="feature-title">Mode Enseignement</h3>
-                    <p class="feature-description">
-                        Apprenez à l'IA de nouvelles connaissances et créez votre base de données personnalisée.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <p class="footer-text" style="opacity: 0.6;">
-                © 2026 Nmap IA - Tous droits réservés
+            <h1>L'Intelligence Artificielle au service de votre santé</h1>
+            <p>
+                Nmap IA est votre assistant médical personnel propulsé par les derniers modèles de langage. 
+                Obtenez des conseils, analysez vos symptômes et apprenez au quotidien.
             </p>
+            <div style="display: flex; gap: 16px; justify-content: center;">
+                <a href="/chat" class="glass-btn primary" style="padding: 16px 32px; font-size: 18px;">
+                    Démarrer maintenant
+                </a>
+                <a href="#features" class="glass-btn" style="padding: 16px 32px; font-size: 18px;">
+                    En savoir plus
+                </a>
+            </div>
+        </section>
+
+        <div class="features" id="features">
+            <div class="card glass-panel">
+                <div class="card-icon"><i class="fas fa-brain"></i></div>
+                <h3>Analyse Intelligente</h3>
+                <p>Des réponses précises basées sur une vaste base de connaissances médicales et scientifiques.</p>
+            </div>
+            <div class="card glass-panel">
+                <div class="card-icon"><i class="fas fa-microphone-lines"></i></div>
+                <h3>Interface Vocale</h3>
+                <p>Parlez naturellement à votre assistant grâce à une reconnaissance vocale de haute précision.</p>
+            </div>
+            <div class="card glass-panel">
+                <div class="card-icon"><i class="fas fa-shield-halved"></i></div>
+                <h3>Sécurisé & Privé</h3>
+                <p>Vos conversations sont traitées avec le plus haut niveau de confidentialité et de sécurité.</p>
+            </div>
+            <div class="card glass-panel">
+                <div class="card-icon"><i class="fas fa-graduation-cap"></i></div>
+                <h3>Mode Enseignement</h3>
+                <p>Apprenez-en plus sur la médecine grâce à nos modules éducatifs interactifs.</p>
+            </div>
+        </div>
+
+        <footer style="text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px; border-top: 1px solid var(--border);">
+            <p>&copy; 2026 Nmap IA - Solution Médicale Assistée par Intelligence Artificielle</p>
         </footer>
     </div>
-
-    <script>
-        // Générer des particules flottantes
-        function createParticles() {
-            const particlesContainer = document.getElementById('particles');
-            const particleCount = 50;
-
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-
-                // Position horizontale aléatoire
-                particle.style.left = Math.random() * 100 + '%';
-
-                // Délai d'animation aléatoire
-                particle.style.animationDelay = Math.random() * 10 + 's';
-
-                // Durée d'animation aléatoire
-                particle.style.animationDuration = (Math.random() * 15 + 20) + 's';
-
-                particlesContainer.appendChild(particle);
-            }
-        }
-
-        // Créer des lignes lumineuses
-        function createGlowLines() {
-            const glowLinesContainer = document.getElementById('glowLines');
-            const lineCount = 8;
-
-            for (let i = 0; i < lineCount; i++) {
-                const line = document.createElement('div');
-                line.className = 'glow-line';
-
-                // Position horizontale aléatoire
-                line.style.left = Math.random() * 100 + '%';
-
-                // Délai d'animation aléatoire
-                line.style.animationDelay = Math.random() * 5 + 's';
-
-                // Durée d'animation aléatoire
-                line.style.animationDuration = (Math.random() * 3 + 4) + 's';
-
-                glowLinesContainer.appendChild(line);
-            }
-        }
-
-        // Smooth scroll pour les liens d'ancrage
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-
-        // Initialiser les particules et lignes au chargement
-        window.addEventListener('load', () => {
-            createParticles();
-            createGlowLines();
-        });
-    </script>
 </body>
-
 </html>
