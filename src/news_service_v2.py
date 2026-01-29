@@ -24,6 +24,9 @@ class NewsServiceV2:
                 "https://www.agpgabon.ga/feed/",
                 "https://infosgabon.com/feed/",
                 "https://gabonactu.com/feed/",
+                # Flux de secours plus fiables
+                "https://www.jeuneafrique.com/tag/gabon/feed/",
+                "https://www.rfi.fr/fr/tag/gabon/rss",
             ],
             "afrique_generale": [
                 "https://www.jeuneafrique.com/feed/",
@@ -225,11 +228,13 @@ class NewsServiceV2:
         
         # Déterminer quels flux RSS utiliser
         feeds_to_check = []
+        country_detected = None
         
         # Recherche spécifique par pays
         for country, feeds in self.african_rss_feeds.items():
             if country.replace("_", " ") in query_lower:
                 feeds_to_check.extend(feeds)
+                country_detected = country
                 print(f"🌍 Flux RSS {country}: {len(feeds)} sources")
         
         # Si pas de pays spécifique ou extended, utiliser les flux généraux
@@ -240,11 +245,27 @@ class NewsServiceV2:
         feeds_to_check = list(set(feeds_to_check))[:8]  # Augmenté à 8 pour plus de diversité
         
         # Parser chaque flux RSS
+        successful_feeds = 0
         for feed_url in feeds_to_check:
             try:
                 print(f"📡 Parsing RSS: {feed_url}")
-                feed = feedparser.parse(feed_url)
                 
+                # Timeout plus court pour éviter les blocages
+                import requests
+                response = requests.get(feed_url, timeout=8, headers={
+                    'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)'
+                })
+                
+                if response.status_code != 200:
+                    print(f"   ⚠️ HTTP {response.status_code} pour {feed_url}")
+                    continue
+                
+                feed = feedparser.parse(response.content)
+                
+                if feed.bozo:
+                    print(f"   ⚠️ Feed malformé: {feed.bozo_exception}")
+                
+                entries_found = 0
                 for entry in feed.entries[:8]:  # Max 8 articles par flux
                     # Filtrer par mots-clés si recherche spécifique
                     title = entry.get("title", "")
@@ -276,12 +297,37 @@ class NewsServiceV2:
                         "image": image_url,
                         "video": video_url
                     })
+                    entries_found += 1
+                
+                if entries_found > 0:
+                    successful_feeds += 1
+                    print(f"   ✅ {entries_found} articles trouvés")
+                else:
+                    print(f"   ⚠️ Aucun article trouvé dans ce flux")
                 
             except Exception as e:
-                print(f"   ⚠️ RSS Error ({feed_url}): {e}")
+                print(f"   ❌ RSS Error ({feed_url}): {e}")
                 continue
         
-        print(f"   ✓ {len(articles)} articles RSS trouvés")
+        print(f"   📊 Résumé: {len(articles)} articles de {successful_feeds}/{len(feeds_to_check)} flux")
+        
+        # Si aucun article trouvé pour un pays spécifique, essayer les flux généraux
+        if len(articles) == 0 and country_detected and not extended:
+            print(f"   🔄 Aucun article trouvé pour {country_detected}, essai avec flux généraux...")
+            general_articles = self._get_rss_news("actualités afrique", extended=True)
+            if general_articles:
+                # Filtrer les articles généraux pour le pays demandé
+                filtered_articles = []
+                for article in general_articles:
+                    title = article.get("title", "").lower()
+                    description = article.get("description", "").lower()
+                    if country_detected.replace("_", " ") in title or country_detected.replace("_", " ") in description:
+                        filtered_articles.append(article)
+                
+                if filtered_articles:
+                    print(f"   ✅ {len(filtered_articles)} articles trouvés via flux généraux")
+                    return filtered_articles[:15]
+        
         return articles
     
     def _extract_image_from_entry(self, entry) -> Optional[str]:
@@ -420,6 +466,26 @@ Reformule ta question et je t'aiderai ! 😊"""
         
         articles = news_result["articles"]
         sources = news_result.get("sources", [])
+        
+        # Vérifier si on a des articles
+        if not articles or len(articles) == 0:
+            return f"""📰 **Actualités**
+
+⚠️ Aucun article trouvé pour votre recherche.
+
+**Recherche :** {original_query}
+
+**💡 Suggestions :**
+• Les flux RSS peuvent être temporairement indisponibles
+• Essayez "actualités Afrique" pour des nouvelles générales
+• Reformulez votre recherche
+
+**Exemples qui fonctionnent :**
+• "Actualités monde"
+• "News international"
+• "Actualités Afrique"
+
+Je peux réessayer dans quelques minutes ! 🔄"""
         
         # En-tête en Markdown
         response = '# 📰 Dernières Actualités\n\n'
