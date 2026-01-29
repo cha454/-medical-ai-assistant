@@ -141,7 +141,7 @@ class NewsServiceV2:
         
         return {
             "success": True,
-            "articles": articles[:15],  # Limiter à 15 pour l'affichage (presque 4 lignes de 4)
+            "articles": articles[:16],  # Limiter à 16 pour une grille de 4x4
             "total": len(articles),
             "sources": sources_used,
             "query": query
@@ -317,7 +317,7 @@ class NewsServiceV2:
         content = entry.get("content", [{}])[0].get("value", "") or entry.get("description", "") or entry.get("summary", "")
         if content:
             # YouTube iframe
-            yt_match = re.search(r'src=["\'](https?://(?:www\.)?youtube\.com/embed/[^"\']+)["\']', content)
+            yt_match = re.search(r'src=["\'](https?://(?:www\.)?(?:youtube\.com/embed/|player\.vimeo\.com/video/|dailymotion\.com/embed/video/)[^"\']+)["\']', content)
             if yt_match:
                 return yt_match.group(1)
             
@@ -442,7 +442,7 @@ Reformule ta question et je t'aiderai ! 😊"""
             
             # Vidéo, Image ou placeholder
             if video_url:
-                if "youtube.com/embed" in video_url:
+                if any(x in video_url for x in ["youtube.com/embed", "player.vimeo.com", "dailymotion.com/embed"]):
                     response += f'  <div class="video-container"><iframe src="{video_url}" allowfullscreen></iframe></div>\n'
                 else:
                     response += f'  <video src="{video_url}" controls class="news-video"></video>\n'
