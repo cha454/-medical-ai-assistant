@@ -65,7 +65,17 @@ function addMessage(content, isUser) {
         formattedContent = content.replace(/\n/g, '<br>');
     } else {
         // Pour le bot, convertir le Markdown en HTML
-        formattedContent = marked.parse(content);
+        console.log('🤖 Réponse du bot (brute):', content.substring(0, 100) + '...');
+        
+        // Si le contenu commence par une balise HTML (comme la carte météo), 
+        // on évite de le passer dans marked.parse qui pourrait ajouter des backticks
+        if (content.trim().startsWith('<div')) {
+            formattedContent = content;
+        } else {
+            formattedContent = marked.parse(content);
+        }
+        
+        console.log('🤖 Réponse du bot (formatée):', formattedContent.substring(0, 100) + '...');
     }
 
     messageDiv.innerHTML = `

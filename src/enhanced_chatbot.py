@@ -943,13 +943,13 @@ Exemple: "Quelle est la météo à Paris, FR ?" """
             for i, f in enumerate(forecast_data["forecasts"]):
                 if i % 2 == 0: # Toutes les 6h (puisque c'est toutes les 3h)
                     time_str = f["datetime"].split()[1][:5]
-                    icon_url = f["icon_url"]
+                    icon_url = f["icon_url"].replace('`', '').strip()
                     temp_val = f["temperature"]
                     forecast_html += f'<div class="forecast-item"><div class="forecast-time">{time_str}</div><img class="forecast-icon" src="{icon_url}" alt="icon"><div class="forecast-temp">{temp_val}°</div></div>'
             forecast_html += '</div>'
 
         # Formater la réponse finale avec le nouveau design
-        current_icon = current['icon_url']
+        current_icon = current['icon_url'].replace('`', '').strip()
         city_name = location['city']
         country_name = location['country']
         main_temp = current['temperature']
@@ -966,55 +966,49 @@ Exemple: "Quelle est la météo à Paris, FR ?" """
         update_time = weather_data['timestamp']
 
         response = f"""<div class="weather-card-container">
-    <div class="weather-header">
-        <div class="weather-location">
-            <span class="weather-city">{city_name}</span>
-            <span class="weather-country">{country_name}</span>
-        </div>
-        <img src="{current_icon}" class="weather-icon-main" alt="weather icon">
-    </div>
-
-    <div class="weather-main-temp">
-        <div class="weather-temp-big">{main_temp}{temp_unit}</div>
-        <div class="weather-description">{description}</div>
-        <div class="weather-feels-like">Ressenti {feels_like}{temp_unit}</div>
-    </div>
-
-    <div class="weather-details-grid">
-        <div class="weather-detail-item">
-            <div class="weather-detail-label">💧 Humidité</div>
-            <div class="weather-detail-value">{humidity}%</div>
-        </div>
-        <div class="weather-detail-item">
-            <div class="weather-detail-label">💨 Vent</div>
-            <div class="weather-detail-value">{wind_speed} {wind_unit}</div>
-        </div>
-        <div class="weather-detail-item">
-            <div class="weather-detail-label">🔻 Min</div>
-            <div class="weather-detail-value">{temp_min}{temp_unit}</div>
-        </div>
-        <div class="weather-detail-item">
-            <div class="weather-detail-label">🔺 Max</div>
-            <div class="weather-detail-value">{temp_max}{temp_unit}</div>
-        </div>
-    </div>
-
-    <div class="weather-sun-times">
-        <span>🌅 Lever: {sunrise}</span>
-        <span>🌇 Coucher: {sunset}</span>
-    </div>
-
-    <div class="weather-health-tip">
-        <div class="weather-tip-title">✨ Conseil santé</div>
-        <div class="weather-tip-text">{health_tip}</div>
-    </div>
-
-    <div class="weather-forecast-title" style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); margin-top: 1rem;">📅 Prévisions prochaines heures</div>
-    {forecast_html}
-
-    <div class="weather-timestamp">
-        Mis à jour: {update_time}
-    </div>
+<div class="weather-header">
+<div class="weather-location">
+<span class="weather-city">{city_name}</span>
+<span class="weather-country">{country_name}</span>
+</div>
+<img src="{current_icon}" class="weather-icon-main" alt="weather icon">
+</div>
+<div class="weather-main-temp">
+<div class="weather-temp-big">{main_temp}{temp_unit}</div>
+<div class="weather-description">{description}</div>
+<div class="weather-feels-like">Ressenti {feels_like}{temp_unit}</div>
+</div>
+<div class="weather-details-grid">
+<div class="weather-detail-item">
+<div class="weather-detail-label">💧 Humidité</div>
+<div class="weather-detail-value">{humidity}%</div>
+</div>
+<div class="weather-detail-item">
+<div class="weather-detail-label">💨 Vent</div>
+<div class="weather-detail-value">{wind_speed} {wind_unit}</div>
+</div>
+<div class="weather-detail-item">
+<div class="weather-detail-label">🔻 Min</div>
+<div class="weather-detail-value">{temp_min}{temp_unit}</div>
+</div>
+<div class="weather-detail-item">
+<div class="weather-detail-label">🔺 Max</div>
+<div class="weather-detail-value">{temp_max}{temp_unit}</div>
+</div>
+</div>
+<div class="weather-sun-times">
+<span>🌅 Lever: {sunrise}</span>
+<span>🌇 Coucher: {sunset}</span>
+</div>
+<div class="weather-health-tip">
+<div class="weather-tip-title">✨ Conseil santé</div>
+<div class="weather-tip-text">{health_tip}</div>
+</div>
+<div class="weather-forecast-title" style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); margin-top: 1rem;">📅 Prévisions prochaines heures</div>
+{forecast_html}
+<div class="weather-timestamp">
+Mis à jour: {update_time}
+</div>
 </div>"""
         
         return response
