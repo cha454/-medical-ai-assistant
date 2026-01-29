@@ -175,6 +175,72 @@
         filter: brightness(1.1);
     }
 
+    /* Responsive Chat */
+    @media (max-width: 768px) {
+        .chat-wrapper {
+            padding: 10px;
+        }
+        
+        .messages-container {
+            padding: 10px;
+            gap: 16px;
+        }
+
+        .message {
+            max-width: 95%;
+            gap: 10px;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            font-size: 1rem;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            font-size: 14px;
+        }
+
+        .chat-input-area {
+            padding: 10px;
+        }
+
+        .input-glass-container {
+            padding: 6px 12px;
+            gap: 8px;
+            border-radius: var(--radius-md);
+        }
+
+        #messageInput {
+            font-size: 14px;
+            padding: 8px 0;
+        }
+        
+        .icon-btn, .send-btn {
+            width: 36px;
+            height: 36px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .message {
+            max-width: 100%;
+        }
+        
+        .message-avatar {
+            display: none; /* Cache les avatars sur les très petits écrans pour gagner de la place */
+        }
+        
+        .message.user .message-bubble {
+            border-top-right-radius: var(--radius-lg);
+        }
+        
+        .message.bot .message-bubble {
+            border-top-left-radius: var(--radius-lg);
+        }
+    }
+
     /* Empty State */
     .chat-empty {
         display: flex;

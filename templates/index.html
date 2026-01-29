@@ -151,6 +151,65 @@
             mask-image: radial-gradient(circle at center, black, transparent 80%);
             opacity: 0.3;
         }
+
+        /* Responsive Landing */
+        @media (max-width: 768px) {
+            .navbar {
+                height: 70px;
+                padding: 0 1.5rem;
+            }
+
+            .logo span {
+                font-size: 18px;
+            }
+
+            .hero {
+                padding: 120px 1.5rem 60px;
+            }
+
+            .hero h1 {
+                font-size: 40px;
+                margin-bottom: 16px;
+            }
+
+            .hero p {
+                font-size: 16px;
+                margin-bottom: 32px;
+            }
+
+            .hero .glass-btn {
+                padding: 12px 20px !important;
+                font-size: 15px !important;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+                padding: 40px 1.5rem;
+            }
+
+            .card {
+                padding: 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-actions .glass-btn span {
+                display: none; /* Cache le texte du bouton sur mobile très étroit */
+            }
+            
+            .nav-actions .glass-btn i {
+                margin: 0;
+            }
+
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .hero style {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
     </style>
 </head>
 <body>
