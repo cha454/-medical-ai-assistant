@@ -22,6 +22,8 @@ class NewsServiceV2:
             "gabon": [
                 "https://www.gabonreview.com/feed/",
                 "https://www.agpgabon.ga/feed/",
+                "https://infosgabon.com/feed/",
+                "https://gabonactu.com/feed/",
             ],
             "afrique_generale": [
                 "https://www.jeuneafrique.com/feed/",
@@ -192,6 +194,30 @@ class NewsServiceV2:
             print(f"   ❌ GNews Exception: {e}")
             return []
     
+    def _format_clean_description(self, html_content: str) -> str:
+        """Nettoie le HTML de la description pour ne garder que le texte propre"""
+        if not html_content:
+            return ""
+        
+        import re
+        # 1. Supprimer les balises <style> et <script>
+        clean = re.sub(r'<(style|script)[^>]*>.*?</\1>', '', html_content, flags=re.DOTALL | re.IGNORECASE)
+        # 2. Supprimer toutes les balises HTML
+        clean = re.sub(r'<[^>]+>', ' ', clean)
+        # 3. Remplacer les entités HTML courantes
+        entities = {
+            '&nbsp;': ' ', '&amp;': '&', '&lt;': '<', '&gt;': '>',
+            '&quot;': '"', '&#039;': "'", '&rsquo;': "'", '&lsquo;': "'",
+            '&ldquo;': '"', '&rdquo;': '"'
+        }
+        for ent, res in entities.items():
+            clean = clean.replace(ent, res)
+        
+        # 4. Nettoyer les espaces multiples et les retours à la ligne
+        clean = re.sub(r'\s+', ' ', clean).strip()
+        
+        return clean
+
     def _get_rss_news(self, query: str, extended: bool = False) -> List[Dict]:
         """Récupère les actualités depuis les flux RSS africains"""
         articles = []
@@ -211,7 +237,7 @@ class NewsServiceV2:
             feeds_to_check.extend(self.african_rss_feeds["afrique_generale"])
         
         # Limiter le nombre de flux pour ne pas être trop lent
-        feeds_to_check = list(set(feeds_to_check))[:5]  # Max 5 flux
+        feeds_to_check = list(set(feeds_to_check))[:8]  # Augmenté à 8 pour plus de diversité
         
         # Parser chaque flux RSS
         for feed_url in feeds_to_check:
@@ -219,13 +245,16 @@ class NewsServiceV2:
                 print(f"📡 Parsing RSS: {feed_url}")
                 feed = feedparser.parse(feed_url)
                 
-                for entry in feed.entries[:5]:  # Max 5 articles par flux
+                for entry in feed.entries[:8]:  # Max 8 articles par flux
                     # Filtrer par mots-clés si recherche spécifique
                     title = entry.get("title", "")
-                    description = entry.get("description", "") or entry.get("summary", "")
+                    raw_description = entry.get("description", "") or entry.get("summary", "")
+                    
+                    # Nettoyer la description
+                    description = self._format_clean_description(raw_description)
                     
                     # Si recherche spécifique, vérifier que l'article correspond
-                    if query and len(query) > 3:
+                    if query and len(query) > 3 and "actualité" not in query_lower:
                         if query_lower not in title.lower() and query_lower not in description.lower():
                             continue
                     
@@ -256,51 +285,41 @@ class NewsServiceV2:
         return articles
     
     def _extract_image_from_entry(self, entry) -> Optional[str]:
-        """Extrait l'image d'une entrée RSS (plusieurs méthodes)"""
-        import re
-        
-        # Méthode 1: media_content (standard)
+        """Extrait une image d'une entrée RSS par tous les moyens possibles"""
+        # Méthode 1: media_content (Standard RSS)
         if entry.get("media_content"):
             for media in entry.get("media_content", []):
-                if media.get("url"):
+                if media.get("type", "").startswith("image/") or media.get("medium") == "image":
                     return media.get("url")
         
-        # Méthode 2: media_thumbnail
-        if entry.get("media_thumbnail"):
-            for thumb in entry.get("media_thumbnail", []):
-                if thumb.get("url"):
-                    return thumb.get("url")
-        
-        # Méthode 3: enclosures (pièces jointes)
-        if entry.get("enclosures"):
-            for enclosure in entry.get("enclosures", []):
-                if enclosure.get("type", "").startswith("image/"):
-                    return enclosure.get("href") or enclosure.get("url")
-        
-        # Méthode 4: Chercher dans le contenu HTML
-        content = entry.get("content", [{}])[0].get("value", "") or entry.get("description", "") or entry.get("summary", "")
-        if content:
-            # Chercher les balises <img>
-            img_matches = re.findall(r'<img[^>]+src=["\']([^"\']+)["\']', content, re.IGNORECASE)
-            if img_matches:
-                # Filtrer les images trop petites (probablement des icônes)
-                for img_url in img_matches:
-                    if not any(x in img_url.lower() for x in ['icon', 'logo', 'avatar', 'pixel', '1x1']):
-                        return img_url
-        
-        # Méthode 5: Champ image direct
-        if entry.get("image"):
-            if isinstance(entry.get("image"), dict):
-                return entry.get("image", {}).get("href") or entry.get("image", {}).get("url")
-            elif isinstance(entry.get("image"), str):
-                return entry.get("image")
-        
-        # Méthode 6: og:image dans les liens
+        # Méthode 2: links (Enclosures)
         if entry.get("links"):
             for link in entry.get("links", []):
                 if link.get("type", "").startswith("image/"):
                     return link.get("href")
         
+        # Méthode 3: media_thumbnail
+        if entry.get("media_thumbnail"):
+            return entry.get("media_thumbnail")[0].get("url")
+
+        # Méthode 4: Image spécifique au Gabon (souvent dans summary ou content avec des balises <img>)
+        content = entry.get("content", [{}])[0].get("value", "") or entry.get("description", "") or entry.get("summary", "")
+        if content:
+            import re
+            # Chercher la première balise img
+            img_match = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', content)
+            if img_match:
+                url = img_match.group(1)
+                # Éviter les petites icônes ou trackers
+                if not any(x in url.lower() for x in ["pixel", "spinner", "logo", "icon", "ads"]):
+                    return url
+
+        # Méthode 5: fallback pour les sites Wordpress (très courants au Gabon)
+        if "links" in entry:
+            for link in entry.links:
+                if "image" in link.get("rel", ""):
+                    return link.href
+            
         return None
     
     def _extract_video_from_entry(self, entry) -> Optional[str]:
