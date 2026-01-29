@@ -178,7 +178,8 @@ class NewsServiceV2:
                         "url": article.get("url"),
                         "source": {"name": article.get("source", {}).get("name", "GNews")},
                         "publishedAt": article.get("publishedAt"),
-                        "image": article.get("image")
+                        "image": article.get("image"),
+                        "video": None
                     })
                 
                 print(f"   ✓ {len(articles)} articles GNews trouvés")
@@ -234,13 +235,17 @@ class NewsServiceV2:
                     # Extraire l'image (plusieurs méthodes)
                     image_url = self._extract_image_from_entry(entry)
                     
+                    # Extraire la vidéo (si disponible)
+                    video_url = self._extract_video_from_entry(entry)
+                    
                     articles.append({
                         "title": title,
                         "description": description[:300] if description else "",
                         "url": entry.get("link", ""),
                         "source": {"name": feed.feed.get("title", "RSS Feed")},
                         "publishedAt": published,
-                        "image": image_url
+                        "image": image_url,
+                        "video": video_url
                     })
                 
             except Exception as e:
@@ -298,6 +303,31 @@ class NewsServiceV2:
         
         return None
     
+    def _extract_video_from_entry(self, entry) -> Optional[str]:
+        """Extrait une vidéo d'une entrée RSS"""
+        import re
+        
+        # Méthode 1: media_content (type video)
+        if entry.get("media_content"):
+            for media in entry.get("media_content", []):
+                if media.get("type", "").startswith("video/"):
+                    return media.get("url")
+        
+        # Méthode 2: Chercher des iframes YouTube ou des balises <video> dans le contenu
+        content = entry.get("content", [{}])[0].get("value", "") or entry.get("description", "") or entry.get("summary", "")
+        if content:
+            # YouTube iframe
+            yt_match = re.search(r'src=["\'](https?://(?:www\.)?youtube\.com/embed/[^"\']+)["\']', content)
+            if yt_match:
+                return yt_match.group(1)
+            
+            # Balise <video>
+            video_match = re.search(r'<video[^>]+src=["\']([^"\']+)["\']', content)
+            if video_match:
+                return video_match.group(1)
+        
+        return None
+
     def _deduplicate_articles(self, articles: List[Dict]) -> List[Dict]:
         """Supprime les articles en double (même titre)"""
         seen_titles = set()
@@ -391,6 +421,7 @@ Reformule ta question et je t'aiderai ! 😊"""
             url = article.get("url", "")
             published_at = article.get("publishedAt", "")
             image_url = article.get("image", "")
+            video_url = article.get("video", "")
             
             # Formater la date
             date_str = ""
@@ -409,8 +440,13 @@ Reformule ta question et je t'aiderai ! 😊"""
             # Carte d'article en HTML
             response += '<div class="news-card">\n'
             
-            # Image ou placeholder
-            if image_url:
+            # Vidéo, Image ou placeholder
+            if video_url:
+                if "youtube.com/embed" in video_url:
+                    response += f'  <div class="video-container"><iframe src="{video_url}" allowfullscreen></iframe></div>\n'
+                else:
+                    response += f'  <video src="{video_url}" controls class="news-video"></video>\n'
+            elif image_url:
                 response += f'  <div class="news-image" style="background-image: url(\'{image_url}\')"></div>\n'
             else:
                 response += '  <div class="news-image news-placeholder">📰</div>\n'

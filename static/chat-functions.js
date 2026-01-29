@@ -5,6 +5,14 @@
 
 console.log('🔵 chat-functions.js chargé');
 
+// Configuration de Marked.js pour autoriser le HTML (nécessaire pour la grille d'actualités)
+marked.setOptions({
+    headerIds: false,
+    mangle: false,
+    sanitize: false, // Permet le HTML dans le Markdown
+    breaks: true    // Supporte les retours à la ligne
+});
+
 const API_URL = window.location.origin;
 let conversationHistory = [];
 
