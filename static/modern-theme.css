@@ -27,6 +27,50 @@
     --radius-md: 12px;
     --radius-lg: 20px;
     --radius-full: 9999px;
+    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.3);
+    --shadow-primary: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+
+/* Mobile Toggle */
+.mobile-toggle {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1001;
+    width: 45px;
+    height: 45px;
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    font-size: 1.2rem;
+    box-shadow: var(--shadow-lg);
+}
+
+@media (max-width: 1024px) {
+    .mobile-toggle {
+        display: flex;
+    }
+
+    .app-sidebar {
+        transform: translateX(-100%);
+        z-index: 1000;
+        width: 280px !important;
+    }
+
+    .app-sidebar.active {
+        transform: translateX(0);
+    }
+
+    .app-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
 }
 
 /* Base Styles */

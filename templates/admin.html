@@ -369,6 +369,19 @@
         </div>
     </div>
 
+    <!-- Charts Section -->
+    <div class="glass-panel" style="margin-bottom: 3rem; padding: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0; color: white; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-chart-line" style="color: var(--primary);"></i>
+                Activité des Consultations
+            </h3>
+        </div>
+        <div style="height: 350px; position: relative;">
+            <canvas id="statsChart"></canvas>
+        </div>
+    </div>
+
     <div class="admin-tabs">
         <button class="admin-tab active" onclick="showTab(event, 'dashboard')">
             <i class="fas fa-chart-line"></i> Dashboard
@@ -564,6 +577,63 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        initStatsChart();
+    });
+
+    async function initStatsChart() {
+        try {
+            const response = await fetch('/api/statistics');
+            const data = await response.json();
+            const stats = data.statistics;
+
+            const ctx = document.getElementById('statsChart').getContext('2d');
+            
+            // Simulation de données historiques pour l'exemple
+            const labels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+            const chartData = [12, 19, 15, 25, 22, 30, stats.total_consultations];
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Consultations',
+                        data: chartData,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: 'rgba(255, 255, 255, 0.5)',
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: 'rgba(255, 255, 255, 0.6)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'rgba(255, 255, 255, 0.6)' }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Erreur lors du chargement des stats:', error);
+        }
+    }
+
     const API_URL = window.location.origin;
     let allDiseases = [];
     let allDrugs = [];
@@ -746,11 +816,11 @@
     }
 
     // Changer de tab
-    function showTab(event, tabName) {
+    function showTab(evt, tabName) {
         document.querySelectorAll('.admin-tab').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-        event.currentTarget.classList.add('active');
+        evt.currentTarget.classList.add('active');
         document.getElementById(tabName).classList.add('active');
 
         if (tabName === 'dashboard') {

@@ -121,8 +121,13 @@
     <div class="bg-canvas"></div>
     
     <div class="app-layout">
+        <!-- Mobile Header Toggle -->
+        <div class="mobile-toggle" onclick="toggleMobileSidebar()">
+            <i class="fas fa-bars"></i>
+        </div>
+
         <!-- Sidebar -->
-        <aside class="app-sidebar">
+        <aside class="app-sidebar" id="appSidebar">
             <div class="sidebar-brand">
                 <div class="brand-icon">
                     <i class="fas fa-heart-pulse"></i>
@@ -178,6 +183,33 @@
         </main>
     </div>
 
+    <script>
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('appSidebar');
+            sidebar.classList.toggle('active');
+            
+            // Fermer le sidebar si on clique en dehors (optionnel)
+            if (sidebar.classList.contains('active')) {
+                const overlay = document.createElement('div');
+                overlay.id = 'sidebar-overlay';
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.background = 'rgba(0,0,0,0.5)';
+                overlay.style.zIndex = '999';
+                overlay.onclick = () => {
+                    sidebar.classList.remove('active');
+                    overlay.remove();
+                };
+                document.body.appendChild(overlay);
+            } else {
+                const overlay = document.getElementById('sidebar-overlay');
+                if (overlay) overlay.remove();
+            }
+        }
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
