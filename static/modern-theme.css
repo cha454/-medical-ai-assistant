@@ -381,7 +381,122 @@ body {
     line-height: 1.6;
 }
 
-/* Glassmorphism Components */
+/* Search Results Styling */
+.search-sources-container {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px dashed var(--border);
+}
+
+.search-sources-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sources-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.source-item {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+    text-decoration: none !important;
+}
+
+.source-item:hover {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: var(--primary);
+    transform: translateX(5px);
+}
+
+.source-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: var(--primary);
+}
+
+.source-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.source-name {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.source-url {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.source-link-icon {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* Markdown Specific Improvements */
+.message-content h3 {
+    margin: 1.5rem 0 1rem 0;
+    color: var(--primary);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.message-content h3::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+}
+
+.message-content ul, .message-content ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.message-content li {
+    margin-bottom: 0.5rem;
+}
+
+.message-content blockquote {
+    border-left: 4px solid var(--primary);
+    background: rgba(59, 130, 246, 0.05);
+    padding: 10px 15px;
+    margin: 1rem 0;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-style: italic;
+}
 .glass-panel {
     background: var(--bg-card);
     backdrop-filter: var(--glass-blur);

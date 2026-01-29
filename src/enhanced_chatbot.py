@@ -609,18 +609,30 @@ RÈGLE #5 - QUESTIONS MÉDICALES:
                 print(f"📥 Réponse LLM reçue: {bool(llm_response)}")
                 
                 if llm_response:
+                    # Améliorer le formatage Markdown
+                    llm_response = self._format_markdown_response(llm_response)
+
                     # Ajouter les sources web si disponibles (seulement si pertinentes)
                     if web_results and web_results.get("sources") and not is_conversational:
-                        # Filtrer les sources pertinentes (pas les articles aléatoires)
-                        relevant_sources = [s for s in web_results["sources"] if s.get('extract') and len(s.get('extract', '')) > 50]
-                        
-                        if relevant_sources:
-                            llm_response += "\n\n---\n**📚 Sources consultées:**\n"
-                            for i, source in enumerate(relevant_sources[:5], 1):  # Maximum 5 sources
-                                reliability = {"very_high": "⭐⭐⭐", "high": "⭐⭐", "medium": "⭐"}.get(source.get("reliability", "medium"), "⭐")
-                                llm_response += f"{i}. {source.get('source', 'Source')} {reliability}\n"
-                                if source.get('url'):
-                                    llm_response += f"   🔗 {source['url']}\n"
+                        # Utiliser le nouveau formatage HTML des sources du web_search
+                        try:
+                            formatted_sources = web_search.format_search_results(web_results)
+                            if formatted_sources:
+                                # Extraire uniquement la partie HTML du formatage (le summary est déjà géré par le LLM)
+                                if '<div class="search-sources-container">' in formatted_sources:
+                                    html_sources = formatted_sources.split('\n\n')[-1]
+                                    llm_response += f"\n\n{html_sources}"
+                        except Exception as e:
+                            print(f"⚠️ Erreur formatage sources: {e}")
+                            # Fallback sur l'ancien formatage si erreur
+                            relevant_sources = [s for s in web_results["sources"] if s.get('extract') and len(s.get('extract', '')) > 50]
+                            if relevant_sources:
+                                llm_response += "\n\n---\n**📚 Sources consultées:**\n"
+                                for i, source in enumerate(relevant_sources[:5], 1):
+                                    reliability = {"very_high": "⭐⭐⭐", "high": "⭐⭐", "medium": "⭐"}.get(source.get("reliability", "medium"), "⭐")
+                                    llm_response += f"{i}. {source.get('source', 'Source')} {reliability}\n"
+                                    if source.get('url'):
+                                        llm_response += f"   🔗 {source['url']}\n"
                     
                     # Ajouter disclaimer seulement pour questions médicales
                     medical_keywords = ["symptôme", "maladie", "douleur", "traitement", "médicament", "santé", "médecin", "diagnostic", "ebola", "virus", "infection"]
@@ -1048,6 +1060,53 @@ Mis à jour: {update_time}
                 return city.title()
         
         return None
+
+    def _format_markdown_response(self, text):
+        """Améliore le formatage Markdown des réponses du LLM pour l'UI"""
+        if not text:
+            return text
+            
+        # 1. Améliorer les titres (### -> h3 avec icônes si possible)
+        lines = text.split('\n')
+        formatted_lines = []
+        
+        # Mapping d'icônes pour les titres courants
+        icon_map = {
+            "caractéristiques": "🌟",
+            "caracteristiques": "🌟",
+            "différences": "🌍",
+            "differences": "🌍",
+            "conclusion": "🕊️",
+            "historique": "📜",
+            "origine": "🌱",
+            "pratiques": "🕌",
+            "croyances": "✨",
+            "sources": "📚",
+            "résumé": "📝",
+            "resume": "📝"
+        }
+        
+        for line in lines:
+            if line.startswith('### '):
+                title = line.replace('### ', '').strip()
+                title_lower = title.lower()
+                
+                # Chercher une icône correspondante
+                icon = ""
+                for key, emoji in icon_map.items():
+                    if key in title_lower:
+                        icon = emoji + " "
+                        break
+                
+                # Si le titre n'a pas déjà d'emoji à la fin, on en met un au début
+                if not any(char in title for char in "🌟🌍🕊️📜🌱🕌✨📚📝✝️☪️☸️"):
+                    formatted_lines.append(f"### {icon}{title}")
+                else:
+                    formatted_lines.append(line)
+            else:
+                formatted_lines.append(line)
+                
+        return '\n'.join(formatted_lines)
     
     def _get_weather_emoji(self, description):
         """Retourne un emoji selon la description météo"""

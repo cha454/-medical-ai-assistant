@@ -277,52 +277,45 @@ class MedicalWebSearch:
         return []
     
     def format_search_results(self, results):
-        """Formate les résultats de recherche pour affichage"""
+        """Formate les résultats de recherche pour affichage avec HTML enrichi"""
         if not results or not results.get("sources"):
             return None
         
-        formatted = f"""**📚 Informations vérifiées sur le web:**\n\n"""
+        # Début du conteneur HTML pour les sources
+        html = '<div class="search-sources-container">'
+        html += '<div class="search-sources-title"><i class="fas fa-book-reader"></i> Sources consultées pour cette réponse</div>'
+        html += '<div class="sources-list">'
         
-        # Résumé principal
-        if results.get("summary"):
-            formatted += f"{results['summary'][:600]}...\n\n"
-        
-        # Statistiques des sources
-        total_sources = len(results["sources"])
-        very_high = sum(1 for s in results["sources"] if s.get("reliability") == "very_high")
-        high = sum(1 for s in results["sources"] if s.get("reliability") == "high")
-        
-        formatted += f"**📊 Qualité de la recherche:**\n"
-        formatted += f"• {total_sources} sources consultées\n"
-        formatted += f"• {very_high} sources très fiables (⭐⭐⭐)\n"
-        formatted += f"• {high} sources fiables (⭐⭐)\n\n"
-        
-        # Sources détaillées
-        formatted += "**🔍 Sources consultées:**\n\n"
-        
-        for i, source in enumerate(results["sources"][:8], 1):  # Augmenté à 8 sources
-            reliability_emoji = {
-                "very_high": "⭐⭐⭐",
-                "high": "⭐⭐",
-                "medium": "⭐"
-            }.get(source.get("reliability", "medium"), "⭐")
+        for source in results["sources"][:5]:  # Limiter à 5 sources pour ne pas surcharger
+            reliability_icon = {
+                "very_high": "🛡️",
+                "high": "✅",
+                "medium": "🔍"
+            }.get(source.get("reliability", "medium"), "🔍")
             
-            formatted += f"{i}. **{source.get('source', 'Source')}** {reliability_emoji}\n"
-            if source.get("title"):
-                formatted += f"   📄 {source['title'][:120]}\n"
-            if source.get("extract") and len(source.get("extract", "")) > 20:
-                formatted += f"   💬 {source['extract'][:150]}...\n"
-            if source.get("authors"):
-                formatted += f"   👥 {source['authors']}\n"
-            if source.get("date"):
-                formatted += f"   📅 {source['date']}\n"
-            if source.get("url"):
-                formatted += f"   🔗 {source['url']}\n"
-            formatted += "\n"
+            source_name = source.get('source', 'Source Web')
+            source_url = source.get('url', '#')
+            source_title = source.get('title', 'Voir la source')
+            
+            html += f"""
+            <a href="{source_url}" target="_blank" class="source-item" title="{source_title}">
+                <div class="source-icon">{reliability_icon}</div>
+                <div class="source-info">
+                    <span class="source-name">{source_name}</span>
+                    <span class="source-url">{source_url}</span>
+                </div>
+                <div class="source-link-icon"><i class="fas fa-external-link-alt"></i></div>
+            </a>"""
         
-        formatted += f"\n📅 **Dernière mise à jour:** {datetime.now().strftime('%d/%m/%Y à %H:%M')}\n"
-        formatted += f"🔄 **Données mises en cache pour 24h**\n\n"
-        formatted += "⚠️ **Ces informations sont à but éducatif. Consultez un professionnel de santé pour un avis personnalisé.**"
+        html += '</div></div>'
+        
+        # Texte Markdown standard qui sera rendu par marked.js
+        # On ajoute le HTML à la fin du texte Markdown
+        summary = results.get("summary", "")
+        if len(summary) > 600:
+            summary = summary[:600] + "..."
+            
+        formatted = f"{summary}\n\n{html}"
         
         return formatted
     
