@@ -241,24 +241,7 @@
         }
     }
 
-    /* Empty State */
-    .chat-empty {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        text-align: center;
-        opacity: 0.8;
-    }
 
-    .chat-empty i {
-        font-size: 4rem;
-        margin-bottom: 20px;
-        background: linear-gradient(135deg, var(--primary), var(--secondary));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
 </style>
 {% endblock %}
 
@@ -279,10 +262,10 @@
 {% block content %}
 <div class="chat-wrapper">
     <div class="messages-container" id="messages">
-        <div class="chat-empty" id="emptyState">
-            <i class="fas fa-comment-medical"></i>
-            <h2>Comment puis-je vous aider aujourd'hui ?</h2>
-            <p style="color: var(--text-secondary); margin-top: 10px;">
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon">💬</div>
+            <h2 class="empty-title">Comment puis-je vous aider ?</h2>
+            <p class="empty-subtitle">
                 Posez vos questions sur la santé, les symptômes ou les médicaments.
             </p>
         </div>

@@ -139,8 +139,8 @@ class ChatHistory {
             messagesDiv.innerHTML = `
                 <div class="empty-state" id="emptyState">
                     <div class="empty-icon">💬</div>
-                    <div class="empty-title">Comment puis-je vous aider ?</div>
-                    <div class="empty-subtitle">Posez-moi vos questions</div>
+                    <h2 class="empty-title">Comment puis-je vous aider ?</h2>
+                    <p class="empty-subtitle">Posez-moi vos questions</p>
                 </div>
             `;
         }
