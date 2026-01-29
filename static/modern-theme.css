@@ -226,6 +226,74 @@
     }
 }
 
+/* Siri Style Visualizer */
+.audio-visualizer {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 40px;
+    padding: 0 15px;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border);
+    position: absolute;
+    bottom: 85px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.visualizer-bar {
+    width: 3px;
+    height: 100%;
+    background: var(--primary);
+    border-radius: var(--radius-full);
+    transition: height 0.1s ease;
+    box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.visualizer-bar:nth-child(even) {
+    background: var(--secondary);
+}
+
+@keyframes siriPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 var(--primary-glow); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
+.icon-btn.listening {
+    background: var(--danger) !important;
+    color: white !important;
+    animation: siriPulse 1.5s infinite;
+}
+
+.icon-btn.speaking {
+    background: var(--accent) !important;
+    color: white !important;
+    animation: siriPulse 1.5s infinite;
+}
+
+.icon-btn.hands-free {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.icon-btn.hands-free::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 5px var(--accent);
+}
+
 /* Base Styles */
 * {
     margin: 0;

@@ -565,7 +565,22 @@ class SiriVoiceAssistant {
         const visualizer = document.getElementById('audio-visualizer');
         if (visualizer) {
             visualizer.style.display = 'flex';
-            this.animateVisualizer();
+            
+            // Tenter d'utiliser le flux réel pour la visualisation
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        const source = this.audioContext.createMediaStreamSource(stream);
+                        source.connect(this.analyser);
+                        this.animateVisualizer();
+                    })
+                    .catch(err => {
+                        console.warn('⚠️ Visualisation réelle non disponible, mode dégradé:', err);
+                        this.animateVisualizer(); // Mode dégradé avec random
+                    });
+            } else {
+                this.animateVisualizer();
+            }
         }
     }
 
@@ -574,19 +589,38 @@ class SiriVoiceAssistant {
         this.visualizationActive = false;
         const visualizer = document.getElementById('audio-visualizer');
         if (visualizer) {
-            visualizer.style.display = 'none';
+            setTimeout(() => {
+                if (!this.visualizationActive && !this.isSpeaking) {
+                    visualizer.style.display = 'none';
+                }
+            }, 500);
         }
     }
 
     // Animer le visualiseur
     animateVisualizer() {
-        if (!this.visualizationActive) return;
+        if (!this.visualizationActive && !this.isSpeaking) return;
 
         const bars = document.querySelectorAll('.visualizer-bar');
+        const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+        
+        if (this.visualizationActive && this.analyser) {
+            this.analyser.getByteFrequencyData(dataArray);
+        }
+
         bars.forEach((bar, index) => {
-            const height = Math.random() * 100;
+            let height;
+            if (this.visualizationActive && this.analyser) {
+                // Utiliser les données réelles
+                const idx = Math.floor(index * (dataArray.length / bars.length));
+                height = (dataArray[idx] / 255) * 100;
+                height = Math.max(10, height); // Hauteur min
+            } else {
+                // Mode speaking ou dégradé : pseudo-aléatoire fluide
+                const time = Date.now() / 200;
+                height = 30 + Math.sin(time + index * 0.5) * 20 + Math.random() * 10;
+            }
             bar.style.height = `${height}%`;
-            bar.style.animationDelay = `${index * 0.1}s`;
         });
 
         requestAnimationFrame(() => this.animateVisualizer());
@@ -598,6 +632,7 @@ class SiriVoiceAssistant {
         if (visualizer) {
             visualizer.style.display = 'flex';
             visualizer.classList.add('speaking');
+            this.animateVisualizer();
         }
     }
 
@@ -657,88 +692,40 @@ class SiriVoiceAssistant {
 
     // Mettre à jour l'interface
     updateUI(state) {
-        const voiceBtn = document.getElementById('voice-btn');
-        const stopBtn = document.getElementById('stopSpeakingBtn');
-
-        // Gérer le bouton STOP
-        if (stopBtn) {
-            if (state === 'speaking') {
-                stopBtn.style.display = 'block';
-            } else {
-                stopBtn.style.display = 'none';
-            }
-        }
-
+        const voiceBtn = document.getElementById('voiceBtn');
+        
         if (!voiceBtn) return;
+
+        // Reset states
+        voiceBtn.classList.remove('listening', 'speaking');
 
         switch (state) {
             case 'listening':
-                voiceBtn.innerHTML = '🎤 Écoute...';
-                voiceBtn.style.background = 'rgba(239, 68, 68, 0.2)';
-                voiceBtn.style.borderColor = '#ef4444';
-                voiceBtn.style.color = '#ef4444';
-                voiceBtn.classList.add('pulse');
+                voiceBtn.classList.add('listening');
                 break;
 
             case 'speaking':
-                voiceBtn.innerHTML = '🔊 Parle...';
-                voiceBtn.style.background = 'rgba(59, 130, 246, 0.2)';
-                voiceBtn.style.borderColor = '#3b82f6';
-                voiceBtn.style.color = '#3b82f6';
-                voiceBtn.classList.add('pulse');
+                voiceBtn.classList.add('speaking');
                 break;
 
             case 'idle':
-                voiceBtn.innerHTML = '🎤 Vocal';
-                voiceBtn.style.background = 'rgba(59, 130, 246, 0.1)';
-                voiceBtn.style.borderColor = 'rgba(59, 130, 246, 0.3)';
-                voiceBtn.style.color = '#3b82f6';
-                voiceBtn.classList.remove('pulse');
+                // Les classes sont déjà supprimées
                 break;
+        }
+
+        // Gérer la classe hands-free séparément
+        if (this.handsFreeModeActive) {
+            voiceBtn.classList.add('hands-free');
+        } else {
+            voiceBtn.classList.remove('hands-free');
         }
     }
 }
 
-// Instance globale
-let siriVoiceAssistant = null;
-
-// Fonction d'initialisation robuste
-function initSiriVoiceAssistant() {
-    // Arrêter toute synthèse vocale en cours (au cas où la page a été rafraîchie)
-    if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-        console.log('🛑 Arrêt de toute synthèse vocale en cours');
-    }
-
-    if (siriVoiceAssistant) {
-        console.log('✓ Assistant vocal déjà initialisé');
-        return;
-    }
-
-    try {
-        siriVoiceAssistant = new SiriVoiceAssistant();
-        window.siriVoiceAssistant = siriVoiceAssistant; // Rendre global
-        console.log('✓ Assistant vocal Siri prêt');
-    } catch (error) {
-        console.error('❌ Erreur initialisation:', error);
-    }
-}
-
-// Initialiser immédiatement si le DOM est prêt
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSiriVoiceAssistant);
-} else {
-    // DOM déjà chargé
-    initSiriVoiceAssistant();
-}
-
-// Backup: initialiser après 500ms si pas encore fait
-setTimeout(() => {
-    if (!siriVoiceAssistant) {
-        console.log('⚠️ Initialisation de secours...');
-        initSiriVoiceAssistant();
-    }
-}, 500);
+// Initialiser l'assistant globalement
+window.addEventListener('load', () => {
+    window.siriVoiceAssistant = new SiriVoiceAssistant();
+});
 
 // Fonctions globales
 function toggleVoiceListening() {
