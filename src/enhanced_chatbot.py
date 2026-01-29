@@ -943,52 +943,65 @@ Exemple: "Quelle est la météo à Paris, FR ?" """
             for i, f in enumerate(forecast_data["forecasts"]):
                 if i % 2 == 0: # Toutes les 6h (puisque c'est toutes les 3h)
                     time_str = f["datetime"].split()[1][:5]
-                    forecast_html += f"""
-                    <div class="forecast-item">
-                        <div class="forecast-time">{time_str}</div>
-                        <img class="forecast-icon" src="{f['icon_url']}" alt="icon">
-                        <div class="forecast-temp">{f['temperature']}°</div>
-                    </div>"""
+                    icon_url = f["icon_url"]
+                    temp_val = f["temperature"]
+                    forecast_html += f'<div class="forecast-item"><div class="forecast-time">{time_str}</div><img class="forecast-icon" src="{icon_url}" alt="icon"><div class="forecast-temp">{temp_val}°</div></div>'
             forecast_html += '</div>'
 
         # Formater la réponse finale avec le nouveau design
+        current_icon = current['icon_url']
+        city_name = location['city']
+        country_name = location['country']
+        main_temp = current['temperature']
+        temp_unit = current['temp_unit']
+        description = current['description']
+        feels_like = current['feels_like']
+        humidity = current['humidity']
+        wind_speed = wind['speed']
+        wind_unit = wind['speed_unit']
+        temp_min = current['temp_min']
+        temp_max = current['temp_max']
+        sunrise = weather_data['sunrise']
+        sunset = weather_data['sunset']
+        update_time = weather_data['timestamp']
+
         response = f"""<div class="weather-card-container">
     <div class="weather-header">
         <div class="weather-location">
-            <span class="weather-city">{location['city']}</span>
-            <span class="weather-country">{location['country']}</span>
+            <span class="weather-city">{city_name}</span>
+            <span class="weather-country">{country_name}</span>
         </div>
-        <img src="{current['icon_url']}" class="weather-icon-main" alt="weather icon">
+        <img src="{current_icon}" class="weather-icon-main" alt="weather icon">
     </div>
 
     <div class="weather-main-temp">
-        <div class="weather-temp-big">{current['temperature']}{current['temp_unit']}</div>
-        <div class="weather-description">{current['description']}</div>
-        <div class="weather-feels-like">Ressenti {current['feels_like']}{current['temp_unit']}</div>
+        <div class="weather-temp-big">{main_temp}{temp_unit}</div>
+        <div class="weather-description">{description}</div>
+        <div class="weather-feels-like">Ressenti {feels_like}{temp_unit}</div>
     </div>
 
     <div class="weather-details-grid">
         <div class="weather-detail-item">
             <div class="weather-detail-label">💧 Humidité</div>
-            <div class="weather-detail-value">{current['humidity']}%</div>
+            <div class="weather-detail-value">{humidity}%</div>
         </div>
         <div class="weather-detail-item">
             <div class="weather-detail-label">💨 Vent</div>
-            <div class="weather-detail-value">{wind['speed']} {wind['speed_unit']}</div>
+            <div class="weather-detail-value">{wind_speed} {wind_unit}</div>
         </div>
         <div class="weather-detail-item">
             <div class="weather-detail-label">🔻 Min</div>
-            <div class="weather-detail-value">{current['temp_min']}{current['temp_unit']}</div>
+            <div class="weather-detail-value">{temp_min}{temp_unit}</div>
         </div>
         <div class="weather-detail-item">
             <div class="weather-detail-label">🔺 Max</div>
-            <div class="weather-detail-value">{current['temp_max']}{current['temp_unit']}</div>
+            <div class="weather-detail-value">{temp_max}{temp_unit}</div>
         </div>
     </div>
 
     <div class="weather-sun-times">
-        <span>🌅 Lever: {weather_data['sunrise']}</span>
-        <span>🌇 Coucher: {weather_data['sunset']}</span>
+        <span>🌅 Lever: {sunrise}</span>
+        <span>🌇 Coucher: {sunset}</span>
     </div>
 
     <div class="weather-health-tip">
@@ -1000,11 +1013,9 @@ Exemple: "Quelle est la météo à Paris, FR ?" """
     {forecast_html}
 
     <div class="weather-timestamp">
-        Mis à jour: {weather_data['timestamp']}
+        Mis à jour: {update_time}
     </div>
 </div>"""
-        
-        return response
         
         return response
     
