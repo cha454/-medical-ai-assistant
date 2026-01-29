@@ -911,87 +911,100 @@ Je n'ai pas pu récupérer la météo pour "{city}".
 • Ajoutez le code pays (ex: "Paris, FR")
 
 Exemple: "Quelle est la météo à Paris, FR ?" """
+
+        # Récupérer aussi les prévisions pour enrichir la réponse
+        forecast_data = weather_service.get_forecast(city, lang=language, days=1)
         
         # Formater la réponse météo
         current = weather_data["current"]
         location = weather_data["location"]
         wind = weather_data["wind"]
         
-        # Emoji selon les conditions
-        weather_emoji = self._get_weather_emoji(current["description"])
-        
-        # Déterminer la couleur du gradient selon la température
-        temp = current['temperature']
-        if temp < 10:
-            gradient_color = "rgba(59, 130, 246, 0.2)"  # Bleu froid
-        elif temp < 20:
-            gradient_color = "rgba(34, 197, 94, 0.2)"  # Vert doux
-        elif temp < 30:
-            gradient_color = "rgba(251, 191, 36, 0.2)"  # Jaune chaud
-        else:
-            gradient_color = "rgba(239, 68, 68, 0.2)"  # Rouge très chaud
-        
         # Conseil santé selon la météo
+        temp = current['temperature']
         if temp < 5:
-            health_tip = "Il fait froid ! Couvrez-vous bien pour éviter les rhumes. ❄️"
-        elif temp > 30:
-            health_tip = "Il fait chaud ! Hydratez-vous régulièrement et évitez le soleil aux heures chaudes. ☀️"
-        elif current['humidity'] > 80:
-            health_tip = "Forte humidité ! Aérez bien votre intérieur et restez hydraté. 💧"
+            health_tip = "Il fait très froid ! Couvrez-vous bien et protégez vos extrémités pour éviter les engelures ou le rhume. ❄️"
+        elif temp < 15:
+            health_tip = "Le temps est frais. Une veste légère est recommandée pour éviter de prendre froid. 🧥"
+        elif temp > 32:
+            health_tip = "Alerte forte chaleur ! Hydratez-vous toutes les heures, restez à l'ombre et surveillez les signes d'insolation. ☀️🥤"
+        elif current['humidity'] > 85:
+            health_tip = "L'air est très humide. Cela peut accentuer les problèmes respiratoires ou articulaires. Restez au sec. 🌧️"
+        elif "pluie" in current['description'].lower() or "rain" in current['description'].lower():
+            health_tip = "N'oubliez pas votre parapluie ! Des chaussures étanches vous éviteront de garder les pieds mouillés, source de refroidissement. ☔"
         else:
-            health_tip = "Conditions agréables ! Profitez-en pour une activité en extérieur. 🚶"
+            health_tip = "Les conditions sont idéales pour une activité physique en plein air. Profitez-en pour marcher un peu ! 🏃‍♂️"
         
-        # Formater la réponse en Markdown + HTML simple (comme les actualités)
-        response = f"""# ☁️ Météo
+        # Prévisions formatées
+        forecast_html = ""
+        if forecast_data and forecast_data.get("success"):
+            forecast_html = '<div class="weather-forecast-scroll">'
+            # Prendre quelques points de prévision (toutes les 6h environ)
+            for i, f in enumerate(forecast_data["forecasts"]):
+                if i % 2 == 0: # Toutes les 6h (puisque c'est toutes les 3h)
+                    time_str = f["datetime"].split()[1][:5]
+                    forecast_html += f"""
+                    <div class="forecast-item">
+                        <div class="forecast-time">{time_str}</div>
+                        <img class="forecast-icon" src="{f['icon_url']}" alt="icon">
+                        <div class="forecast-temp">{f['temperature']}°</div>
+                    </div>"""
+            forecast_html += '</div>'
 
-**📍 {location['city']}, {location['country']}**
+        # Formater la réponse finale avec le nouveau design
+        response = f"""<div class="weather-card-container">
+    <div class="weather-header">
+        <div class="weather-location">
+            <span class="weather-city">{location['city']}</span>
+            <span class="weather-country">{location['country']}</span>
+        </div>
+        <img src="{current['icon_url']}" class="weather-icon-main" alt="weather icon">
+    </div>
 
-**☁️ {current['description']}**
+    <div class="weather-main-temp">
+        <div class="weather-temp-big">{current['temperature']}{current['temp_unit']}</div>
+        <div class="weather-description">{current['description']}</div>
+        <div class="weather-feels-like">Ressenti {current['feels_like']}{current['temp_unit']}</div>
+    </div>
 
----
+    <div class="weather-details-grid">
+        <div class="weather-detail-item">
+            <div class="weather-detail-label">💧 Humidité</div>
+            <div class="weather-detail-value">{current['humidity']}%</div>
+        </div>
+        <div class="weather-detail-item">
+            <div class="weather-detail-label">💨 Vent</div>
+            <div class="weather-detail-value">{wind['speed']} {wind['speed_unit']}</div>
+        </div>
+        <div class="weather-detail-item">
+            <div class="weather-detail-label">🔻 Min</div>
+            <div class="weather-detail-value">{current['temp_min']}{current['temp_unit']}</div>
+        </div>
+        <div class="weather-detail-item">
+            <div class="weather-detail-label">🔺 Max</div>
+            <div class="weather-detail-value">{current['temp_max']}{current['temp_unit']}</div>
+        </div>
+    </div>
 
-<div class="weather-card-container">
+    <div class="weather-sun-times">
+        <span>🌅 Lever: {weather_data['sunrise']}</span>
+        <span>🌇 Coucher: {weather_data['sunset']}</span>
+    </div>
 
-<div class="weather-main-temp">
-<div class="weather-temp-big">{current['temperature']}{current['temp_unit']}</div>
-<div class="weather-feels-like">Ressenti {current['feels_like']}{current['temp_unit']}</div>
-</div>
+    <div class="weather-health-tip">
+        <div class="weather-tip-title">✨ Conseil santé</div>
+        <div class="weather-tip-text">{health_tip}</div>
+    </div>
 
-<div class="weather-details-grid">
-<div class="weather-detail-item">
-<div class="weather-detail-label">💧 Humidité</div>
-<div class="weather-detail-value">{current['humidity']}%</div>
-</div>
-<div class="weather-detail-item">
-<div class="weather-detail-label">💨 Vent</div>
-<div class="weather-detail-value">{wind['speed']} {wind['speed_unit']}</div>
-</div>
-<div class="weather-detail-item">
-<div class="weather-detail-label">🔻 Min</div>
-<div class="weather-detail-value">{current['temp_min']}{current['temp_unit']}</div>
-</div>
-<div class="weather-detail-item">
-<div class="weather-detail-label">🔺 Max</div>
-<div class="weather-detail-value">{current['temp_max']}{current['temp_unit']}</div>
-</div>
-</div>
+    <div class="weather-forecast-title" style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); margin-top: 1rem;">📅 Prévisions prochaines heures</div>
+    {forecast_html}
 
-<div class="weather-sun-times">
-<span>🌄 Lever: {weather_data['sunrise']}</span>
-<span>🌇 Coucher: {weather_data['sunset']}</span>
-</div>
-
-<div class="weather-health-tip">
-<div class="weather-tip-title">💡 Conseil santé</div>
-<div class="weather-tip-text">{health_tip}</div>
-</div>
-
-<div class="weather-timestamp">
-📅 Mis à jour: {weather_data['timestamp']}
-</div>
-
-</div>
-"""
+    <div class="weather-timestamp">
+        Mis à jour: {weather_data['timestamp']}
+    </div>
+</div>"""
+        
+        return response
         
         return response
     
@@ -1013,8 +1026,11 @@ Exemple: "Quelle est la météo à Paris, FR ?" """
                 city = re.sub(r'\s+(svp|stp|merci|please)$', '', city)
                 return city.title()
         
-        # Villes françaises courantes (détection directe)
-        french_cities = [
+        # Villes gabonaises et françaises courantes
+        cities = [
+            # Gabon
+            "libreville", "port-gentil", "franceville", "oyem", "moanda", "mouila", "lambaréné", "tchibanga", "koulamoutou", "makokou",
+            # France
             "paris", "lyon", "marseille", "toulouse", "nice", "nantes", 
             "strasbourg", "montpellier", "bordeaux", "lille", "rennes",
             "reims", "toulon", "grenoble", "dijon", "angers", "nîmes",
@@ -1022,7 +1038,7 @@ Exemple: "Quelle est la météo à Paris, FR ?" """
         ]
         
         text_lower = text.lower()
-        for city in french_cities:
+        for city in cities:
             if city in text_lower:
                 return city.title()
         
